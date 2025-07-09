@@ -101,7 +101,7 @@ export default function Navbar() {
                 Register
               </button>
             </NavLink>
-            <NavLink to="/landownerdashboard">
+            <NavLink to="/Login">
               <button className="bg-white text-black font-bold border border-gray-300 px-4 py-2 rounded-full hover:bg-gray-100 transition">
                 Log In
               </button>
