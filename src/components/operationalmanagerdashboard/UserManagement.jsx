@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FiSearch } from "react-icons/fi";
-import AddNewUserForm from "./AddNewUserForm"; // adjust path if needed
+import AddNewUserForm from "./AddNewUserForm"; // Adjust path if needed
 
 const initialUsers = [
   {
@@ -75,7 +75,7 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="max-w-7xlp-4 md:p-10 p-4 md:p-10 font-poppins">
+    <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
       {showForm ? (
         <AddNewUserForm
           onCancel={() => setShowForm(false)}
@@ -83,9 +83,11 @@ export default function UserManagementPage() {
         />
       ) : (
         <>
+          {/* Page Title */}
           <h1 className="text-3xl md:text-4xl font-bold text-black mb-4 mt-4">
             User Management
           </h1>
+
           {/* Search Bar */}
           <div className="relative mb-6">
             <FiSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-green-600" />
@@ -96,23 +98,21 @@ export default function UserManagementPage() {
             />
           </div>
 
-          {/* Filters & Add Button */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div className="flex flex-wrap items-center gap-3">
-              <select className="bg-green-50 text-sm rounded-md px-3 py-2 focus:outline-none">
+          {/* Filters + Add Button */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            {/* Filters */}
+            <div className="flex flex-wrap gap-3 w-full md:w-auto">
+              <select className="bg-green-50 text-sm rounded-md px-4 py-2 focus:outline-none w-full md:w-auto">
                 <option>Landowner</option>
-              </select>
-              <select className="bg-green-50 text-sm rounded-md px-3 py-2 focus:outline-none">
                 <option>Supervisor</option>
-              </select>
-              <select className="bg-green-50 text-sm rounded-md px-3 py-2 focus:outline-none">
                 <option>Buyer</option>
               </select>
             </div>
 
+            {/* Add Button */}
             <button
               onClick={() => setShowForm(true)}
-              className="bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-md hover:bg-green-700"
+              className="bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-md hover:bg-green-700 w-full md:w-auto"
             >
               Add New User
             </button>
@@ -151,22 +151,24 @@ export default function UserManagementPage() {
                         {user.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-black font-semibold text-sm">
-                      <button className="hover:underline hover:text-green-600 cursor-pointer">
-                        View
-                      </button>
-                      <span className="mx-1">|</span>
-                      <button className="hover:underline hover:text-green-600 cursor-pointer">
-                        Edit
-                      </button>
-                      <span className="mx-1">|</span>
-                      <button className="hover:underline hover:text-green-600 cursor-pointer">
-                        Delete
-                      </button>
-                      <span className="mx-1">|</span>
-                      <button className="hover:underline hover:text-green-600 cursor-pointer">
-                        Change Role
-                      </button>
+                    <td className="px-6 py-4 text-black font-semibold text-sm whitespace-nowrap">
+                      <div className="flex flex-wrap gap-1">
+                        <button className="hover:underline hover:text-green-600 cursor-pointer">
+                          View
+                        </button>
+                        <span className="mx-1 hidden md:inline">|</span>
+                        <button className="hover:underline hover:text-green-600 cursor-pointer">
+                          Edit
+                        </button>
+                        <span className="mx-1 hidden md:inline">|</span>
+                        <button className="hover:underline hover:text-green-600 cursor-pointer">
+                          Delete
+                        </button>
+                        <span className="mx-1 hidden md:inline">|</span>
+                        <button className="hover:underline hover:text-green-600 cursor-pointer">
+                          Change Role
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
