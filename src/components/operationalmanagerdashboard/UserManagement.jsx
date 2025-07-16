@@ -121,13 +121,13 @@ export default function UserManagementPage() {
           {/* User Table */}
           <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
             <table className="min-w-full text-sm text-left">
-              <thead className="bg-green-50 text-green-700 font-semibold">
+              <thead className="bg-green-50 text-black font-semibold">
                 <tr>
                   <th className="px-6 py-4">Name</th>
                   <th className="px-6 py-4">Email</th>
                   <th className="px-6 py-4">Role</th>
                   <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Actions</th>
+                  <th className="px-6 py-4 text-green-700">Actions</th>
                 </tr>
               </thead>
               <tbody>
