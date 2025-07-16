@@ -75,7 +75,7 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-10 font-poppins">
+    <div className="max-w-7xlp-4 md:p-10 p-4 md:p-10 font-poppins">
       {showForm ? (
         <AddNewUserForm
           onCancel={() => setShowForm(false)}
@@ -83,7 +83,7 @@ export default function UserManagementPage() {
         />
       ) : (
         <>
-          <h1 className="text-2xl md:text-3xl font-bold text-black mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-black mb-4 mt-4">
             User Management
           </h1>
           {/* Search Bar */}
