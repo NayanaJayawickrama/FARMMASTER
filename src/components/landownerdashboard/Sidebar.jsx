@@ -33,7 +33,7 @@ export default function Sidebar() {
             <img src={logo} alt="FarmMaster Logo" className="h-20 w-auto" />
           </NavLink>{" "}
           <button
-            className="md:hidden text-gray-600"
+            className="md:hidden text-gray-600 cursor-pointer"
             onClick={() => setIsOpen(false)}
           >
             <X size={24} />

@@ -85,17 +85,17 @@ export default function DashboardContent() {
               Manage Users
             </button>
           </NavLink>
-          <NavLink to="/proposals">
+          <NavLink to="/operationalmanagerproposalmanagement">
             <button className="bg-green-100 text-black px-4 py-2 rounded-md font-semibold hover:bg-green-600 hover:text-white transition">
               View Proposals
             </button>
           </NavLink>
-          <NavLink to="/cropinventory">
+          <NavLink to="/operationalmanagercropinventorymanagement">
             <button className="bg-green-100 text-black px-4 py-2 rounded-md font-semibold hover:bg-green-600 hover:text-white transition">
               Crop Inventory
             </button>
           </NavLink>
-          <NavLink to="/assignlandreports">
+          <NavLink to="/operationalmanagerlandreportmanagement">
             <button className="bg-green-100 text-black px-4 py-2 rounded-md font-semibold hover:bg-green-600 hover:text-white transition">
               Assign Land Reports
             </button>

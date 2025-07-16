@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FiSearch } from "react-icons/fi";
-import AddNewUserForm from "./AddNewUserForm"; // Adjust path if needed
+import AddNewUserForm from "./AddNewUserForm";
 
 const initialUsers = [
   {

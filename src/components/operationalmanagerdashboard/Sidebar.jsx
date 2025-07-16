@@ -14,7 +14,7 @@ import {
 import logo from "../../assets/images/logo.png";
 import profilePic from "../../assets/images/profile.png";
 
-export default function OperationalSidebar() {
+export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const linkBase =
@@ -43,7 +43,7 @@ export default function OperationalSidebar() {
             <img src={logo} alt="FarmMaster Logo" className="h-20 w-auto" />
           </NavLink>
           <button
-            className="md:hidden text-gray-600"
+            className="md:hidden text-gray-600 cursor-pointer"
             onClick={() => setIsOpen(false)}
           >
             <X size={24} />
@@ -88,7 +88,7 @@ export default function OperationalSidebar() {
           </NavLink>
 
           <NavLink
-            to="/proposal-management"
+            to="/operationalmanagerproposalmanagement"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? activeLink : normalLink}`
             }
@@ -99,7 +99,7 @@ export default function OperationalSidebar() {
           </NavLink>
 
           <NavLink
-            to="/crop-inventory"
+            to="/operationalmanagercropinventorymanagement"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? activeLink : normalLink}`
             }
@@ -110,7 +110,7 @@ export default function OperationalSidebar() {
           </NavLink>
 
           <NavLink
-            to="/land-report-management"
+            to="/operationalmanagerlandreportmanagement"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? activeLink : normalLink}`
             }
