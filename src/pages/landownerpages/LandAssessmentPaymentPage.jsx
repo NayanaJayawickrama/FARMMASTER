@@ -1,6 +1,6 @@
 import React from "react";
-import Sidebar from "../components/landownerdashboard/Sidebar";
-import LandAssessmentPayment from "../components/landownerdashboard/LandAssessmentPayment";
+import Sidebar from "../../components/landownerdashboard/Sidebar";
+import LandAssessmentPayment from "../../components/landownerdashboard/LandAssessmentPayment";
 
 function LandAssessmentPaymentPage() {
   return (

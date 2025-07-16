@@ -1,6 +1,6 @@
 import React from "react";
-import Sidebar from "../components/landownerdashboard/Sidebar";
-import HarvestPageBody from "../components/landownerdashboard/HarvestPageBody";
+import Sidebar from "../../components/landownerdashboard/Sidebar";
+import HarvestPageBody from "../../components/landownerdashboard/HarvestPageBody";
 
 function HarvestPage() {
   return (

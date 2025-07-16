@@ -7,12 +7,15 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Register from "./pages/Register";
 import Login from "./pages/Login"; 
-import LandownerDashboard from "./pages/LandownerDashboard";
-import LandAssessmentRequestPage from "./pages/LandAssessmentRequestPage";
-import LandAssessmentPaymentPage from "./pages/LandAssessmentPaymentPage";
-import LandReportPage from "./pages/LandReportPage";
-import LeaseProposalPage from "./pages/LeaseProposalPage";
-import HarvestPage from "./pages/HarvestPage";
+import LandownerDashboard from "./pages/landownerpages/LandownerDashboard";
+import LandAssessmentPaymentPage from "./pages/landownerpages/LandAssessmentPaymentPage";
+import LandAssessmentRequestPage from "./pages/landownerpages/LandAssessmentRequestPage";
+import LandReportPage from "./pages/landownerpages/LandReportPage";
+import LeaseProposalPage from "./pages/landownerpages/LeaseProposalPage";
+import HarvestPage from "./pages/landownerpages/HarvestPage";
+import OperationalMDashboard from "./pages/operationalmanagerpages/OperationalMDashboard";
+import OperationalMUserManagement from "./pages/operationalmanagerpages/OperationalMUserManagement";
+
 
 function App() {
   return (
@@ -29,7 +32,9 @@ function App() {
         <Route path="/landassessmentpayment" element={<LandAssessmentPaymentPage />} />
         <Route path="/landreport" element={<LandReportPage />} />
         <Route path="/leaseproposal" element={<LeaseProposalPage />} />
-        <Route path="/harvest" element={<HarvestPage/>}/>
+        <Route path="/harvest" element={<HarvestPage />}/>
+        <Route path="/operationalmanagerdashboard" element={<OperationalMDashboard />}/>
+        <Route path="/operationalmanagerusermanagement" element={<OperationalMUserManagement />}/>
       </Routes>
     </main>
   );

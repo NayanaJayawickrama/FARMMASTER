@@ -1,6 +1,7 @@
 import React from "react";
-import Sidebar from "../components/landownerdashboard/Sidebar";
-import DashboardContent from "../components/landownerdashboard/DashboardContent";
+import DashboardContent from "../../components/landownerdashboard/DashboardContent";
+import Sidebar from "../../components/landownerdashboard/Sidebar";
+
 
 function LandownerDashboard() {
   return (

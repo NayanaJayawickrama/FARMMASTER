@@ -40,32 +40,32 @@ export default function DashboardContent() {
 
       {/* Recent Activity Section */}
       <div className="mb-10">
-        <h2 className="text-2xl md:text-3xl font-bold mb-6">Recent Activity</h2>
-        <ul className="space-y-4">
+        <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
+        <ul className="space-y-4 bg-green-50/50 p-4 rounded-md">
           <li className="flex items-start gap-5">
-            <div className="bg-green-50 rounded-sm p-2">
-              <FileText className="text-green-700" size={30} />
+            <div className="bg-green-100 rounded-sm p-2">
+              <FileText className="text-green-700" size={26} />
             </div>
             <div>
-              <p className="font-medium">Land Report for Block A</p>
+              <p className="font-semibold">Land Report for Block A</p>
               <p className="text-sm text-green-600">Requested on 2024-01-15</p>
             </div>
           </li>
-          <li className="flex items-start gap-5">
-            <div className="bg-green-50 rounded-sm p-2">
-              <Handshake className="text-green-700" size={30} />
+          <li className="flex items-start gap-4">
+            <div className="bg-green-100 rounded-sm p-2">
+              <Handshake className="text-green-700" size={26} />
             </div>
             <div>
-              <p className="font-medium">Proposal for Block B</p>
+              <p className="font-semibold">Proposal for Block B</p>
               <p className="text-sm text-green-600">Submitted on 2024-02-01</p>
             </div>
           </li>
-          <li className="flex items-start gap-5">
-            <div className="bg-green-50 rounded-sm p-2">
-              <Leaf className="text-green-700" size={30} />
+          <li className="flex items-start gap-4">
+            <div className="bg-green-100 rounded-sm p-2">
+              <Leaf className="text-green-700" size={26} />
             </div>
             <div>
-              <p className="font-medium">Harvest for Block A</p>
+              <p className="font-semibold">Harvest for Block A</p>
               <p className="text-sm text-green-600">Completed on 2024-03-10</p>
             </div>
           </li>

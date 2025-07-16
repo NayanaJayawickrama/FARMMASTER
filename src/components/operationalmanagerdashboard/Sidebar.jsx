@@ -1,10 +1,20 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Home, FileText, Handshake, Leaf, Menu, X, ArrowLeftCircle, LogOut} from "lucide-react";
+import {
+  Home,
+  Users,
+  Handshake,
+  Leaf,
+  FileText,
+  LogOut,
+  Menu,
+  X,
+  ArrowLeftCircle, 
+} from "lucide-react";
 import logo from "../../assets/images/logo.png";
 import profilePic from "../../assets/images/profile.png";
 
-export default function Sidebar() {
+export default function OperationalSidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const linkBase =
@@ -14,7 +24,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Top Bar for Small Screens */}
+      {/* Mobile Top Bar */}
       <div className="md:hidden flex items-start bg-white shadow px-4 py-6">
         <button onClick={() => setIsOpen(true)}>
           <Menu size={24} />
@@ -27,11 +37,11 @@ export default function Sidebar() {
           isOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
-        {/* Logo & Close Icon */}
+        {/* Logo & Mobile Close */}
         <div className="flex items-center justify-between mb-6">
           <NavLink to="/" onClick={() => setIsOpen(false)}>
             <img src={logo} alt="FarmMaster Logo" className="h-20 w-auto" />
-          </NavLink>{" "}
+          </NavLink>
           <button
             className="md:hidden text-gray-600"
             onClick={() => setIsOpen(false)}
@@ -44,19 +54,19 @@ export default function Sidebar() {
         <div className="flex items-center mb-8">
           <img
             src={profilePic}
-            alt="Profile"
+            alt="Operational Manager"
             className="w-14 h-14 rounded-full object-cover mr-4"
           />
           <div>
-            <p className="text-base font-semibold">Nila Perera</p>
-            <p className="text-sm text-green-600">Landowner</p>
+            <p className="text-base font-semibold">Helani Silva</p>
+            <p className="text-sm text-green-600">Operational Manager</p>
           </div>
         </div>
 
         {/* Navigation Links */}
         <nav className="flex flex-col gap-2">
           <NavLink
-            to="/landownerdashboard"
+            to="/operationalmanagerdashboard"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? activeLink : normalLink}`
             }
@@ -67,38 +77,50 @@ export default function Sidebar() {
           </NavLink>
 
           <NavLink
-            to="/landreport"
+            to="/operationalmanagerusermanagement"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? activeLink : normalLink}`
             }
             onClick={() => setIsOpen(false)}
           >
-            <FileText size={16} />
-            Land Reports
+            <Users size={16} />
+            User Management
           </NavLink>
 
           <NavLink
-            to="/leaseproposal"
+            to="/proposal-management"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? activeLink : normalLink}`
             }
             onClick={() => setIsOpen(false)}
           >
             <Handshake size={16} />
-            Proposals
+            Proposal Management
           </NavLink>
 
           <NavLink
-            to="/harvest"
+            to="/crop-inventory"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? activeLink : normalLink}`
             }
             onClick={() => setIsOpen(false)}
           >
             <Leaf size={16} />
-            Harvests
+            Crop Inventory
           </NavLink>
 
+          <NavLink
+            to="/land-report-management"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? activeLink : normalLink}`
+            }
+            onClick={() => setIsOpen(false)}
+          >
+            <FileText size={16} />
+            Land Report Management
+          </NavLink>
+
+          {/* Bottom Section */}
           <div className="mt-6 pt-4 border-t border-gray-200">
             <NavLink
               to="/"

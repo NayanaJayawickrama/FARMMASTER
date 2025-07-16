@@ -1,6 +1,6 @@
 import React from "react";
-import Sidebar from "../components/landownerdashboard/Sidebar";
-import LandReportBody from "../components/landownerdashboard/LandReportBody";
+import Sidebar from "../../components/landownerdashboard/Sidebar";
+import LandReportBody from "../../components/landownerdashboard/LandReportBody";
 
 function LandReportPage() {
   return (

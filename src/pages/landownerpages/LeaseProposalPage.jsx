@@ -1,6 +1,7 @@
 import React from "react";
-import Sidebar from "../components/landownerdashboard/Sidebar";
-import LeaseProposalBody from "../components/landownerdashboard/LeaseProposalBody";
+import Sidebar from "../../components/landownerdashboard/Sidebar";
+import LeaseProposalBody from "../../components/landownerdashboard/LeaseProposalBody";
+
 
 function LeaseProposalPage() {
   return (
