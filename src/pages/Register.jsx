@@ -125,16 +125,14 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Account Type</label>
-            <select
-              value={accountType}
-              onChange={(e) => setAccountType(e.target.value)}
-              className="w-full border rounded-md px-4 py-2"
-              required
-            >
-              <option value="">Select your account type</option>
-              <option value="Landowner">Landowner</option>
-              <option value="Buyer">Buyer</option>
+            <label className="block text-sm font-medium mb-1">
+              Account Type
+            </label>
+            <select className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+              <option>Select your account type</option>
+              <option>Landowner</option>
+              <option>Buyer</option>
+              
             </select>
           </div>
 
