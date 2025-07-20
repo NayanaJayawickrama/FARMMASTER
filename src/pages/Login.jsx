@@ -32,7 +32,11 @@ const Login = () => {
       setLoading(false);
       if (response.data.status === 'success') {
         setMessage('✅ Login successful!');
-        const user = response.data.user;
+        const user = {
+          id: response.data.user_id,
+          role: response.data.user_role
+
+        };
 
         switch (user.role) {
           case 'Landowner':
