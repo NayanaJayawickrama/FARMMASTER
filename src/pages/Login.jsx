@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -13,12 +13,29 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const rootUrl = import.meta.env.VITE_API_URL;
-  console.log(rootUrl)
-
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) {
+      const route = roleToPath[user.role];
+      if (route) navigate(route);
+    }
+  }, []);
+
+  const roleToPath = {
+    'Landowner': '/landownerdashboard',
+    'Supervisor': '/fieldsupervisordashboard',
+    'Buyer': '/buyerdashboard',
+    'Operational Manager': '/operationalmanagerdashboard',
+    'Financial Manager': '/financialmanagerdashboard'
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setMessage('');
+
     if (!email || !password || !accountType) {
       setMessage('⚠️ Please fill in all fields.');
       return;
@@ -26,42 +43,24 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        `${rootUrl}/login.php`, 
-        {
+      const response = await axios.post(`${rootUrl}/login.php`, {
         email,
         password,
         user_role: accountType
       });
 
       setLoading(false);
+
       if (response.data.status === 'success') {
-        setMessage('✅ Login successful!');
         const user = {
           id: response.data.user_id,
-          role: response.data.user_role
-
+          role: response.data.user_role,
+          name: response.data.first_name + ' ' + response.data.last_name,
+          email: response.data.email
         };
 
-        switch (user.role) {
-          case 'Landowner':
-            navigate('/landowner', { state: { user } });
-            break;
-          case 'Supervisor':
-            navigate('/supervisor', { state: { user } });
-            break;
-          case 'Buyer':
-            navigate('/buyer', { state: { user } });
-            break;
-          case 'Operational Manager':
-            navigate('/operational-manager', { state: { user } });
-            break;
-          case 'Financial Manager':
-            navigate('/financial-manager', { state: { user } });
-            break;
-          default:
-            setMessage('❌ Invalid role.');
-        }
+        localStorage.setItem("user", JSON.stringify(user));
+        navigate(roleToPath[user.role]);
       } else {
         setMessage('❌ ' + response.data.message);
       }

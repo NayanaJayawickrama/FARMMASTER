@@ -25,6 +25,11 @@ import FSDashboard from "./pages/fieldsupervisorpages/FSDashboard";
 import FSAssignedTasks from "./pages/fieldsupervisorpages/FSAssignedTasks";
 import FSLandDataSubmission from "./pages/fieldsupervisorpages/FSLandDataSubmission";
 
+import BuyerDashboard from "./pages/buyerpages/BuyerDashboard";
+import BuyerCart from "./pages/buyerpages/BuyerCart";
+import BuyerOrders from "./pages/buyerpages/BuyerOrders";
+import BuyerCheckout from "./pages/buyerpages/BuyerCheckout";
+
 
 function App() {
   return (
@@ -53,6 +58,12 @@ function App() {
         <Route path="/fieldsupervisordashboard" element={<FSDashboard />} />
         <Route path="/fieldsupervisorassignedtasks" element={<FSAssignedTasks />} />
         <Route path="/fieldsupervisorlanddatasubmission" element={<FSLandDataSubmission />} />
+
+        <Route path="/buyerdashboard" element={<BuyerDashboard />}/>
+        <Route path="/buyerorders" element={<BuyerOrders />}/>
+        <Route path="/buyercart" element={<BuyerCart />}/>
+        <Route path="/checkoutpage" element={<BuyerCheckout />}/>
+
       </Routes>
     </main>
   );

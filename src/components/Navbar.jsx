@@ -2,11 +2,13 @@ import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import { Menu, X, Search, ShoppingCart, User } from "lucide-react";
+import { useCart } from "./cart/CartContext"; // ✅ import cart context
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const location = useLocation();
+  const { cartItems } = useCart(); // ✅ get cart items from context
 
   const isMarketplace = location.pathname.startsWith("/marketplace");
 
@@ -14,6 +16,8 @@ export default function Navbar() {
     "bg-green-600 text-white px-4 py-2 rounded-full shadow-md transition duration-300";
   const normalLinkStyle =
     "text-black hover:text-green-700 px-4 py-2 rounded-full hover:bg-green-100 transition duration-300";
+
+  const totalItems = cartItems.length;
 
   return (
     <nav
@@ -27,7 +31,7 @@ export default function Navbar() {
         </NavLink>
       </div>
 
-      {/* Center: Main Menu (always centered) */}
+      {/* Center: Main Menu */}
       <ul
         className="hidden md:flex space-x-6 font-semibold text-lg items-center absolute left-1/2 transform -translate-x-1/2"
         style={{ pointerEvents: isOpen ? "none" : "auto" }}
@@ -74,7 +78,7 @@ export default function Navbar() {
         </li>
       </ul>
 
-      {/* Right: Icons or Buttons */}
+      {/* Right: Icons */}
       <div className="hidden md:flex items-center space-x-4 z-50">
         {isMarketplace ? (
           <div className="flex items-center space-x-6">
@@ -85,24 +89,34 @@ export default function Navbar() {
                 className="border border-gray-300 rounded-full px-4 py-1 w-48 outline-none focus:ring-2 focus:ring-green-300 transition duration-300"
               />
             )}
-            <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-8 relative">
               <Search
                 className="hover:text-green-700 cursor-pointer transition"
                 onClick={() => setShowSearch(!showSearch)}
               />
-              <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />
+
+              {/* ✅ Cart Icon with Badge */}
+              <NavLink to="/buyercart" className="relative">
+                <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
+              </NavLink>
+
               <User className="hover:text-green-700 cursor-pointer transition" />
             </div>
           </div>
         ) : (
           <>
             <NavLink to="/register">
-              <button className="bg-green-500 text-white font-bold px-4 py-2 rounded-full shadow-md hover:bg-green-600 transition">
+              <button className="bg-green-500 text-white font-bold px-4 py-2 rounded-full shadow-md hover:bg-green-600 transition cursor-pointer">
                 Register
               </button>
             </NavLink>
-            <NavLink to="/Login">
-              <button className="bg-white text-black font-bold border border-gray-300 px-4 py-2 rounded-full hover:bg-gray-100 transition">
+            <NavLink to="/login">
+              <button className="bg-white text-black font-bold border border-gray-300 px-4 py-2 rounded-full hover:bg-gray-100 transition cursor-pointer">
                 Log In
               </button>
             </NavLink>
@@ -110,7 +124,7 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Mobile Right Side Icons and Toggle grouped */}
+      {/* Mobile Right Side Icons */}
       {isMarketplace && (
         <div className="flex md:hidden items-center space-x-3 z-50">
           {showSearch && (
@@ -124,20 +138,32 @@ export default function Navbar() {
             className="hover:text-green-700 cursor-pointer transition"
             onClick={() => setShowSearch(!showSearch)}
           />
-          <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />
+
+          {/* ✅ Cart Icon with Badge */}
+          <NavLink to="/buyercart" className="relative">
+            <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />
+            {totalItems > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
+          </NavLink>
+
           <User className="hover:text-green-700 cursor-pointer transition" />
 
-          {/* Hamburger button moved here to reduce gap */}
-          <button onClick={() => setIsOpen(!isOpen)} className="ml-2">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="ml-2 cursor-pointer"
+          >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       )}
 
-      {/* Mobile Menu Toggle (for non-marketplace) */}
+      {/* Mobile Menu Toggle */}
       {!isMarketplace && (
         <div className="md:hidden z-50">
-          <button onClick={() => setIsOpen(!isOpen)}>
+          <button onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -190,7 +216,7 @@ export default function Navbar() {
                 className="w-4/5"
                 onClick={() => setIsOpen(false)}
               >
-                <button className="bg-green-500 text-white font-bold px-4 py-2 rounded-full w-full shadow-md hover:bg-green-600 transition">
+                <button className="bg-green-500 text-white font-bold px-4 py-2 rounded-full w-full shadow-md hover:bg-green-600 transition cursor-pointer">
                   Register
                 </button>
               </NavLink>
@@ -199,7 +225,7 @@ export default function Navbar() {
                 className="w-4/5"
                 onClick={() => setIsOpen(false)}
               >
-                <button className="bg-white text-black font-bold border border-gray-300 px-4 py-2 rounded-full w-full hover:bg-gray-100 transition">
+                <button className="bg-white text-black font-bold border border-gray-300 px-4 py-2 rounded-full w-full hover:bg-gray-100 transition cursor-pointer">
                   Log In
                 </button>
               </NavLink>
