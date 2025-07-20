@@ -82,7 +82,7 @@ const Register = () => {
               <option>Select your account type</option>
               <option>Farmer</option>
               <option>Buyer</option>
-              <option>Consultant</option>
+            
             </select>
           </div>
 
