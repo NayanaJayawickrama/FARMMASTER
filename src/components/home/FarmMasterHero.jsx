@@ -27,9 +27,11 @@ const FarmMasterHero = () => {
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+            <NavLink to="/register">
             <button className="bg-green-600 text-white px-6 py-2.5 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-green-700 transition">
               Start Your Journey <ArrowRight size={18} />
             </button>
+            </NavLink>
             <NavLink to="/about">
             <button className="border border-black px-6 py-2.5 rounded-full font-semibold text-black hover:bg-gray-100 transition">
               Learn More

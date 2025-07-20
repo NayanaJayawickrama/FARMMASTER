@@ -195,6 +195,11 @@ const Register = () => {
 
           {message && <p className="text-center text-sm text-red-600">{message}</p>}
         </form>
+           <div className="text-center text-sm text-gray-600 space-y-1">
+            <p>
+              Already have an account? <a href="/login" className="text-green-600 font-medium hover:underline">Sign In</a>
+            </p>
+           </div>
       </div>
 
       <div className="mt-6">

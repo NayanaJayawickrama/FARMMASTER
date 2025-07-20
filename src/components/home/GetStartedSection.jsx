@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from "react-router-dom";
 
 const GetStartedSection = () => {
   return (
@@ -12,10 +13,12 @@ const GetStartedSection = () => {
         <p className="text-white text-lg">
           Join thousands of landowners who are already earning from sustainable organic farming
         </p>
-
+        <NavLink to="/register">
         <button className="mt-4 bg-white text-green-500 font-medium px-6 py-2 rounded hover:bg-green-100 transition">
           Get Started Today
         </button>
+        </NavLink>
+        
         
       </div>
     </section>

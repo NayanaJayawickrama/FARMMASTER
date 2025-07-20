@@ -1,6 +1,7 @@
 import React from "react";
 import heroImage from "../../assets/images/homeimages/hero.png";
 import { ArrowRight } from "lucide-react";
+import { NavLink } from "react-router-dom";
 
 const MarketplaceHero = () => {
   return (
@@ -26,9 +27,11 @@ const MarketplaceHero = () => {
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+            <NavLink to="/marketplace">
             <button className="bg-green-600 text-white px-6 py-2.5 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-green-700 transition">
               Shop Now <ArrowRight size={18} />
             </button>
+            </NavLink>
           </div>
         </div>
       </div>
