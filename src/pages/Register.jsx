@@ -33,7 +33,7 @@ const Register = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost/FarmMaster/farm_master_backend/register.php",
+        "http://localhost/FARMMASTER-Backend/register.php",
         {
           first_name: firstName,
           last_name: lastName,
