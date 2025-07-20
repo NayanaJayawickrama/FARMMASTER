@@ -80,9 +80,9 @@ const Register = () => {
             </label>
             <select className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
               <option>Select your account type</option>
-              <option>Farmer</option>
+              <option>Landowner</option>
               <option>Buyer</option>
-              <option>Consultant</option>
+              
             </select>
           </div>
 
