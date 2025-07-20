@@ -1,5 +1,5 @@
 import React from "react";
-import vegetablesimage from "../../assets/images/vegetables_hero1.png";
+import vegetablesimage from "../../assets/images/marketplaceimages/vegetables_hero1.png";
 
 const MarketplaceHero = () => {
   return (

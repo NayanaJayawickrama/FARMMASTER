@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 
-import carrotImg from "../../assets/images/carrot.png";
-import cabbageImg from "../../assets/images/cabbage.png";
-import tomatoImg from "../../assets/images/tomato.png";
-import leekImg from "../../assets/images/leeks.png";
-import rightImg from "../../assets/images/right-veg.png";
-import leftImg from "../../assets/images/left-veg1.png";
+import carrotImg from "../../assets/images/marketplaceimages/carrot.png";
+import cabbageImg from "../../assets/images/marketplaceimages/cabbage.png";
+import tomatoImg from "../../assets/images/marketplaceimages/tomato.png";
+import leekImg from "../../assets/images/marketplaceimages/leeks.png";
+import rightImg from "../../assets/images/marketplaceimages/right-veg.png";
+import leftImg from "../../assets/images/marketplaceimages/left-veg1.png";
 
 const products = [
   {

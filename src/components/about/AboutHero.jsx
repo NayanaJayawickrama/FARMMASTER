@@ -1,5 +1,5 @@
 import React from "react";
-import aboutImage from "../../assets/images/about-hero.png"; // Replace with your correct image path
+import aboutImage from "../../assets/images/aboutimages/about-hero.png"; // Replace with your correct image path
 
 const AboutHero = () => {
   return (

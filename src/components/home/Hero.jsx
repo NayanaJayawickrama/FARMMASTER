@@ -1,5 +1,5 @@
 import React from "react";
-import heroImage from "../../assets/images/hero.png";
+import heroImage from "../../assets/images/homeimages/hero.png";
 import { ArrowRight } from "lucide-react";
 
 const MarketplaceHero = () => {

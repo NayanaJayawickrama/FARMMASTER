@@ -1,9 +1,9 @@
 import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import carrotImg from "../../assets/images/carrot.png";
-import cabbageImg from "../../assets/images/cabbage.png";
-import tomatoImg from "../../assets/images/tomato.png";
-import leekImg from "../../assets/images/leeks.png";
+import carrotImg from "../../assets/images/marketplaceimages/carrot.png";
+import cabbageImg from "../../assets/images/marketplaceimages/cabbage.png";
+import tomatoImg from "../../assets/images/marketplaceimages/tomato.png";
+import leekImg from "../../assets/images/marketplaceimages/leeks.png";
 
 const featuredProducts = [
   {

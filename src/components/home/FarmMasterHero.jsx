@@ -1,5 +1,5 @@
 import React from "react";
-import heroImage from "../../assets/images/farm-hero.jpg"; 
+import heroImage from "../../assets/images/homeimages/farm-hero.jpg"; 
 import { ArrowRight } from "lucide-react";
 import { NavLink } from "react-router-dom";
 

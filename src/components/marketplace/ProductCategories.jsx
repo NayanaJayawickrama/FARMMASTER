@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-import vegImage from '../../assets/images/vegetables.jpg';
-import fruitsImage from '../../assets/images/fruits.jpg';
-import spicesImage from '../../assets/images/spices.jpg';
-import grainsImage from '../../assets/images/grains.png';
+import vegImage from '../../assets/images/marketplaceimages/vegetables.jpg';
+import fruitsImage from '../../assets/images/marketplaceimages/fruits.jpg';
+import spicesImage from '../../assets/images/marketplaceimages/spices.jpg';
+import grainsImage from '../../assets/images/marketplaceimages/grains.png';
 
 const ProductCategories = () => {
   const categories = [
