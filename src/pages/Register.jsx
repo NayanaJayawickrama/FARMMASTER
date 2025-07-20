@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import axios from "axios";
 import logo from "../assets/images/logo.png";
 import { ArrowLeft } from "lucide-react";
 
@@ -7,9 +8,58 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [accountType, setAccountType] = useState("");
+
+  const [message, setMessage] = useState("");
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+
+    if (!firstName || !lastName || !email || !password || !accountType) {
+      setMessage("⚠️ Please fill in all required fields.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setMessage("❌ Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://localhost/FarmMaster/farm_master_backend/register.php",
+        {
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          phone: phone,
+          password: password,
+          account_type: accountType,
+        }
+      );
+
+      console.log(response.data);
+
+      if (response.data.status === "success") {
+        setMessage("✅ Registration successful!");
+        // Optional: redirect or clear form
+      } else {
+        setMessage("❌ " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Registration failed:", error);
+      setMessage("❌ Server error. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      {/* Logo + Tagline */}
       <div className="mt-10 mb-6 text-center">
         <img src={logo} alt="FarmMaster" className="w-32 h-auto mx-auto mb-1" />
         <p className="text-xl text-gray-600">
@@ -17,7 +67,6 @@ const Register = () => {
         </p>
       </div>
 
-      {/* Card */}
       <div className="bg-white shadow-md rounded-xl w-full max-w-2xl p-8 space-y-6">
         <div className="text-center">
           <h2 className="text-3xl font-bold">Create Account</h2>
@@ -26,74 +75,79 @@ const Register = () => {
           </p>
         </div>
 
-        <form className="space-y-4">
-          {/* Name Fields */}
+        <form className="space-y-4" onSubmit={handleRegister}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
-                First Name
-              </label>
+              <label className="block text-sm font-medium mb-1">First Name</label>
               <input
                 type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
                 placeholder="John"
-                className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border rounded-md px-4 py-2"
+                required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Last Name
-              </label>
+              <label className="block text-sm font-medium mb-1">Last Name</label>
               <input
                 type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
                 placeholder="Doe"
-                className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border rounded-md px-4 py-2"
+                required
               />
             </div>
           </div>
 
-          {/* Email */}
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="john@example.com"
-              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full border rounded-md px-4 py-2"
+              required
             />
           </div>
 
-          {/* Phone */}
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Phone Number
-            </label>
+            <label className="block text-sm font-medium mb-1">Phone</label>
             <input
               type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               placeholder="+94 77 123 4567"
-              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full border rounded-md px-4 py-2"
             />
           </div>
 
-          {/* Account Type */}
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Account Type
-            </label>
-            <select className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
-              <option>Select your account type</option>
-              <option>Farmer</option>
-              <option>Buyer</option>
-            
+            <label className="block text-sm font-medium mb-1">Account Type</label>
+            <select
+              value={accountType}
+              onChange={(e) => setAccountType(e.target.value)}
+              className="w-full border rounded-md px-4 py-2"
+              required
+            >
+              <option value="">Select your account type</option>
+              <option value="Landowner">Landowner</option>
+              <option value="Buyer">Buyer</option>
             </select>
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-sm font-medium mb-1">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a strong password"
-                className="w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border rounded-md px-4 py-2 pr-10"
+                required
               />
               <div
                 onClick={() => setShowPassword(!showPassword)}
@@ -104,16 +158,16 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Confirm Password
-            </label>
+            <label className="block text-sm font-medium mb-1">Confirm Password</label>
             <div className="relative">
               <input
                 type={showConfirm ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"
-                className="w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full border rounded-md px-4 py-2 pr-10"
+                required
               />
               <div
                 onClick={() => setShowConfirm(!showConfirm)}
@@ -124,22 +178,6 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Terms Checkbox */}
-          <div className="flex items-start">
-            <input type="checkbox" id="terms" className="mt-1 mr-2" />
-            <label htmlFor="terms" className="text-sm text-gray-700">
-              I agree to the{" "}
-              <a href="#" className="text-green-600 underline">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-green-600 underline">
-                Privacy Policy
-              </a>
-            </label>
-          </div>
-
-          {/* Submit Button */}
           <button
             type="submit"
             className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md transition"
@@ -147,17 +185,10 @@ const Register = () => {
             Create Account
           </button>
 
-          {/* Already have an account */}
-          <p className="text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <a href="/login" className="text-green-600 font-medium">
-              Sign In
-            </a>
-          </p>
+          {message && <p className="text-center text-sm text-red-600">{message}</p>}
         </form>
       </div>
 
-      {/* Back to Home Button */}
       <div className="mt-6">
         <a
           href="/"
@@ -168,7 +199,6 @@ const Register = () => {
         </a>
       </div>
 
-      {/* Footer */}
       <p className="mt-8 text-sm text-gray-400 text-center">
         © 2025 Farm Master. All rights reserved.
       </p>
