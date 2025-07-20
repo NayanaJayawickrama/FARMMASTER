@@ -12,6 +12,9 @@ const Login = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const rootUrl = import.meta.env.VITE_API_URL;
+  console.log(rootUrl)
+
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -23,7 +26,9 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost/FARMMASTER-Backend/login.php", {
+      const response = await axios.post(
+        `${rootUrl}/login.php`, 
+        {
         email,
         password,
         user_role: accountType
