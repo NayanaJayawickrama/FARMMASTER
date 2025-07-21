@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ShoppingCart,
   CheckCircle,
@@ -7,13 +7,24 @@ import {
 } from "lucide-react";
 
 export default function BuyerDashboardContent() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
+
   return (
     <div className="p-4 md:p-10 font-poppins">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">Dashboard</h1>
-          <p className="text-green-600 mt-1">Welcome back, Emily Perera</p>
+          <p className="text-green-600 mt-1">
+            Welcome back, {user?.name || "Buyer"}
+          </p>
         </div>
         <button className="border border-black px-4 py-2 rounded-md hover:bg-gray-100 flex items-center gap-2 font-bold text-black mt-4 md:mt-0">
           <Repeat size={20} />
@@ -29,7 +40,7 @@ export default function BuyerDashboardContent() {
         </div>
         <div className="border rounded-md p-6 shadow-sm text-center">
           <p className="text-sm text-gray-600">Total Spendings</p>
-          <p className="text-2xl font-bold mt-1">10 000 LKR</p>
+          <p className="text-2xl font-bold mt-1">10,000 LKR</p>
         </div>
         <div className="border rounded-md p-6 shadow-sm text-center">
           <p className="text-sm text-gray-600">Purchase History</p>
