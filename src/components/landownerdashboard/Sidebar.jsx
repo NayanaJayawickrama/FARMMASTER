@@ -33,12 +33,12 @@ export default function Sidebar() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/", { replace: true });
-    window.location.reload(); // fixes image not loading after logout
+    window.location.reload(); // refresh sidebar state
   };
 
   return (
     <>
-      {/* Top Bar for Small Screens */}
+      {/* Mobile Top Bar */}
       <div className="md:hidden flex items-start bg-white shadow px-4 py-6">
         <button onClick={() => setIsOpen(true)}>
           <Menu size={24} />
@@ -51,7 +51,7 @@ export default function Sidebar() {
           isOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
-        {/* Logo & Close Icon */}
+        {/* Logo and Close (Mobile) */}
         <div className="flex items-center justify-between mb-6">
           <NavLink to="/" onClick={() => setIsOpen(false)}>
             <img src={logo} alt="FarmMaster Logo" className="h-20 w-auto" />
@@ -64,7 +64,7 @@ export default function Sidebar() {
           </button>
         </div>
 
-        {/* Profile Section */}
+        {/* Profile Info */}
         <div className="flex items-center mb-8">
           <img
             src={defaultProfilePic}
@@ -79,7 +79,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Navigation Links */}
+        {/* Nav Links */}
         <nav className="flex flex-col gap-2">
           <NavLink
             to="/landownerdashboard"
@@ -126,7 +126,7 @@ export default function Sidebar() {
           </NavLink>
         </nav>
 
-        {/* Footer */}
+        {/* Bottom Section */}
         <div className="mt-6 pt-4 border-t border-gray-200">
           <NavLink
             to="/"
@@ -149,6 +149,5 @@ export default function Sidebar() {
         </div>
       </aside>
     </>
-    
   );
 }

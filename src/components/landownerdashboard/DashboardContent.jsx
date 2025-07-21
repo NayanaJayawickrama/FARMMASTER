@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FileText, Handshake, Leaf, Repeat } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 export default function DashboardContent() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
+
   return (
     <div className="p-4 md:p-10">
       {/* Top Section */}
@@ -10,7 +19,7 @@ export default function DashboardContent() {
         <div>
           <h1 className="text-3xl md:text-4xl font-bold">Dashboard</h1>
           <p className="text-sm md:text-lg text-green-600 mt-2">
-            Welcome back, Nila Perera
+            Welcome back, {user?.name || "Landowner"}
           </p>
         </div>
         <button className="border border-black px-4 py-2 rounded-md hover:bg-gray-100 flex items-center gap-2 font-bold text-black mt-4 md:mt-0">

@@ -1,11 +1,26 @@
-import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Home, Calendar, FileText, LogOut, Menu, X, ArrowLeftCircle } from "lucide-react";
 import logo from "../../assets/images/logo.png";
 import profilePic from "../../assets/images/profile_FS.png";
 
 export default function SupervisorSidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser) {
+      setUser(storedUser);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login", { replace: true });
+    window.location.reload();
+  };
 
   const linkBase =
     "flex items-center gap-3 px-4 py-2 rounded-md transition text-sm font-medium";
@@ -48,8 +63,12 @@ export default function SupervisorSidebar() {
             className="w-14 h-14 rounded-full object-cover mr-4"
           />
           <div>
-            <p className="text-base font-semibold">Saman Silva</p>
-            <p className="text-sm text-green-600">Field Supervisor</p>
+            <p className="text-base font-semibold">
+              {user?.name || "Field Supervisor"}
+            </p>
+            <p className="text-sm text-green-600">
+              {user?.account_type || "Field Supervisor"}
+            </p>
           </div>
         </div>
 
@@ -85,31 +104,31 @@ export default function SupervisorSidebar() {
             onClick={() => setIsOpen(false)}
           >
             <FileText size={16} />
-            Data Submition
+            Data Submission
+          </NavLink>
+        </nav>
+
+        {/* Bottom Section */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <NavLink
+            to="/"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? activeLink : normalLink}`
+            }
+            onClick={() => setIsOpen(false)}
+          >
+            <ArrowLeftCircle size={16} />
+            Go to Home
           </NavLink>
 
-          {/* Bottom Section */}
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `${linkBase} ${isActive ? activeLink : normalLink}`
-              }
-              onClick={() => setIsOpen(false)}
-            >
-              <ArrowLeftCircle size={16} />
-              Go to Home
-            </NavLink>
-
-            <button
-              className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer`}
-              onClick={() => alert("Logging out...")}
-            >
-              <LogOut size={16} />
-              Log out
-            </button>
-          </div>
-        </nav>
+          <button
+            className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer`}
+            onClick={handleLogout}
+          >
+            <LogOut size={16} />
+            Log out
+          </button>
+        </div>
       </aside>
     </>
   );
