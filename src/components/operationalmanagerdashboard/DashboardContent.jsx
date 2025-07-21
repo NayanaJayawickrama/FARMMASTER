@@ -1,16 +1,25 @@
-import React from "react";
-import { FileText, Handshake, Leaf } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { FileText, Handshake } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 export default function DashboardContent() {
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser?.name) {
+      setUserName(storedUser.name);
+    }
+  }, []);
+
   return (
-    <div className="p-4 md:p-10">
+    <div className="p-4 md:p-10 font-poppins">
       {/* Top Section */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 mt-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold">Dashboard</h1>
           <p className="text-sm md:text-lg text-green-600 mt-2">
-            Welcome back, Helani Silva
+            Welcome back, {userName || "Operational Manager"}
           </p>
         </div>
       </div>

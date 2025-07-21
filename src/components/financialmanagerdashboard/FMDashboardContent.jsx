@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, ResponsiveContainer } from "recharts";
 import { NavLink } from "react-router-dom";
 
@@ -13,13 +13,22 @@ const data = [
 ];
 
 export default function FinancialDashboardContent() {
+  const [userName, setUserName] = useState("");
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (storedUser?.name) {
+      setUserName(storedUser.name);
+    }
+  }, []);
+
   return (
     <div className="p-4 md:p-10 font-poppins">
       {/* Header */}
       <div className="mb-8 mt-4">
         <h1 className="text-3xl md:text-4xl font-bold">Dashboard</h1>
         <p className="text-sm md:text-lg text-green-600 mt-2">
-          Welcome back, Ruwani Almeda
+          Welcome back, {userName || "Financial Manager"}
         </p>
       </div>
 
@@ -68,9 +77,7 @@ export default function FinancialDashboardContent() {
 
       {/* Quick Actions */}
       <div className="mb-6">
-        <h2 className="text-3xl font-bold mb-6 text-green-700">
-          Quick Actions
-        </h2>
+        <h2 className="text-3xl font-bold mb-6 text-green-700">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
           <NavLink to="/transactions">
             <button className="bg-green-100 text-black px-4 py-2 rounded-md font-semibold hover:bg-green-600 hover:text-white transition">

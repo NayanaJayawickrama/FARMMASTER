@@ -104,7 +104,7 @@ const Login = () => {
             <select value={accountType} onChange={(e) => setAccountType(e.target.value)} className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" required>
               <option value="">Select your account type</option>
               <option value="Landowner">Landowner</option>
-              <option value="Supervisor">Supervisor</option>
+              <option value="Supervisor">Field Supervisor</option>
               <option value="Buyer">Buyer</option>
               <option value="Operational Manager">Operational Manager</option>
               <option value="Financial Manager">Financial Manager</option>
