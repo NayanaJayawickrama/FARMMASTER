@@ -1,52 +1,51 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
+
 import carrotImg from "../../assets/images/marketplaceimages/carrot.png";
 import cabbageImg from "../../assets/images/marketplaceimages/cabbage.png";
 import tomatoImg from "../../assets/images/marketplaceimages/tomato.png";
 import leekImg from "../../assets/images/marketplaceimages/leeks.png";
 
+const rootUrl = import.meta.env.VITE_API_URL;
 const ProductContext = createContext();
 
-const initialProducts = [
-  {
-    id: 1,
-    name: "Organic Carrots",
-    image: carrotImg,
-    description: "Fresh and sweet farm carrots",
-    price: 200,
-    quantity: 0,
-    status: "available",
-  },
-  {
-    id: 2,
-    name: "Organic Cabbage",
-    image: cabbageImg,
-    description: "Crisp, green and pesticide-free",
-    price: 150,
-    quantity: 0,
-    status: "available",
-  },
-  {
-    id: 3,
-    name: "Organic Tomatoes",
-    image: tomatoImg,
-    description: "Juicy, ripe, and naturally grown",
-    price: 160,
-    quantity: 0,
-    status: "available",
-  },
-  {
-    id: 4,
-    name: "Organic Leeks",
-    image: leekImg,
-    description: "Fresh, mild-flavored, and pesticide-free",
-    price: 180,
-    quantity: 0,
-    status: "available",
-  },
-];
+const imageMap = {
+  Carrots: carrotImg,
+  Cabbage: cabbageImg,
+  Tomatoes: tomatoImg,
+  Leeks: leekImg,
+};
 
 export const ProductProvider = ({ children }) => {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get(`${rootUrl}/get_products.php`);
+      const data = res.data;
+
+      const mappedProducts = data.map((item) => ({
+        id: parseInt(item.product_id),
+        product_id: parseInt(item.product_id), // add this for editing consistency
+        name: `Organic ${item.crop_name}`,
+        crop_name: item.crop_name,
+        image: imageMap[item.crop_name] || null,
+        description: item.description,
+        price: parseFloat(item.price_per_unit),
+        price_per_unit: parseFloat(item.price_per_unit),
+        quantity: parseFloat(item.quantity),
+        status: item.status.toLowerCase(),
+      }));
+
+      setProducts(mappedProducts);
+    } catch (err) {
+      console.error("Failed to load products:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const updateProduct = (id, updatedFields) => {
     setProducts((prev) =>
@@ -57,7 +56,7 @@ export const ProductProvider = ({ children }) => {
   };
 
   return (
-    <ProductContext.Provider value={{ products, updateProduct }}>
+    <ProductContext.Provider value={{ products, updateProduct, fetchProducts }}>
       {children}
     </ProductContext.Provider>
   );

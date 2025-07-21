@@ -1,23 +1,37 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+const rootUrl = import.meta.env.VITE_API_URL;
+
 const ProductForm = ({ product, onSave, onCancel }) => {
+  // 🚫 Prevent rendering if product data is invalid
+  if (!product || !product.product_id) {
+    return <p className="text-red-600">Invalid product data. Cannot edit.</p>;
+  }
+
+  // Always in edit mode
+  const isEditing = true;
+
   const [formData, setFormData] = useState({
     product_id: "",
     crop_name: "",
     price_per_unit: "",
     quantity: "",
-    product_description: "",
+    description: "",
     status: "",
   });
-
-  const isEditing = !!product?.product_id;
 
   useEffect(() => {
     if (product) {
       setFormData({
-        ...product,
-        product_id: product.product_id?.replace(/^P/, "") || "",
+        product_id: product.product_id,
+        crop_name: product.crop_name || "",
+        price_per_unit: product.price_per_unit || "",
+        quantity: product.quantity || "",
+        description: product.description || "",
+        status: product.status
+          ? product.status.charAt(0).toUpperCase() + product.status.slice(1)
+          : "Available",
       });
     }
   }, [product]);
@@ -32,25 +46,27 @@ const ProductForm = ({ product, onSave, onCancel }) => {
 
     const formattedData = {
       ...formData,
-      product_id: `P${formData.product_id.replace(/^P/, "")}`,
+      status: formData.status.charAt(0).toUpperCase() + formData.status.slice(1),
     };
 
-    const url = isEditing
-      ? "http://localhost/backend/api/update_product.php"
-      : "http://localhost/backend/api/create_product.php";
+    console.log("Sending formData:", formattedData);
+
+    const url = `${rootUrl}/update_product.php`;
 
     try {
       const res = await axios.post(url, formattedData, {
         headers: { "Content-Type": "application/json" },
       });
 
+      console.log("Server response:", res.data);
+
       if (res.data.success) {
-        onSave(formattedData);
+        onSave({ ...formData });
       } else {
-        alert(res.data.message || "Failed to save product.");
+        alert(`Error: ${res.data.message || "Failed to update product."}`);
       }
     } catch (error) {
-      console.error("Error saving product:", error);
+      console.error("Error updating product:", error);
       alert("Failed to connect to the server.");
     }
   };
@@ -58,37 +74,36 @@ const ProductForm = ({ product, onSave, onCancel }) => {
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 shadow rounded mb-4">
       <div className="mb-2">
-        <label className="block font-semibold">Product ID</label>
-        <div className="flex">
-          <span className="bg-gray-200 px-3 py-2 rounded-l text-gray-600 font-bold">
-            P
-          </span>
-          <input
-            name="product_id"
-            value={formData.product_id}
-            onChange={handleChange}
-            className="w-full border p-2 rounded-r"
-            pattern="\d+"
-            title="Only numbers are allowed"
-            required
-            disabled={isEditing}
-          />
-        </div>
-      </div>
-
-      <div className="mb-2">
-        <label className="block font-semibold">Product Name</label>
+        <label className="block font-semibold">Product ID (read-only)</label>
         <input
-          name="crop_name"
-          value={formData.crop_name}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
+          name="product_id"
+          value={formData.product_id}
+          readOnly
+          className="w-full border p-2 rounded bg-gray-100"
         />
       </div>
 
       <div className="mb-2">
-        <label className="block font-semibold">Price Per Unit</label>
+        <label className="block font-semibold">Crop Name</label>
+        <select
+          name="crop_name"
+          value={formData.crop_name}
+          onChange={handleChange}
+          className="w-full border p-2 rounded bg-white text-gray-700 appearance-none"
+          required
+        >
+          <option value="" disabled>
+            -- Select Crop --
+          </option>
+          <option value="Carrots">Carrots</option>
+          <option value="Leeks">Leeks</option>
+          <option value="Tomatoes">Tomatoes</option>
+          <option value="Cabbage">Cabbage</option>
+        </select>
+      </div>
+
+      <div className="mb-2">
+        <label className="block font-semibold">Price Per Unit (Rs.)</label>
         <input
           name="price_per_unit"
           value={formData.price_per_unit}
@@ -101,7 +116,7 @@ const ProductForm = ({ product, onSave, onCancel }) => {
       </div>
 
       <div className="mb-2">
-        <label className="block font-semibold">Quantity</label>
+        <label className="block font-semibold">Quantity (Kg)</label>
         <input
           name="quantity"
           value={formData.quantity}
@@ -116,8 +131,8 @@ const ProductForm = ({ product, onSave, onCancel }) => {
       <div className="mb-2">
         <label className="block font-semibold">Description</label>
         <textarea
-          name="product_description"
-          value={formData.product_description}
+          name="description"
+          value={formData.description}
           onChange={handleChange}
           className="w-full border p-2 rounded"
           required
@@ -136,24 +151,17 @@ const ProductForm = ({ product, onSave, onCancel }) => {
           <option value="" disabled>
             -- Select Status --
           </option>
-          <option value="available">Available</option>
-          <option value="sold">Sold</option>
-          <option value="unavailable">Unavailable</option>
+          <option value="Available">Available</option>
+          <option value="Sold">Sold</option>
+          <option value="Unavailable">Unavailable</option>
         </select>
       </div>
 
       <div className="space-x-2">
-        <button
-          type="submit"
-          className="bg-green-600 text-white px-4 py-2 rounded"
-        >
-          {isEditing ? "Update Product" : "Save Product"}
+        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
+          Update Product
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="text-gray-600 px-4 py-2"
-        >
+        <button type="button" onClick={onCancel} className="text-gray-600 px-4 py-2">
           Cancel
         </button>
       </div>
