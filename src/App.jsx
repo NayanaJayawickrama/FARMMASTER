@@ -30,6 +30,12 @@ import BuyerCart from "./pages/buyerpages/BuyerCart";
 import BuyerOrders from "./pages/buyerpages/BuyerOrders";
 import BuyerCheckout from "./pages/buyerpages/BuyerCheckout";
 
+import FinancialMDashboard from "./pages/financialmanagerpages/FinancialMDashboard";
+import FinancialMPaymentManagement from "./pages/financialmanagerpages/FinancialMPaymentManagement";
+import FinancialMProfitRentCalculation from "./pages/financialmanagerpages/FinancialMProfitRentCalculation";
+import FinancialMMarketplaceFinance from "./pages/financialmanagerpages/FinancialMMarketplaceFinance";
+import FinancialMMarketplaceProducts from "./pages/financialmanagerpages/FinancialMMarketplaceProducts";
+import FinancialMFinancialReportManagement from "./pages/financialmanagerpages/FinancialMFinancialReportManagement";
 
 function App() {
   return (
@@ -63,6 +69,13 @@ function App() {
         <Route path="/buyerorders" element={<BuyerOrders />}/>
         <Route path="/buyercart" element={<BuyerCart />}/>
         <Route path="/checkoutpage" element={<BuyerCheckout />}/>
+
+        <Route path="/financialmanagerdashboard" element={<FinancialMDashboard />} />
+        <Route path="/financialmanagerpaymentmanagement" element={<FinancialMPaymentManagement />} />
+        <Route path="/financialmanagerprofitrentcalculation" element={<FinancialMProfitRentCalculation />} />
+        <Route path="/financialmanagermarketplacefinance" element={<FinancialMMarketplaceFinance />} />
+        <Route path="/financialmanagermarketplaceproducts" element={<FinancialMMarketplaceProducts />} />
+        <Route path="/financialmanagermarfinancialreportmanagement" element={<FinancialMFinancialReportManagement />} />
 
       </Routes>
     </main>
