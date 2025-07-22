@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "../cart/CartContext";
 import { useProducts } from "../financialmanagerdashboard/ProductContext";
-import { FaStar } from "react-icons/fa";
 
 import rightImg from "../../assets/images/marketplaceimages/right-veg.png";
 import leftImg from "../../assets/images/marketplaceimages/left-veg1.png";
@@ -19,11 +18,11 @@ const productImages = {
 };
 
 const VegetableSection = () => {
-  const { products } = useProducts(); // get products from ProductContext
-  const [quantities, setQuantities] = useState([]);
+  const { products } = useProducts();
   const { addToCart } = useCart();
 
-  // Initialize quantities state once products load or change
+  const [quantities, setQuantities] = useState([]);
+
   useEffect(() => {
     setQuantities(products.map(() => 1));
   }, [products]);
@@ -61,11 +60,14 @@ const VegetableSection = () => {
         </div>
 
         {/* Product Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-6 mt-10">
+        <div
+          className="grid gap-6 px-6 mt-10"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
+        >
           {products.map((item, index) => (
             <div
               key={item.id}
-              className="bg-white rounded-lg shadow-md border border-gray-200 p-4 flex flex-col justify-between items-center text-center h-[370px]"
+              className="rounded-lg shadow-md border border-gray-200 p-4 flex flex-col justify-between items-center text-center h-[370px] bg-white"
             >
               <img
                 src={productImages[item.id] || ""}
@@ -74,12 +76,6 @@ const VegetableSection = () => {
               />
               <h3 className="font-bold text-lg text-black">{item.name}</h3>
               <p className="text-sm text-gray-600 mb-1">{item.description}</p>
-
-              <div className="flex justify-center text-yellow-400 my-1">
-                {[...Array(5)].map((_, i) => (
-                  <FaStar key={i} size={14} />
-                ))}
-              </div>
 
               <p className="text-green-600 font-semibold text-md">
                 Rs. {item.price}.00
@@ -95,16 +91,25 @@ const VegetableSection = () => {
                 </button>
               </div>
 
-              <button
-                onClick={() => handleAddToCart(item, quantities[index])}
-                className="mt-3 bg-green-600 text-white font-semibold px-4 py-1 rounded hover:bg-green-700 text-sm"
-              >
-                Add to Cart
-              </button>
+              {item.status === "sold" ? (
+                <button
+                  className="mt-3 bg-red-500 text-white font-semibold px-4 py-1 rounded cursor-not-allowed text-sm"
+                  disabled
+                >
+                  Sold Out
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleAddToCart(item, quantities[index])}
+                  className="mt-3 bg-green-600 text-white font-semibold px-4 py-1 rounded hover:bg-green-700 text-sm"
+                >
+                  Add to Cart
+                </button>
+              )}
             </div>
           ))}
           {products.length === 0 && (
-            <p className="text-center col-span-full text-gray-600">No products available.</p>
+            <p className="text-center col-span-full text-gray-600">No available products at the moment.</p>
           )}
         </div>
       </div>

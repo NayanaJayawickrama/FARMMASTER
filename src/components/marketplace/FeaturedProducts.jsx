@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import carrotImg from "../../assets/images/marketplaceimages/carrot.png";
 import cabbageImg from "../../assets/images/marketplaceimages/cabbage.png";
 import tomatoImg from "../../assets/images/marketplaceimages/tomato.png";
@@ -110,11 +110,6 @@ const FeaturedProducts = () => {
                 <p className="text-sm text-gray-600 mb-2">
                   {product.description}
                 </p>
-                <div className="flex justify-center text-yellow-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} fill="currentColor" />
-                  ))}
-                </div>
               </div>
             ))}
           </div>
