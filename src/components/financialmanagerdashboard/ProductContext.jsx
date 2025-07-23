@@ -26,7 +26,7 @@ export const ProductProvider = ({ children }) => {
 
       const mappedProducts = data.map((item) => ({
         id: parseInt(item.product_id),
-        product_id: parseInt(item.product_id), // add this for editing consistency
+        product_id: parseInt(item.product_id), 
         name: `Organic ${item.crop_name}`,
         crop_name: item.crop_name,
         image: imageMap[item.crop_name] || null,

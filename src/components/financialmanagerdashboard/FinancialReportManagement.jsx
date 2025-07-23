@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import FinancialReportForm from "./FinancialReportForm"; // form component
+import FinancialReportForm from "./FinancialReportForm"; 
 
 export default function FinancialReportManagement() {
   const [showForm, setShowForm] = useState(false);

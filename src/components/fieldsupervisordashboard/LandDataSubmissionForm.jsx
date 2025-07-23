@@ -18,7 +18,7 @@ export default function LandDataSubmissionForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Submitted Data:", formData);
-    // Add your form submission logic here (e.g., API call)
+    
   };
 
   return (
