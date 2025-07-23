@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 export default function LandDataSubmissionForm() {
   const [formData, setFormData] = useState({
@@ -10,15 +11,34 @@ export default function LandDataSubmissionForm() {
     notes: "",
   });
 
+  const [recommendedCrops, setRecommendedCrops] = useState([]);
+  const [responseMessage, setResponseMessage] = useState("");
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitted Data:", formData);
-    // Add your form submission logic here (e.g., API call)
+
+    try {
+      const res = await axios.post(
+        "http://localhost/FARMMASTER-Backend/submit_land_data.php",
+        formData
+      );
+
+      if (res.data.status === "success") {
+        setRecommendedCrops(res.data.recommendedCrops);
+        setResponseMessage("Crop suggestions based on soil data:");
+      } else {
+        setResponseMessage("Submission failed. Please try again.");
+        setRecommendedCrops([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setResponseMessage("Server error. Please check your backend.");
+    }
   };
 
   return (
@@ -26,87 +46,50 @@ export default function LandDataSubmissionForm() {
       onSubmit={handleSubmit}
       className="bg-white min-h-screen p-4 md:p-10 font-poppins"
     >
-      {/* Heading */}
       <h2 className="text-3xl md:text-4xl font-bold text-black mb-10">
         Land Data Submission
       </h2>
 
-      {/* Form Fields */}
       <div className="max-w-xl space-y-6">
-        {/* pH Value */}
-        <div>
-          <label className="block font-semibold text-black mb-1">pH Value</label>
-          <input
-            type="text"
-            name="phValue"
-            value={formData.phValue}
-            onChange={handleChange}
-            placeholder="Enter pH value"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-        </div>
+        {[
+          { label: "pH Value", name: "phValue", placeholder: "Enter pH value" },
+          {
+            label: "Organic Matter (%)",
+            name: "organicMatter",
+            placeholder: "Enter organic matter",
+          },
+          {
+            label: "Nitrogen (N)",
+            name: "nitrogen",
+            placeholder: "Enter nitrogen level",
+          },
+          {
+            label: "Phosphorus (P)",
+            name: "phosphorus",
+            placeholder: "Enter phosphorus level",
+          },
+          {
+            label: "Potassium (K)",
+            name: "potassium",
+            placeholder: "Enter potassium level",
+          },
+        ].map((field) => (
+          <div key={field.name}>
+            <label className="block font-semibold text-black mb-1">
+              {field.label}
+            </label>
+            <input
+              type="text"
+              name={field.name}
+              value={formData[field.name]}
+              onChange={handleChange}
+              placeholder={field.placeholder}
+              className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
+            />
+          </div>
+        ))}
 
-        {/* Organic Matter */}
-        <div>
-          <label className="block font-semibold text-black mb-1">
-            Organic Matter (%)
-          </label>
-          <input
-            type="text"
-            name="organicMatter"
-            value={formData.organicMatter}
-            onChange={handleChange}
-            placeholder="Enter organic matter percentage"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-        </div>
-
-        {/* Nitrogen */}
-        <div>
-          <label className="block font-semibold text-black mb-1">
-            Nitrogen (N)
-          </label>
-          <input
-            type="text"
-            name="nitrogen"
-            value={formData.nitrogen}
-            onChange={handleChange}
-            placeholder="Enter nitrogen level"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-        </div>
-
-        {/* Phosphorus */}
-        <div>
-          <label className="block font-semibold text-black mb-1">
-            Phosphorus (P)
-          </label>
-          <input
-            type="text"
-            name="phosphorus"
-            value={formData.phosphorus}
-            onChange={handleChange}
-            placeholder="Enter phosphorus level"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-        </div>
-
-        {/* Potassium */}
-        <div>
-          <label className="block font-semibold text-black mb-1">
-            Potassium (K)
-          </label>
-          <input
-            type="text"
-            name="potassium"
-            value={formData.potassium}
-            onChange={handleChange}
-            placeholder="Enter potassium level"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-        </div>
-
-        {/* Environmental Notes */}
+        {/* Notes */}
         <div>
           <label className="block font-semibold text-black mb-1">
             Environmental Notes
@@ -122,7 +105,6 @@ export default function LandDataSubmissionForm() {
         </div>
       </div>
 
-      {/* Submit Button */}
       <div className="mt-10 flex justify-end">
         <button
           type="submit"
@@ -131,6 +113,22 @@ export default function LandDataSubmissionForm() {
           Submit Report
         </button>
       </div>
+
+      {/* Suggestions */}
+      {responseMessage && (
+        <div className="mt-8 text-green-800">
+          <h3 className="font-bold">{responseMessage}</h3>
+          {recommendedCrops.length > 0 ? (
+            <ul className="list-disc ml-6 mt-2">
+              {recommendedCrops.map((crop, index) => (
+                <li key={index}>{crop}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-red-600 mt-2">No suitable crops found.</p>
+          )}
+        </div>
+      )}
     </form>
   );
 }
