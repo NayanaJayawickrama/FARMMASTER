@@ -1,35 +1,10 @@
 import React, { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import carrotImg from "../../assets/images/marketplaceimages/carrot.png";
-import cabbageImg from "../../assets/images/marketplaceimages/cabbage.png";
-import tomatoImg from "../../assets/images/marketplaceimages/tomato.png";
-import leekImg from "../../assets/images/marketplaceimages/leeks.png";
-
-const featuredProducts = [
-  {
-    name: "Organic Carrots",
-    description: "Fresh and sweet farm carrots",
-    image: carrotImg,
-  },
-  {
-    name: "Organic Cabbage",
-    description: "Crisp, green, and pesticide-free",
-    image: cabbageImg,
-  },
-  {
-    name: "Organic Tomatoes",
-    description: "Juicy, ripe, and naturally grown",
-    image: tomatoImg,
-  },
-  {
-    name: "Organic Leeks",
-    description: "Fresh, mild-flavored, and pesticide-free",
-    image: leekImg,
-  },
-];
+import { useProducts } from "../financialmanagerdashboard/ProductContext";
 
 const FeaturedProducts = () => {
   const scrollRef = useRef(null);
+  const { products } = useProducts();
 
   const scroll = (direction) => {
     if (scrollRef.current) {
@@ -42,6 +17,11 @@ const FeaturedProducts = () => {
     }
   };
 
+  // Show products that are not 'unavailable'
+  const filteredProducts = products.filter(
+    (product) => product.status !== "unavailable"
+  );
+
   return (
     <section className="flex justify-center py-14 px-4 md:px-10">
       <div className="bg-[#F3FFF0] rounded-2xl max-w-6xl w-full p-8 relative">
@@ -49,7 +29,7 @@ const FeaturedProducts = () => {
           Featured Products
         </h2>
 
-        {/* Arrows - only show on small screens */}
+        {/* Arrows for horizontal scroll (mobile only) */}
         <button
           onClick={() => scroll("left")}
           className="absolute left-2 top-1/2 transform -translate-y-1/2 z-20 bg-white p-2 rounded-full shadow hover:bg-gray-100 md:hidden"
@@ -63,41 +43,21 @@ const FeaturedProducts = () => {
           <ChevronRight />
         </button>
 
-        {/* Product wrapper */}
-        <div className="flex justify-center">
-          <div
-            ref={scrollRef}
-            className="
-              flex 
-              md:grid 
-              md:grid-cols-2 
-              lg:grid-cols-4 
-              gap-6 
-              overflow-x-auto 
-              md:overflow-visible 
-              scrollbar-hide 
-              scroll-smooth 
-              px-1
-            "
-            style={{ scrollSnapType: "x mandatory" }}
-          >
-            {featuredProducts.map((product, index) => (
+        {/* Product list */}
+        <div
+          ref={scrollRef}
+          className="grid gap-6 overflow-x-auto md:overflow-visible scrollbar-hide scroll-smooth px-1"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
+        >
+          {filteredProducts.length === 0 ? (
+            <p className="text-gray-600 text-center col-span-full">
+              No featured products available at the moment.
+            </p>
+          ) : (
+            filteredProducts.map((product, index) => (
               <div
                 key={index}
-                className={`
-                  flex-shrink-0 
-                  scroll-snap-align-start 
-                  w-[220px] h-[260px] 
-                  bg-white 
-                  border 
-                  rounded-lg 
-                  p-4 
-                  text-center 
-                  shadow-sm 
-                  hover:shadow-md 
-                  transition 
-                  md:w-full
-                `}
+                className="bg-white border rounded-lg p-4 text-center shadow-sm hover:shadow-md transition h-[280px] flex-shrink-0 relative"
               >
                 <img
                   src={product.image}
@@ -108,11 +68,18 @@ const FeaturedProducts = () => {
                   {product.name}
                 </h3>
                 <p className="text-sm text-gray-600 mb-2">
-                  {product.description}
+                  {product.description || "No description available"}
                 </p>
+
+                {/* Show 'Sold Out' badge if product.status is soldout */}
+                {product.status === "soldout" && (
+                  <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                    Sold Out
+                  </span>
+                )}
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
       </div>
     </section>

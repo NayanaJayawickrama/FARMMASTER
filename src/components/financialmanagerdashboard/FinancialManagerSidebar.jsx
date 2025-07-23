@@ -37,7 +37,7 @@ export default function FinancialManagerSidebar() {
   // Logout function
   const handleLogout = () => {
     localStorage.removeItem("user");
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
     window.location.reload();
   };
 

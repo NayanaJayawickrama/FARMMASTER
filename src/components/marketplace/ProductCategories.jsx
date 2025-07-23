@@ -8,10 +8,10 @@ import grainsImage from '../../assets/images/marketplaceimages/grains.png';
 
 const ProductCategories = () => {
   const categories = [
-    { name: 'Vegetables', image: vegImage, path: '/vegetables' },
-    { name: 'Fruits', image: fruitsImage, path: '/fruits' },
-    { name: 'Spices', image: spicesImage, path: '/spices' },
-    { name: 'Grains', image: grainsImage, path: '/grains' },
+    { name: 'Vegetables', image: vegImage, path: '/marketplace' },
+    { name: 'Fruits', image: fruitsImage, path: '/marketplace' },
+    { name: 'Spices', image: spicesImage, path: '/marketplace' },
+    { name: 'Grains', image: grainsImage, path: '/marketplace' },
   ];
 
   return (
