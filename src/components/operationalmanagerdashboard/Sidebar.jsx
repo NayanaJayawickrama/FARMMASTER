@@ -33,7 +33,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
     window.location.reload(); // fixes image and state not resetting
   };
 

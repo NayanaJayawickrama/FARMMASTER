@@ -18,7 +18,7 @@ export default function SupervisorSidebar() {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    navigate("/login", { replace: true });
+    navigate("/", { replace: true });
     window.location.reload();
   };
 
@@ -109,26 +109,26 @@ export default function SupervisorSidebar() {
         </nav>
 
         {/* Bottom Section */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? activeLink : normalLink}`
-            }
-            onClick={() => setIsOpen(false)}
-          >
-            <ArrowLeftCircle size={16} />
-            Go to Home
-          </NavLink>
-
-          <button
-            className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer`}
-            onClick={handleLogout}
-          >
-            <LogOut size={16} />
-            Log out
-          </button>
-        </div>
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <NavLink
+                    to="/"
+                    className={({ isActive }) =>
+                      `${linkBase} ${isActive ? activeLink : normalLink}`
+                    }
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <ArrowLeftCircle size={16} />
+                    Go to Home
+                  </NavLink>
+        
+                  <button
+                    className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer`}
+                    onClick={handleLogout}
+                  >
+                    <LogOut size={16} />
+                    Log out
+                  </button>
+                </div>
       </aside>
     </>
   );
