@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import { Menu, X, Search, ShoppingCart, User } from "lucide-react";
 import { useCart } from "./cart/CartContext";
@@ -8,7 +8,10 @@ import { useAuth } from "../context/AuthContext";
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
   const { cartItems } = useCart();
   const { user, logout } = useAuth();
 
@@ -30,6 +33,15 @@ export default function Navbar() {
     "text-black hover:text-green-700 px-4 py-2 rounded-full hover:bg-green-100 transition duration-300";
 
   const totalItems = cartItems.length;
+
+  const handleCartClick = (e) => {
+    e.preventDefault();
+    if (!user || user.role !== "Buyer") {
+      setShowPopup(true);
+    } else {
+      navigate("/buyercart");
+    }
+  };
 
   return (
     <nav
@@ -79,14 +91,14 @@ export default function Navbar() {
               className="hover:text-green-700 cursor-pointer transition"
               onClick={() => setShowSearch(!showSearch)}
             />
-            <NavLink to="/buyercart" className="relative">
+            <button onClick={handleCartClick} className="relative">
               <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {totalItems}
                 </span>
               )}
-            </NavLink>
+            </button>
           </>
         )}
         {user ? (
@@ -132,20 +144,23 @@ export default function Navbar() {
               className="hover:text-green-700 cursor-pointer transition"
               onClick={() => setShowSearch(!showSearch)}
             />
-            <NavLink to="/buyercart" className="relative">
+            <button onClick={handleCartClick} className="relative">
               <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {totalItems}
                 </span>
               )}
-            </NavLink>
+            </button>
           </>
         )}
         <NavLink to={user ? profilePath : "/login"} className="text-green-700">
           <User />
         </NavLink>
-        <button onClick={() => setIsOpen(!isOpen)} className="ml-2 cursor-pointer">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="ml-2 cursor-pointer"
+        >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -179,18 +194,59 @@ export default function Navbar() {
             </button>
           ) : (
             <div className="flex flex-col items-center space-y-2 w-4/5">
-              <NavLink to="/register" onClick={() => setIsOpen(false)} className="w-full">
+              <NavLink
+                to="/register"
+                onClick={() => setIsOpen(false)}
+                className="w-full"
+              >
                 <button className="bg-green-500 text-white font-bold px-4 py-2 rounded-full w-full shadow-md hover:bg-green-600 transition cursor-pointer">
                   Register
                 </button>
               </NavLink>
-              <NavLink to="/login" onClick={() => setIsOpen(false)} className="w-full">
+              <NavLink
+                to="/login"
+                onClick={() => setIsOpen(false)}
+                className="w-full"
+              >
                 <button className="bg-white text-black font-bold border border-gray-300 px-4 py-2 rounded-full w-full hover:bg-gray-100 transition cursor-pointer">
                   Log In
                 </button>
               </NavLink>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Popup for non-buyers or unauthenticated users */}
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-[999]">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center border border-green-600">
+            <h2 className="text-lg font-bold mb-2 text-gray-800">
+              Access Denied
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Only registered buyers can access the cart.
+            </p>
+            <div className="flex justify-center gap-4">
+              {!user && (
+                <button
+                  onClick={() => {
+                    navigate("/register");
+                    setShowPopup(false);
+                  }}
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+                >
+                  Go to Register
+                </button>
+              )}
+              <button
+                onClick={() => setShowPopup(false)}
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </nav>
