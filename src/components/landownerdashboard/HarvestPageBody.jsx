@@ -11,11 +11,10 @@ const harvestData = [
 const HarvestPage = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 font-sans">
-      {/* Page Title */}
+      
       <h1 className="text-3xl font-bold text-black">Harvests</h1>
       <p className="text-green-600 text-sm mt-1">Track your harvest activities and income</p>
 
-      {/* Overview Section */}
       <h3 className="text-xl font-bold text-black mt-10 mb-4">Harvest Overview</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white border rounded-xl p-6 shadow-sm">
@@ -30,10 +29,9 @@ const HarvestPage = () => {
         </div>
       </div>
 
-      {/* Table Section */}
+     
       <h3 className="text-xl font-bold text-black mt-10 mb-4">Harvest Details</h3>
 
-      {/* Responsive Table Wrapper */}
       <div className="hidden md:block bg-white border rounded-xl overflow-x-auto">
         <table className="min-w-full text-sm text-center border-collapse">
           <thead className="bg-gray-50 border-b">
@@ -61,7 +59,7 @@ const HarvestPage = () => {
         </table>
       </div>
 
-      {/* Mobile Card View */}
+      
       <div className="block md:hidden space-y-4">
         {harvestData.map((item, idx) => (
           <div key={idx} className="bg-white border rounded-xl p-4 shadow-sm">

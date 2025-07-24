@@ -56,7 +56,6 @@ export default function FinancialReportManagement() {
         Generate and access financial reports for FarmMaster operations.
       </p>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         {summaryData.map((item, idx) => (
           <div
@@ -69,7 +68,7 @@ export default function FinancialReportManagement() {
         ))}
       </div>
 
-      {/* Report Data Table */}
+      
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Report Data</h2>
         <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
@@ -96,7 +95,7 @@ export default function FinancialReportManagement() {
         </div>
       </div>
 
-      {/* Action Buttons */}
+      
       <div className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4">
         <div className="flex flex-wrap gap-4">
           <button

@@ -5,7 +5,7 @@ export default function LeaseProposalBody() {
     <div className="flex min-h-screen bg-white">
       <div className="flex-1 p-4 md:p-10">
         <div className="max-w-4xl mx-auto bg-white border border-green-600 p-6 md:p-10 rounded-md shadow-sm">
-          {/* Header */}
+          
           <h1 className="text-3xl md:text-3xl font-bold text-gray-800 mb-2">
             Lease Proposal Details
           </h1>
@@ -13,7 +13,7 @@ export default function LeaseProposalBody() {
             Review the terms and conditions of the lease proposal for your land.
           </p>
 
-          {/* Proposal Summary */}
+         
           <div className="mb-8">
             <h2 className="text-base font-semibold text-gray-800 mb-4">
               Proposal Summary
@@ -43,7 +43,6 @@ export default function LeaseProposalBody() {
             </table>
           </div>
 
-          {/* Terms and Conditions */}
           <div className="mb-10">
             <h2 className="text-base font-semibold text-gray-800 mb-4">
               Terms and Conditions
@@ -83,7 +82,7 @@ export default function LeaseProposalBody() {
             </p>
           </div>
 
-          {/* Action Buttons */}
+         
           <div className="flex flex-col md:flex-row gap-4 justify-end">
             <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 text-sm font-semibold rounded-md transition">
               Accept Proposal

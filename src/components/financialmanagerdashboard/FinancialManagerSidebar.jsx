@@ -34,7 +34,7 @@ export default function FinancialManagerSidebar() {
   const activeLink = "bg-green-100 text-green-700 font-semibold";
   const normalLink = "text-black hover:bg-green-50";
 
-  // Logout function
+  // Logout 
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/", { replace: true });
@@ -43,7 +43,7 @@ export default function FinancialManagerSidebar() {
 
   return (
     <>
-      {/* Mobile Top Bar */}
+      
       <div className="md:hidden flex items-start bg-white shadow px-4 py-6">
         <button className="cursor-pointer" onClick={() => setIsOpen(true)}>
           <Menu size={24} />
@@ -56,7 +56,7 @@ export default function FinancialManagerSidebar() {
           isOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
-        {/* Logo & Close Icon */}
+       
         <div className="flex items-center justify-between mb-6">
           <NavLink to="/" onClick={() => setIsOpen(false)}>
             <img src={logo} alt="FarmMaster Logo" className="h-20 w-auto" />
@@ -69,7 +69,7 @@ export default function FinancialManagerSidebar() {
           </button>
         </div>
 
-        {/* Profile Info */}
+        
         <div className="flex items-center mb-8">
           <img
             src={profilePic}
@@ -84,7 +84,7 @@ export default function FinancialManagerSidebar() {
           </div>
         </div>
 
-        {/* Navigation */}
+     
         <nav className="flex flex-col gap-2">
           <NavLink
             to="/financialmanagerdashboard"

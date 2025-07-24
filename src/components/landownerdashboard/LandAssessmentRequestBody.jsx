@@ -40,7 +40,7 @@ const LandAssessmentRequestPage = () => {
       setLoading(false);
 
       if (response.data.status === "success") {
-        // Redirect to payment page
+        // Go to payment page
         navigate("/landassessmentpayment");
       } else {
         setMessage("❌ " + response.data.message);

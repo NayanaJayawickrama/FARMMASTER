@@ -80,7 +80,7 @@ export default function MarketplaceFinancePage() {
 
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
-      {/* Title */}
+      
       <h1 className="text-3xl md:text-4xl font-bold text-black mb-2 mt-4">
         Marketplace Finance
       </h1>
@@ -88,7 +88,7 @@ export default function MarketplaceFinancePage() {
         Manage your sales income and transaction history from the online marketplace.
       </p>
 
-      {/* Sales Overview */}
+     
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         <div className="border rounded-md p-6 shadow-sm text-center">
           <p className="text-sm text-gray-600">Total Sales Income</p>
@@ -104,7 +104,6 @@ export default function MarketplaceFinancePage() {
         </div>
       </div>
 
-      {/* Transaction History Table */}
       <div className="mb-10">
         <h2 className="text-xl font-semibold mb-4">Transaction History</h2>
         <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">

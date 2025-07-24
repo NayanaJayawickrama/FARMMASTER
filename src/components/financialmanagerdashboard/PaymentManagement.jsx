@@ -63,7 +63,7 @@ const transactions = [
 export default function PaymentManagement() {
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
-      {/* Page Title */}
+     
       <h1 className="text-3xl md:text-4xl font-bold text-black mb-2 mt-4">
         Payment Management
       </h1>
@@ -71,7 +71,7 @@ export default function PaymentManagement() {
         Manage and track all payments within the FarmMaster system.
       </p>
 
-      {/* Search Bar */}
+      
       <div className="relative mb-6">
         <FiSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-green-600" />
         <input
@@ -81,7 +81,7 @@ export default function PaymentManagement() {
         />
       </div>
 
-      {/* Table */}
+      
       <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
         <table className="min-w-full text-sm text-left">
           <thead className="bg-green-50 text-black font-semibold">

@@ -4,7 +4,7 @@ import axios from "axios";
 const rootUrl = import.meta.env.VITE_API_URL;
 
 const ProductForm = ({ product, onSave, onCancel }) => {
-  //  Prevent rendering if product data is invalid
+ 
   if (!product || !product.product_id) {
     return <p className="text-red-600">Invalid product data. Cannot edit.</p>;
   }
