@@ -48,14 +48,14 @@ export default function Navbar() {
       style={{ backgroundColor: "#F0FFED" }}
       className="fixed top-0 w-full z-50 py-2 px-6 md:px-12 flex items-center justify-between shadow-sm font-poppins"
     >
-      {/* Logo */}
+      
       <div className="flex items-center space-x-2 z-50">
         <NavLink to="/" onClick={() => setIsOpen(false)}>
           <img src={logo} alt="FarmMaster Logo" className="h-20 w-auto" />
         </NavLink>
       </div>
 
-      {/* Center Menu */}
+    
       <ul
         className="hidden md:flex space-x-6 font-semibold text-lg items-center absolute left-1/2 transform -translate-x-1/2"
         style={{ pointerEvents: isOpen ? "none" : "auto" }}
@@ -76,7 +76,7 @@ export default function Navbar() {
         ))}
       </ul>
 
-      {/* Desktop Right Side */}
+      
       <div className="hidden md:flex items-center space-x-6 z-50">
         {isMarketplace && (
           <>
@@ -129,7 +129,7 @@ export default function Navbar() {
         )}
       </div>
 
-      {/* Mobile Icons */}
+      
       <div className="flex md:hidden items-center space-x-5 z-50">
         {isMarketplace && (
           <>
@@ -165,7 +165,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu */}
+    
       {isOpen && (
         <div className="absolute top-20 left-0 w-full bg-green-50 shadow-md flex flex-col items-center space-y-4 py-4 md:hidden z-40">
           {["/", "/marketplace", "/about", "/contact"].map((path, index) => (
@@ -217,7 +217,7 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Popup for non-buyers or unauthenticated users */}
+      
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-[999]">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center border border-green-600">

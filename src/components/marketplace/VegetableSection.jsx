@@ -14,9 +14,9 @@ import leekImg from "../../assets/images/marketplaceimages/leeks.png";
 
 const productImages = {
   1: carrotImg,
-  2: cabbageImg,
+  4: cabbageImg,
   3: tomatoImg,
-  4: leekImg,
+  2: leekImg,
 };
 
 const VegetableSection = () => {
@@ -26,8 +26,8 @@ const VegetableSection = () => {
   const navigate = useNavigate();
 
   const [quantities, setQuantities] = useState([]);
-  const [showPopup, setShowPopup] = useState(false); // for not logged in users
-  const [showRolePopup, setShowRolePopup] = useState(false); // for logged-in but non-buyers
+  const [showPopup, setShowPopup] = useState(false); 
+  const [showRolePopup, setShowRolePopup] = useState(false); 
 
   useEffect(() => {
     setQuantities(products.map(() => 1));
@@ -65,7 +65,7 @@ const VegetableSection = () => {
       className="relative flex justify-center py-14 px-4 md:px-10"
     >
       <div className="bg-[#F0FFED] rounded-2xl max-w-5xl w-full pt-0 pb-10 overflow-hidden relative">
-        {/* Header */}
+        
         <div className="bg-green-600 text-white text-center py-10 px-4 relative">
           <h2 className="text-3xl md:text-5xl font-extrabold">
             All Organic Vegetables
@@ -82,7 +82,7 @@ const VegetableSection = () => {
           />
         </div>
 
-        {/* Product Cards */}
+        
         <div
           className="grid gap-6 px-6 mt-10"
           style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
@@ -145,7 +145,7 @@ const VegetableSection = () => {
           )}
         </div>
 
-        {/* Popup for unregistered users */}
+        
         {showPopup && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center border border-green-600">
@@ -173,7 +173,7 @@ const VegetableSection = () => {
           </div>
         )}
 
-        {/* Popup for registered non-buyers */}
+        
         {showRolePopup && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center border border-green-600">

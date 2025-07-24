@@ -10,9 +10,9 @@ const rootUrl = import.meta.env.VITE_API_URL;
 const ProductContext = createContext();
 
 const imageMap = {
-  Carrots: carrotImg,
+  Carrot: carrotImg,
   Cabbage: cabbageImg,
-  Tomatoes: tomatoImg,
+  Tomato: tomatoImg,
   Leeks: leekImg,
 };
 

@@ -9,7 +9,7 @@ const ProductForm = ({ product, onSave, onCancel }) => {
     return <p className="text-red-600">Invalid product data. Cannot edit.</p>;
   }
 
-  // Always in edit mode
+
   const isEditing = true;
 
   const [formData, setFormData] = useState({
@@ -95,9 +95,9 @@ const ProductForm = ({ product, onSave, onCancel }) => {
           <option value="" disabled>
             -- Select Crop --
           </option>
-          <option value="Carrots">Carrots</option>
+          <option value="Carrot">Carrots</option>
           <option value="Leeks">Leeks</option>
-          <option value="Tomatoes">Tomatoes</option>
+          <option value="Tomato">Tomatoes</option>
           <option value="Cabbage">Cabbage</option>
         </select>
       </div>
@@ -158,10 +158,10 @@ const ProductForm = ({ product, onSave, onCancel }) => {
       </div>
 
       <div className="space-x-2">
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded">
+        <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded cursor-pointer">
           Update Product
         </button>
-        <button type="button" onClick={onCancel} className="text-gray-600 px-4 py-2">
+        <button type="button" onClick={onCancel} className="text-gray-600 px-4 py-2 cursor-pointer">
           Cancel
         </button>
       </div>

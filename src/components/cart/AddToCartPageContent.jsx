@@ -21,7 +21,7 @@ const AddToCartPageContent = () => {
       </h2>
 
       <div className="flex flex-col lg:flex-row gap-10">
-        {/* Cart Items */}
+        
         <div className="flex-1">
           {cartItems.length === 0 ? (
             <p className="text-gray-600 text-center mt-10">
@@ -29,7 +29,7 @@ const AddToCartPageContent = () => {
             </p>
           ) : (
             <>
-              {/* Header Row */}
+              
               <div className="grid grid-cols-2 md:grid-cols-6 text-gray-500 font-semibold border-b pb-3 mb-4 text-sm">
                 <span className="col-span-2">Item</span>
                 <span className="hidden md:block">Price</span>
@@ -38,13 +38,13 @@ const AddToCartPageContent = () => {
                 <span className="hidden md:block"></span>
               </div>
 
-              {/* Items */}
+              
               {cartItems.map((item, index) => (
                 <div
                   key={index}
                   className="grid grid-cols-2 md:grid-cols-6 items-center gap-4 border-b py-4 text-sm"
                 >
-                  {/* Image + Name */}
+                  
                   <div className="col-span-2 flex items-center gap-4">
                     <img
                       src={item.image}
@@ -53,7 +53,7 @@ const AddToCartPageContent = () => {
                     />
                     <div>
                       <p className="font-medium text-gray-800">{item.name}</p>
-                      {/* Mobile View Price & Total */}
+                      
                       <div className="md:hidden mt-2 text-gray-700 text-sm">
                         <p>Price: Rs. {item.price.toFixed(2)}</p>
                         <p>Total: Rs. {(item.price * item.quantity).toFixed(2)}</p>
@@ -61,12 +61,12 @@ const AddToCartPageContent = () => {
                     </div>
                   </div>
 
-                  {/* Price */}
+                
                   <span className="text-gray-700 hidden md:block">
                     Rs. {item.price.toFixed(2)}
                   </span>
 
-                  {/* Quantity Controls */}
+                  
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => updateQuantity(item.name, item.quantity - 1)}
@@ -85,12 +85,12 @@ const AddToCartPageContent = () => {
                     </button>
                   </div>
 
-                  {/* Total */}
+                  
                   <span className="text-green-700 font-semibold hidden md:block">
                     Rs. {(item.price * item.quantity).toFixed(2)}
                   </span>
 
-                  {/* Remove Button */}
+                
                   <div className="flex justify-end">
                     <button
                       onClick={() => removeFromCart(item.name)}
@@ -106,7 +106,7 @@ const AddToCartPageContent = () => {
           )}
         </div>
 
-        {/* Order Summary */}
+        
         <div className="w-full lg:w-1/3 bg-gray-50 p-6 rounded-md shadow-sm h-fit text-sm">
           <h3 className="text-xl font-semibold mb-4 text-gray-800">
             Order Summary
