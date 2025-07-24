@@ -10,12 +10,12 @@ export default function LandReportReview({ onBack }) {
       <div className="flex-1 p-4 md:p-10 font-poppins">
         <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-xl p-6 md:p-10 shadow-sm">
 
-          {/* Heading */}
+         
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
             Land Report Review & Approve
           </h1>
 
-          {/* Top Info (One column with green border between) */}
+         
           <div className="flex flex-col text-sm mt-6 mb-8 divide-y divide-green-200 border border-green-300 rounded-md">
             {[
               ["Land Report ID", "#2025-LR-002"],
@@ -33,7 +33,7 @@ export default function LandReportReview({ onBack }) {
             ))}
           </div>
 
-          {/* Land Assessment Summary */}
+        
           <div className="mb-8">
             <h2 className="text-base font-semibold text-gray-800 mb-3">
               Land Assessment Summary
@@ -56,7 +56,7 @@ export default function LandReportReview({ onBack }) {
             </table>
           </div>
 
-          {/* Environmental Data */}
+        
           <div className="mb-8">
             <h2 className="text-base font-semibold text-gray-800 mb-3">
               Environmental Data
@@ -78,7 +78,6 @@ export default function LandReportReview({ onBack }) {
             </table>
           </div>
 
-          {/* Crop Recommendations */}
           <div className="mb-8">
             <h2 className="text-base font-semibold text-gray-800 mb-2">
               Crop Recommendations
@@ -104,7 +103,7 @@ export default function LandReportReview({ onBack }) {
             </div>
           </div>
 
-          {/* Review Decision Section */}
+         
           <div className="mb-10">
             <h2 className="text-base font-semibold text-gray-800 mb-4">
               Review Decision
@@ -138,7 +137,7 @@ export default function LandReportReview({ onBack }) {
             />
           </div>
 
-          {/* Bottom Buttons */}
+         
           <div className="flex justify-between items-center pt-4 border-t border-gray-200">
             <button
               onClick={onBack}

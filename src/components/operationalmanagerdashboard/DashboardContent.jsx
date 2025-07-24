@@ -14,7 +14,7 @@ export default function DashboardContent() {
 
   return (
     <div className="p-4 md:p-10 font-poppins">
-      {/* Top Section */}
+    
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 mt-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold">Dashboard</h1>
@@ -24,7 +24,7 @@ export default function DashboardContent() {
         </div>
       </div>
 
-      {/* Overview Section */}
+      
       <div className="mb-10">
         <h2 className="text-2xl md:text-3xl font-bold mb-6">Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -47,7 +47,6 @@ export default function DashboardContent() {
         </div>
       </div>
 
-      {/* Recent Activity Section */}
       <div className="mb-10">
         <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
         <ul className="space-y-4 bg-green-50/50 p-4 rounded-md">
@@ -85,7 +84,7 @@ export default function DashboardContent() {
         </ul>
       </div>
 
-      {/* Quick Actions Section */}
+     
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-5">

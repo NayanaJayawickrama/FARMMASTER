@@ -105,7 +105,7 @@ export default function LandReportManagement() {
 
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
-      {/* Assignment Section */}
+     
       <div className="mb-10">
         <h2 className="text-3xl md:text-4xl font-bold text-black mb-4 mt-4">
           Land Report Assignments
@@ -154,7 +154,6 @@ export default function LandReportManagement() {
         </div>
       </div>
 
-      {/* Review & Approval Section */}
       <div>
         <h2 className="text-3xl md:text-4xl font-bold text-black mb-4 mt-4">
           Land Report Review & Approval

@@ -43,7 +43,7 @@ const statusStyles = {
 export default function ProposalManagement() {
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
-      {/* Header */}
+    
       <div className="mb-6">
         <h1 className="text-3xl md:text-4xl font-bold text-black mb-4 mt-4">Proposal Management</h1>
         <p className="text-green-600 mt-1">
@@ -51,7 +51,7 @@ export default function ProposalManagement() {
         </p>
       </div>
 
-      {/* Table */}
+  
       <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
         <table className="min-w-full border border-gray-200">
           <thead>

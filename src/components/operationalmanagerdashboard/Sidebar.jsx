@@ -39,20 +39,19 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile Top Bar */}
+     
       <div className="md:hidden flex items-start bg-white shadow px-4 py-6">
         <button onClick={() => setIsOpen(true)}>
           <Menu size={24} />
         </button>
       </div>
 
-      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-white shadow-sm font-poppins flex flex-col px-4 py-6 z-50 transform transition-transform ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
-        {/* Logo & Mobile Close */}
+      
         <div className="flex items-center justify-between mb-6">
           <NavLink to="/" onClick={() => setIsOpen(false)}>
             <img src={logo} alt="FarmMaster Logo" className="h-20 w-auto" />
@@ -65,7 +64,7 @@ export default function Sidebar() {
           </button>
         </div>
 
-        {/* Profile Section */}
+       
         <div className="flex items-center mb-8">
           <img
             src={profilePic}
@@ -80,7 +79,6 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex flex-col gap-2">
           <NavLink
             to="/operationalmanagerdashboard"
@@ -138,7 +136,7 @@ export default function Sidebar() {
           </NavLink>
         </nav>
 
-        {/* Footer */}
+      
         <div className="mt-6 pt-4 border-t border-gray-200">
           <NavLink
             to="/"

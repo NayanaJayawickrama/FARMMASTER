@@ -31,7 +31,7 @@ export default function AddNewCropForm({ onCancel, onSubmit }) {
     >
       <h2 className="text-2xl md:text-3xl font-bold text-black mb-8 text-center">Add a New Crop</h2>
 
-      {/* Crop Type */}
+   
       <div className="mb-4">
         <label className="block font-semibold mb-1 text-black">Crop Type</label>
         <input
@@ -45,7 +45,7 @@ export default function AddNewCropForm({ onCancel, onSubmit }) {
         />
       </div>
 
-      {/* Location */}
+     
       <div className="mb-4">
         <label className="block font-semibold mb-1 text-black">Location</label>
         <select
@@ -64,7 +64,7 @@ export default function AddNewCropForm({ onCancel, onSubmit }) {
         </select>
       </div>
 
-      {/* Supervisor */}
+     
       <div className="mb-4">
         <label className="block font-semibold mb-1 text-black">Supervisor</label>
         <input
@@ -78,7 +78,7 @@ export default function AddNewCropForm({ onCancel, onSubmit }) {
         />
       </div>
 
-      {/* Expected Yield */}
+     
       <div className="mb-4">
         <label className="block font-semibold mb-1 text-black">Expected Yield</label>
         <input
@@ -92,7 +92,7 @@ export default function AddNewCropForm({ onCancel, onSubmit }) {
         />
       </div>
 
-      {/* Inventory Status */}
+      
       <div className="mb-6">
         <label className="block font-semibold mb-1 text-black">Inventory Status</label>
         <select
@@ -109,7 +109,7 @@ export default function AddNewCropForm({ onCancel, onSubmit }) {
         </select>
       </div>
 
-      {/* Buttons */}
+    
       <div className="flex justify-end space-x-3">
         <button
           type="button"

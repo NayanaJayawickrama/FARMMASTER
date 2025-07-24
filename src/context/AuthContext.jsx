@@ -27,8 +27,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
-  if (loading) return null; // or a loader/spinner
-
+  if (loading) return null; 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
       {children}
