@@ -83,9 +83,9 @@ export default function DashboardContent() {
 
       
       <div className="flex justify-end">
-        <NavLink to="/landassessmentrequest">
-          <button className="bg-green-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-green-700 transition">
-            Request New Land Report
+        <NavLink to="/landassessment">
+          <button className="bg-green-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-green-700 transition flex items-center gap-2">
+            Request New Land Assessment
           </button>
         </NavLink>
       </div>

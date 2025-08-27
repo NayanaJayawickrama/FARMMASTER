@@ -9,8 +9,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login"; 
 
 import LandownerDashboard from "./pages/landownerpages/LandownerDashboard";
-import LandAssessmentPaymentPage from "./pages/landownerpages/LandAssessmentPaymentPage";
-import LandAssessmentRequestPage from "./pages/landownerpages/LandAssessmentRequestPage";
+import LandAssessmentStripePaymentPage from "./pages/landownerpages/LandAssessmentStripePaymentPage";
 import LandReportPage from "./pages/landownerpages/LandReportPage";
 import LeaseProposalPage from "./pages/landownerpages/LeaseProposalPage";
 import HarvestPage from "./pages/landownerpages/HarvestPage";
@@ -49,8 +48,8 @@ function App() {
         <Route path="/login" element={<Login />} /> 
 
         <Route path="/landownerdashboard" element={<LandownerDashboard />} />
-        <Route path="/landassessmentrequest" element={<LandAssessmentRequestPage />} />
-        <Route path="/landassessmentpayment" element={<LandAssessmentPaymentPage />} />
+        <Route path="/landassessment" element={<LandAssessmentStripePaymentPage />} />
+        <Route path="/landassessmentstripe" element={<LandAssessmentStripePaymentPage />} />
         <Route path="/landreport" element={<LandReportPage />} />
         <Route path="/leaseproposal" element={<LeaseProposalPage />} />
         <Route path="/harvest" element={<HarvestPage />} />
