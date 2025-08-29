@@ -202,12 +202,7 @@ export default function CropInventoryManagement() {
                 </option>
               ))}
             </select>
-            <button
-              onClick={openAddCropForm}
-              className="bg-green-600 text-white text-sm font-semibold px-4 py-2 rounded-md hover:bg-green-700 w-full md:w-auto"
-            >
-              Add New Crop
-            </button>
+            
           </div>
 
           {/* Crop Table */}
@@ -240,7 +235,7 @@ export default function CropInventoryManagement() {
                             onClick={() => openEditCropForm(crop)}
                             className="hover:underline hover:text-green-600 text-sm"
                           >
-                            Edit
+                            Update
                           </button>
                           <button
                             onClick={() => handleDeleteCrop(crop.crop_id)}
