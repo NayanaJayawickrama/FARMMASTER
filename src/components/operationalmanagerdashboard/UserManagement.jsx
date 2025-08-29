@@ -196,10 +196,7 @@ export default function UserManagementPage() {
               required
             >
               <option value="">Select Role</option>
-              <option value="Landowner">Landowner</option>
               <option value="Supervisor">Supervisor</option>
-              <option value="Buyer">Buyer</option>
-              <option value="Operational_Manager">Operational Manager</option>
               <option value="Financial_Manager">Financial Manager</option>
             </select>
           </div>

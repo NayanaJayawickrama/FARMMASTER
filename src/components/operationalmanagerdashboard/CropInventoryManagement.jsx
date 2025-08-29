@@ -102,7 +102,7 @@ export default function CropInventoryManagement() {
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      if (!cropName || !cropDuration || !quantity) {
+      if (!cropName || !quantity) {
         alert("Please fill in all required fields.");
         return;
       }
@@ -137,17 +137,7 @@ export default function CropInventoryManagement() {
               ))}
             </select>
           </div>
-          <div>
-            <label className="block font-medium">Crop Duration*</label>
-            <input
-              type="text"
-              value={cropDuration}
-              onChange={(e) => setCropDuration(e.target.value)}
-              className="w-full border px-3 py-2 rounded"
-              placeholder="e.g. 90 days"
-              required
-            />
-          </div>
+          
           <div>
             <label className="block font-medium">Quantity*</label>
             <input
@@ -233,7 +223,7 @@ export default function CropInventoryManagement() {
                 <thead className="bg-green-50 text-black font-semibold">
                   <tr>
                     <th className="px-6 py-4">Crop</th>
-                    <th className="px-6 py-4">Duration</th>
+                  
                     <th className="px-6 py-4">Quantity</th>
                     <th className="px-6 py-4 text-green-700">Actions</th>
                   </tr>
@@ -242,7 +232,7 @@ export default function CropInventoryManagement() {
                   {filteredCrops.map((crop) => (
                     <tr key={crop.crop_id} className="border-t hover:bg-green-50">
                       <td className="px-6 py-4">{crop.crop_name}</td>
-                      <td className="px-6 py-4">{crop.crop_duration}</td>
+                      
                       <td className="px-6 py-4">{crop.quantity}</td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
