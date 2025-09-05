@@ -20,7 +20,6 @@ export default function CropInventoryManagement() {
     setError("");
     try {
       const res = await axios.get(`${rootUrl}/get_crops.php`);
-      console.log("Fetched crops:", res.data); // Debugging line
       if (Array.isArray(res.data)) {
         setCropList(res.data);
       } else if (res.data.success === false) {
@@ -45,7 +44,7 @@ export default function CropInventoryManagement() {
     try {
       const res = await axios.post(`${rootUrl}/delete_crop.php`, { crop_id: cropId });
       if (res.data.success) {
-        await fetchCrops();
+        fetchCrops();
       } else {
         alert(res.data.error || "Failed to delete crop.");
       }
@@ -54,31 +53,24 @@ export default function CropInventoryManagement() {
     }
   };
 
-  // Open Add Crop Form
-  const openAddCropForm = () => {
-    setEditCrop(null);
-    setShowForm(true);
-  };
-
   // Open Edit Crop Form
   const openEditCropForm = (crop) => {
     setEditCrop(crop);
     setShowForm(true);
   };
 
-  // Handle Add or Update Crop form submission
+  // Handle Update Crop form submission
   const handleFormSubmit = async (formData) => {
     try {
-      const endpoint = editCrop ? "update_crop.php" : "add_crop.php";
-      const payload = editCrop ? { crop_id: editCrop.crop_id, ...formData } : formData;
-      const res = await axios.post(`${rootUrl}/${endpoint}`, payload);
+      const payload = { crop_id: editCrop.crop_id, ...formData };
+      const res = await axios.post(`${rootUrl}/update_crop.php`, payload);
 
       if (res.data.success) {
-        alert(`Crop ${editCrop ? "updated" : "added"} successfully`);
-        await fetchCrops();        // ensure crop list updates before hiding form
+        alert("Crop updated successfully");
         setShowForm(false);
+        fetchCrops();
       } else {
-        alert(res.data.error || `Failed to ${editCrop ? "update" : "add"} crop`);
+        alert(res.data.error || "Failed to update crop");
       }
     } catch {
       alert("Server error. Please try again.");
@@ -94,61 +86,61 @@ export default function CropInventoryManagement() {
     return matchesFilter && matchesSearch;
   });
 
-  // Crop add/edit form component
-  const CropForm = ({ initialData, onCancel, onSubmit }) => {
-    const [cropName, setCropName] = useState(initialData?.crop_name || "");
-    const [cropDuration, setCropDuration] = useState(initialData?.crop_duration || "");
-    const [quantity, setQuantity] = useState(initialData?.quantity || "");
+  // Crop edit form component
+  const CropEditForm = ({ cropData, onCancel, onSubmit }) => {
+    const [quantity, setQuantity] = useState(cropData?.quantity || "");
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      if (!cropName || !quantity) {
-        alert("Please fill in all required fields.");
-        return;
-      }
-      if (!allowedCrops.includes(cropName)) {
-        alert("Invalid crop selected.");
+      if (!quantity || quantity <= 0) {
+        alert("Please enter a valid quantity.");
         return;
       }
       onSubmit({
-        crop_name: cropName,
-        crop_duration: cropDuration,
-        quantity: parseInt(quantity, 10),
+        crop_name: cropData.crop_name, // Keep the same crop name
+        quantity: parseFloat(quantity),
       });
     };
 
     return (
       <div className="max-w-md mx-auto p-6 bg-white rounded shadow">
-        <h2 className="text-2xl font-bold mb-4">{initialData ? "Edit Crop" : "Add New Crop"}</h2>
+        <h2 className="text-2xl font-bold mb-4">Edit Crop Inventory</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block font-medium">Crop Name*</label>
-            <select
-              value={cropName}
-              onChange={(e) => setCropName(e.target.value)}
-              className="w-full border px-3 py-2 rounded"
-              required
-            >
-              <option value="">Select Crop</option>
-              {allowedCrops.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <label className="block font-medium">Crop Name</label>
+            <input
+              type="text"
+              value={cropData.crop_name}
+              className="w-full border px-3 py-2 rounded bg-gray-100"
+              disabled
+            />
+            <p className="text-xs text-gray-500 mt-1">Crop name cannot be changed</p>
           </div>
           
           <div>
-            <label className="block font-medium">Quantity*</label>
+            <label className="block font-medium">Current Quantity</label>
+            <input
+              type="text"
+              value={`${cropData.quantity} kg`}
+              className="w-full border px-3 py-2 rounded bg-gray-100"
+              disabled
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium">New Quantity (kg)*</label>
             <input
               type="number"
-              min="1"
+              min="0.1"
+              step="0.1"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              className="w-full border px-3 py-2 rounded"
+              className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="Enter new quantity in kg"
               required
             />
           </div>
+
           <div className="flex justify-between">
             <button
               type="button"
@@ -161,7 +153,7 @@ export default function CropInventoryManagement() {
               type="submit"
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
-              {initialData ? "Update Crop" : "Add Crop"}
+              Update Quantity
             </button>
           </div>
         </form>
@@ -172,74 +164,98 @@ export default function CropInventoryManagement() {
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
       {showForm ? (
-        <CropForm
-          initialData={editCrop}
+        <CropEditForm
+          cropData={editCrop}
           onCancel={() => setShowForm(false)}
           onSubmit={handleFormSubmit}
         />
       ) : (
         <>
-          <h1 className="text-3xl md:text-4xl font-bold text-black mb-4 mt-4">Crop Inventory</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-black mb-4 mt-4">Crop Inventory Management</h1>
+          <p className="text-gray-600 mb-6">Update quantities of existing crops in inventory</p>
 
           {/* Search & Filter */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 max-w-md">
-            <input
-              type="text"
-              placeholder="Search crops"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-green-50 text-sm rounded-md px-4 py-2 w-full md:w-auto focus:outline-none"
-            />
-            <select
-              value={cropFilter}
-              onChange={(e) => setCropFilter(e.target.value)}
-              className="bg-green-50 text-sm rounded-md px-4 py-2 w-full md:w-auto focus:outline-none"
-            >
-              <option value="">All Crops</option>
-              {allowedCrops.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div className="flex gap-4 w-full md:w-auto">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search crops..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="bg-green-50 text-sm rounded-md pl-10 pr-4 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <select
+                value={cropFilter}
+                onChange={(e) => setCropFilter(e.target.value)}
+                className="bg-green-50 text-sm rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <option value="">All Crops</option>
+                {allowedCrops.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Crop Table */}
           {loading ? (
-            <p className="text-center text-gray-600">Loading crops...</p>
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              <p className="text-gray-600 mt-2">Loading crops...</p>
+            </div>
           ) : error ? (
-            <p className="text-center text-red-600">{error}</p>
+            <div className="text-center py-8">
+              <p className="text-red-600">{error}</p>
+            </div>
           ) : filteredCrops.length === 0 ? (
-            <p className="text-center text-gray-600">No crops found.</p>
+            <div className="text-center py-8">
+              <p className="text-gray-600">No crops found.</p>
+            </div>
           ) : (
             <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
               <table className="min-w-full text-sm text-left">
                 <thead className="bg-green-50 text-black font-semibold">
                   <tr>
-                    <th className="px-6 py-4">Crop</th>
-                  
-                    <th className="px-6 py-4">Quantity</th>
+                    <th className="px-6 py-4">Crop Name</th>
+                    <th className="px-6 py-4">Quantity (kg)</th>
+                    <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-green-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredCrops.map((crop) => (
-                    <tr key={crop.crop_id} className="border-t hover:bg-green-50">
-                      <td className="px-6 py-4">{crop.crop_name}</td>
-                      
-                      <td className="px-6 py-4">{crop.quantity}</td>
+                    <tr key={crop.crop_id} className="border-t hover:bg-green-50 transition-colors">
+                      <td className="px-6 py-4 font-medium">{crop.crop_name}</td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                        <span className="font-semibold">{crop.quantity}</span> kg
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          crop.quantity > 50 
+                            ? 'bg-green-100 text-green-800' 
+                            : crop.quantity > 10 
+                            ? 'bg-yellow-100 text-yellow-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {crop.quantity > 50 ? 'In Stock' : crop.quantity > 10 ? 'Low Stock' : 'Very Low'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-3">
                           <button
                             onClick={() => openEditCropForm(crop)}
-                            className="hover:underline hover:text-green-600 text-sm"
+                            className="text-green-600 hover:text-green-800 hover:underline text-sm font-medium transition-colors"
                           >
-                            Update
+                            Update Quantity
                           </button>
                           <button
                             onClick={() => handleDeleteCrop(crop.crop_id)}
-                            className="hover:underline hover:text-green-600 text-sm"
+                            className="text-red-600 hover:text-red-800 hover:underline text-sm font-medium transition-colors"
                           >
                             Delete
                           </button>
@@ -249,6 +265,37 @@ export default function CropInventoryManagement() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Summary */}
+          {!loading && !error && filteredCrops.length > 0 && (
+            <div className="mt-6 bg-green-50 p-4 rounded-lg">
+              <h3 className="font-semibold text-green-800 mb-2">Inventory Summary</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Total Crops:</span>
+                  <span className="ml-2 font-semibold">{filteredCrops.length}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Total Quantity:</span>
+                  <span className="ml-2 font-semibold">
+                    {filteredCrops.reduce((sum, crop) => sum + parseFloat(crop.quantity), 0).toFixed(1)} kg
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Low Stock:</span>
+                  <span className="ml-2 font-semibold text-yellow-600">
+                    {filteredCrops.filter(crop => crop.quantity <= 50 && crop.quantity > 10).length}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Very Low Stock:</span>
+                  <span className="ml-2 font-semibold text-red-600">
+                    {filteredCrops.filter(crop => crop.quantity <= 10).length}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 
