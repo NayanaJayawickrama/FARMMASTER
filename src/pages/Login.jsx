@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react'; 
+import { Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
-import { useAuth } from '../context/AuthContext'; // import auth hook
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [accountType, setAccountType] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const rootUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
-  const { login, user } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) {
+      const route = roleToPath[user.role];
+      if (route) navigate(route);
+    }
+  }, []);
 
   const roleToPath = {
     'Landowner': '/landownerdashboard',
@@ -25,20 +31,23 @@ const Login = () => {
     'Financial Manager': '/financialmanagerdashboard'
   };
 
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      const route = roleToPath[user.role];
-      if (route) navigate(route);
-    }
-  }, [user, navigate]);
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage('');
 
-    if (!email || !password || !accountType) {
+    // Frontend validation
+    if (!email || !password) {
       setMessage('⚠️ Please fill in all fields.');
+      return;
+    }
+
+    if (!email.includes('@')) {
+      setMessage('⚠️ Please enter a valid email address.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setMessage('⚠️ Password must be at least 6 characters long.');
       return;
     }
 
@@ -46,27 +55,32 @@ const Login = () => {
     try {
       const response = await axios.post(`${rootUrl}/login.php`, {
         email,
-        password,
-        user_role: accountType
+        password
       });
 
       setLoading(false);
 
       if (response.data.status === 'success') {
-        const userData = {
+        const user = {
           id: response.data.user_id,
           role: response.data.user_role,
           name: response.data.first_name + ' ' + response.data.last_name,
-          email: response.data.email
+          email: response.data.email,
+          phone: response.data.phone
         };
 
-        login(userData); // <-- set global auth state here
-        navigate(roleToPath[userData.role]);
+        localStorage.setItem("user", JSON.stringify(user));
+        setMessage('✅ Login successful! Redirecting...');
+        
+        setTimeout(() => {
+          navigate(roleToPath[user.role]);
+        }, 1000);
       } else {
         setMessage('❌ ' + response.data.message);
       }
     } catch (error) {
       setLoading(false);
+      console.error('Login error:', error);
       setMessage('❌ Server error. Please try again.');
     }
   };
@@ -87,29 +101,30 @@ const Login = () => {
         <form className="space-y-4" onSubmit={handleLogin}>
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-              required
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="Enter your email" 
+              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500" 
+              required 
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">Password</label>
             <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
+              <input 
+                type={showPassword ? 'text' : 'password'} 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                placeholder="Enter your password" 
+                className="w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500" 
+                required 
+                minLength="6"
               />
-              <div
-                onClick={() => setShowPassword(!showPassword)}
+              <div 
+                onClick={() => setShowPassword(!showPassword)} 
                 className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -117,64 +132,28 @@ const Login = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Account Type</label>
-            <select
-              value={accountType}
-              onChange={(e) => setAccountType(e.target.value)}
-              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-              required
-            >
-              <option value="">Select your account type</option>
-              <option value="Landowner">Landowner</option>
-              <option value="Supervisor">Field Supervisor</option>
-              <option value="Buyer">Buyer</option>
-              <option value="Operational Manager">Operational Manager</option>
-              <option value="Financial Manager">Financial Manager</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md transition"
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-semibold py-2 rounded-md transition"
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
 
           {message && (
-            <div
-              className={`text-center mt-2 text-sm ${
-                message.includes('✅') ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
+            <div className={`text-center mt-2 text-sm ${message.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
               {message}
             </div>
           )}
 
           <div className="text-center text-sm text-gray-600 space-y-1">
-            <a href="#" className="text-green-600 hover:underline block">
-              Forgot your password?
-            </a>
+            <a href="#" className="text-green-600 hover:underline block">Forgot your password?</a>
             <p>
-              Don’t have an account?{' '}
-              <a href="/register" className="text-green-600 font-medium hover:underline">
-                Sign Up
-              </a>
+              Don't have an account? <a href="/register" className="text-green-600 font-medium hover:underline">Sign Up</a>
             </p>
           </div>
         </form>
-        
       </div>
-      <div className="mt-6">
-            <a
-              href="/"
-              className="flex items-center justify-center gap-2 border border-green-600 text-green-600 font-medium px-4 py-2 rounded-md hover:bg-green-600 hover:text-white transition"
-            >
-              <ArrowLeft size={18} />
-              Back to Home
-            </a>
-          </div>
 
       <p className="mt-8 text-sm text-gray-400 text-center">© 2025 Farm Master. All rights reserved.</p>
     </div>
