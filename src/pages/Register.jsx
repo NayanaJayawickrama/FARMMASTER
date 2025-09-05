@@ -10,7 +10,7 @@ const Register = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("+94");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [accountType, setAccountType] = useState("");
@@ -18,12 +18,113 @@ const Register = () => {
   const rootUrl = import.meta.env.VITE_API_URL;
 
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Validation functions
+  const validateName = (name, fieldName) => {
+    if (!name.trim()) {
+      return `${fieldName} is required.`;
+    }
+    if (!/^[a-zA-Z\s]+$/.test(name)) {
+      return `${fieldName} should contain only letters and spaces.`;
+    }
+    return null;
+  };
+
+  const validateEmail = (email) => {
+    if (!email.trim()) {
+      return "Email is required.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return "Please enter a valid email address.";
+    }
+    return null;
+  };
+
+  const validatePassword = (password) => {
+    if (!password) {
+      return "Password is required.";
+    }
+    if (password.length < 6) {
+      return "Password must be at least 6 characters long.";
+    }
+    if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(password)) {
+      return "Password must contain at least one letter and one number.";
+    }
+    return null;
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone || phone === "+94") {
+      return null; // Phone is optional
+    }
+    
+    // Remove +94 prefix for validation
+    let phoneDigits = phone;
+    if (phone.startsWith('+94')) {
+      phoneDigits = phone.substring(3);
+    }
+    
+    if (!/^\d{9}$/.test(phoneDigits)) {
+      return "Phone number must be 9 digits after +94.";
+    }
+    return null;
+  };
+
+  const handlePhoneChange = (e) => {
+    let value = e.target.value;
+    
+    // Always ensure it starts with +94
+    if (!value.startsWith('+94')) {
+      value = '+94' + value.replace(/^\+?94?/, '');
+    }
+    
+    // Remove any non-digit characters except +94 prefix
+    const digits = value.substring(3).replace(/\D/g, '');
+    
+    // Limit to 9 digits after +94
+    if (digits.length <= 9) {
+      setPhone('+94' + digits);
+    }
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setMessage("");
 
-    if (!firstName || !lastName || !email || !password || !accountType) {
-      setMessage("⚠️ Please fill in all required fields.");
+    // Frontend validation
+    const firstNameError = validateName(firstName, "First name");
+    if (firstNameError) {
+      setMessage("⚠️ " + firstNameError);
+      return;
+    }
+
+    const lastNameError = validateName(lastName, "Last name");
+    if (lastNameError) {
+      setMessage("⚠️ " + lastNameError);
+      return;
+    }
+
+    const emailError = validateEmail(email);
+    if (emailError) {
+      setMessage("⚠️ " + emailError);
+      return;
+    }
+
+    const phoneError = validatePhone(phone);
+    if (phoneError) {
+      setMessage("⚠️ " + phoneError);
+      return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setMessage("⚠️ " + passwordError);
+      return;
+    }
+
+    if (!accountType) {
+      setMessage("⚠️ Please select an account type.");
       return;
     }
 
@@ -32,28 +133,26 @@ const Register = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      const response = await axios.post(
-        `${rootUrl}/register.php`,
-        {
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-          phone: phone,
-          password: password,
-          account_type: accountType,
-        }
-      );
+      const response = await axios.post(`${rootUrl}/register.php`, {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        phone: phone === "+94" ? "" : phone, // Send empty if only +94
+        password: password,
+        account_type: accountType,
+      });
 
-      console.log(response.data);
+      setLoading(false);
 
       if (response.data.status === "success") {
-        setMessage("✅ Registration successful!");
-        // Optional: clear form
+        setMessage("✅ Registration successful! You can now login.");
+        // Clear form
         setFirstName("");
         setLastName("");
         setEmail("");
-        setPhone("");
+        setPhone("+94");
         setPassword("");
         setConfirmPassword("");
         setAccountType("");
@@ -61,6 +160,7 @@ const Register = () => {
         setMessage("❌ " + response.data.message);
       }
     } catch (error) {
+      setLoading(false);
       console.error("Registration failed:", error);
       setMessage("❌ Server error. Please try again.");
     }
@@ -86,54 +186,56 @@ const Register = () => {
         <form className="space-y-4" onSubmit={handleRegister}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">First Name</label>
+              <label className="block text-sm font-medium mb-1">First Name *</label>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="John"
-                className="w-full border rounded-md px-4 py-2"
+                className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Last Name</label>
+              <label className="block text-sm font-medium mb-1">Last Name *</label>
               <input
                 type="text"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Doe"
-                className="w-full border rounded-md px-4 py-2"
+                className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="block text-sm font-medium mb-1">Email *</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="john@example.com"
-              className="w-full border rounded-md px-4 py-2"
+              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Phone</label>
+            <label className="block text-sm font-medium mb-1">Phone (Optional)</label>
             <input
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+94 77 123 4567"
-              className="w-full border rounded-md px-4 py-2"
+              onChange={handlePhoneChange}
+              placeholder="+94 771234567"
+              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              maxLength="12"
             />
+            <p className="text-xs text-gray-500 mt-1">Format: +94 followed by 9 digits</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Account Type</label>
+            <label className="block text-sm font-medium mb-1">Account Type *</label>
             <select
               value={accountType}
               onChange={(e) => setAccountType(e.target.value)}
@@ -147,15 +249,16 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label className="block text-sm font-medium mb-1">Password *</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a strong password"
-                className="w-full border rounded-md px-4 py-2 pr-10"
+                className="w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
+                minLength="6"
               />
               <div
                 onClick={() => setShowPassword(!showPassword)}
@@ -164,17 +267,18 @@ const Register = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </div>
             </div>
+            <p className="text-xs text-gray-500 mt-1">At least 6 characters with one letter and one number</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Confirm Password</label>
+            <label className="block text-sm font-medium mb-1">Confirm Password *</label>
             <div className="relative">
               <input
                 type={showConfirm ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your password"
-                className="w-full border rounded-md px-4 py-2 pr-10"
+                className="w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
               <div
@@ -188,18 +292,24 @@ const Register = () => {
 
           <button
             type="submit"
-            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md transition"
+            disabled={loading}
+            className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-semibold py-2 rounded-md transition"
           >
-            Create Account
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
 
-          {message && <p className="text-center text-sm text-red-600">{message}</p>}
+          {message && (
+            <div className={`text-center mt-2 text-sm ${message.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
+              {message}
+            </div>
+          )}
         </form>
-           <div className="text-center text-sm text-gray-600 space-y-1">
-            <p>
-              Already have an account? <a href="/login" className="text-green-600 font-medium hover:underline">Sign In</a>
-            </p>
-           </div>
+
+        <div className="text-center text-sm text-gray-600 space-y-1">
+          <p>
+            Already have an account? <a href="/login" className="text-green-600 font-medium hover:underline">Sign In</a>
+          </p>
+        </div>
       </div>
 
       <div className="mt-6">
