@@ -1,25 +1,94 @@
 import React, { useEffect, useState } from "react";
-import { FileText, Handshake, Leaf, Repeat } from "lucide-react";
+import { FileText, Handshake, Leaf, Repeat, MapPin, Calendar } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
+
+const rootUrl = import.meta.env.VITE_API_URL;
 
 export default function DashboardContent() {
   const [user, setUser] = useState(null);
+  const [landReports, setLandReports] = useState([]);
+  const [assessmentRequests, setAssessmentRequests] = useState([]);
+  const [userLands, setUserLands] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user: authUser } = useAuth();
+
+  // Test user ID
+  const testUserId = authUser?.id || 32;
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
       setUser(storedUser);
     }
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      // Fetch assessment requests (includes both requests and reports)
+      const [requestsResponse, landsResponse] = await Promise.all([
+        axios.get(`${rootUrl}/get_assessment_requests.php?user_id=${testUserId}`),
+        axios.get(`${rootUrl}/get_user_lands.php?user_id=${testUserId}`)
+      ]);
+
+      if (!requestsResponse.data.error) {
+        // Store full assessment requests data
+        const assessmentData = requestsResponse.data;
+        setAssessmentRequests(assessmentData);
+        // Convert assessment requests to land reports format for compatibility
+        const completedReports = assessmentData.filter(item => item.has_report);
+        setLandReports(completedReports);
+      }
+      
+      if (!landsResponse.data.error) {
+        setUserLands(landsResponse.data);
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'approved': return 'text-green-600';
+      case 'rejected': return 'text-red-600';
+      default: return 'text-yellow-600';
+    }
+  };
+
+  // Calculate statistics from assessment requests
+  const totalRequests = assessmentRequests.length;
+  const completedReports = assessmentRequests.filter(r => r.has_report && r.report_status === 'Approved').length;
+  const pendingRequests = assessmentRequests.filter(r => 
+    r.overall_status === 'Payment Pending' || 
+    r.overall_status === 'Assessment Pending' || 
+    (r.has_report && !r.report_status)
+  ).length;
+  const totalLands = userLands.length;
+  const recentActivity = [
+    ...assessmentRequests.slice(0, 5).map(request => ({
+      type: request.has_report ? 'report' : 'request',
+      title: request.has_report 
+        ? `Land Report #${request.report_id}` 
+        : `Assessment Request #${request.land_id}`,
+      subtitle: `${request.overall_status} - ${request.location}`,
+      date: request.has_report ? request.report_date : request.request_date,
+      status: request.overall_status
+    }))
+  ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
   return (
     <div className="p-4 md:p-10">
-    
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 mt-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold">Dashboard</h1>
           <p className="text-sm md:text-lg text-green-600 mt-2">
-            Welcome back, {user?.name || "Landowner"}
+            Welcome back, {user?.name || authUser?.name || "Landowner"}
           </p>
         </div>
         <button className="border border-black px-4 py-2 rounded-md hover:bg-gray-100 flex items-center gap-2 font-bold text-black mt-4 md:mt-0">
@@ -28,67 +97,81 @@ export default function DashboardContent() {
         </button>
       </div>
 
-    
-      <div className="mb-10">
-        <h2 className="text-2xl md:text-3xl font-bold mb-6">Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="border rounded-md p-6 shadow-sm text-center">
-            <p className="text-sm text-gray-600">Land Report Requests</p>
-            <p className="text-2xl font-bold mt-1">2</p>
-          </div>
-          <div className="border rounded-md p-6 shadow-sm text-center">
-            <p className="text-sm text-gray-600">Active Proposals</p>
-            <p className="text-2xl font-bold mt-1">1</p>
-          </div>
-          <div className="border rounded-md p-6 shadow-sm text-center">
-            <p className="text-sm text-gray-600">Total Harvests</p>
-            <p className="text-2xl font-bold mt-1">3</p>
-          </div>
+      {loading ? (
+        <div className="text-center py-8">
+          <div className="text-gray-500">Loading dashboard data...</div>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Overview */}
+          <div className="mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6">Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="border rounded-md p-6 shadow-sm text-center">
+                <p className="text-sm text-gray-600">Total Requests</p>
+                <p className="text-2xl font-bold mt-1">{totalRequests}</p>
+              </div>
+              <div className="border rounded-md p-6 shadow-sm text-center">
+                <p className="text-sm text-gray-600">Completed Reports</p>
+                <p className="text-2xl font-bold mt-1 text-green-600">{completedReports}</p>
+              </div>
+              <div className="border rounded-md p-6 shadow-sm text-center">
+                <p className="text-sm text-gray-600">Pending Requests</p>
+                <p className="text-2xl font-bold mt-1 text-yellow-600">{pendingRequests}</p>
+              </div>
+              <div className="border rounded-md p-6 shadow-sm text-center">
+                <p className="text-sm text-gray-600">Registered Lands</p>
+                <p className="text-2xl font-bold mt-1">{totalLands}</p>
+              </div>
+            </div>
+          </div>
 
-      
-      <div className="mb-10">
-        <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
-        <ul className="space-y-4 bg-green-50/50 p-4 rounded-md">
-          <li className="flex items-start gap-5">
-            <div className="bg-green-100 rounded-sm p-2">
-              <FileText className="text-green-700" size={26} />
-            </div>
-            <div>
-              <p className="font-semibold">Land Report for Block A</p>
-              <p className="text-sm text-green-600">Requested on 2024-01-15</p>
-            </div>
-          </li>
-          <li className="flex items-start gap-4">
-            <div className="bg-green-100 rounded-sm p-2">
-              <Handshake className="text-green-700" size={26} />
-            </div>
-            <div>
-              <p className="font-semibold">Proposal for Block B</p>
-              <p className="text-sm text-green-600">Submitted on 2024-02-01</p>
-            </div>
-          </li>
-          <li className="flex items-start gap-4">
-            <div className="bg-green-100 rounded-sm p-2">
-              <Leaf className="text-green-700" size={26} />
-            </div>
-            <div>
-              <p className="font-semibold">Harvest for Block A</p>
-              <p className="text-sm text-green-600">Completed on 2024-03-10</p>
-            </div>
-          </li>
-        </ul>
-      </div>
-
-      
-      <div className="flex justify-end">
-        <NavLink to="/landassessment">
-          <button className="bg-green-600 text-white font-semibold px-6 py-3 rounded-md hover:bg-green-700 transition flex items-center gap-2">
-            Request New Land Assessment
-          </button>
-        </NavLink>
-      </div>
+          {/* Recent Activity */}
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
+            {recentActivity.length > 0 ? (
+              <ul className="space-y-4 bg-green-50/50 p-4 rounded-md">
+                {recentActivity.map((activity, index) => (
+                  <li key={index} className="flex items-start gap-4">
+                    <div className="bg-green-100 rounded-sm p-2">
+                      {activity.type === 'report' ? (
+                        <FileText className="text-green-700" size={26} />
+                      ) : activity.type === 'request' ? (
+                        <MapPin className="text-green-700" size={26} />
+                      ) : activity.type === 'proposal' ? (
+                        <Handshake className="text-green-700" size={26} />
+                      ) : (
+                        <MapPin className="text-green-700" size={26} />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold">{activity.title}</p>
+                      <p className="text-sm text-gray-600">{activity.subtitle}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Calendar size={14} className="text-gray-400" />
+                        <p className="text-xs text-gray-500">
+                          {new Date(activity.date).toLocaleDateString()}
+                        </p>
+                        {activity.status && (
+                          <span className={`text-xs ${getStatusColor(activity.status)}`}>
+                            • {activity.status}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="bg-gray-50 p-8 rounded-md text-center">
+                <FileText size={48} className="mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600">No recent activity found</p>
+                <p className="text-sm text-gray-500">Start by requesting a land assessment</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
