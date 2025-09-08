@@ -96,40 +96,47 @@ const Register = () => {
     const firstNameError = validateName(firstName, "First name");
     if (firstNameError) {
       setMessage("⚠️ " + firstNameError);
+      alert("⚠️ " + firstNameError);
       return;
     }
 
     const lastNameError = validateName(lastName, "Last name");
     if (lastNameError) {
       setMessage("⚠️ " + lastNameError);
+      alert("⚠️ " + lastNameError);
       return;
     }
 
     const emailError = validateEmail(email);
     if (emailError) {
       setMessage("⚠️ " + emailError);
+      alert("⚠️ " + emailError);
       return;
     }
 
     const phoneError = validatePhone(phone);
     if (phoneError) {
       setMessage("⚠️ " + phoneError);
+      alert("⚠️ " + phoneError);
       return;
     }
 
     const passwordError = validatePassword(password);
     if (passwordError) {
       setMessage("⚠️ " + passwordError);
+      alert("⚠️ " + passwordError);
       return;
     }
 
     if (!accountType) {
       setMessage("⚠️ Please select an account type.");
+      alert("⚠️ Please select an account type.");
       return;
     }
 
     if (password !== confirmPassword) {
       setMessage("❌ Passwords do not match.");
+      alert("❌ Passwords do not match.");
       return;
     }
 
@@ -158,11 +165,13 @@ const Register = () => {
         setAccountType("");
       } else {
         setMessage("❌ " + response.data.message);
+        alert("❌ " + response.data.message);
       }
     } catch (error) {
       setLoading(false);
       console.error("Registration failed:", error);
       setMessage("❌ Server error. Please try again.");
+      alert("❌ Server error. Please try again.");
     }
   };
 
