@@ -21,25 +21,30 @@ export const ProductProvider = ({ children }) => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${rootUrl}/get_products.php`);
+      const res = await axios.get(`${rootUrl}/ProductRoute.php?action=getProducts`);
       const data = res.data;
 
-      const mappedProducts = data.map((item) => ({
-        id: parseInt(item.product_id),
-        product_id: parseInt(item.product_id), 
-        name: `Organic ${item.crop_name}`,
-        crop_name: item.crop_name,
-        image: imageMap[item.crop_name] || null,
-        description: item.description,
-        price: parseFloat(item.price_per_unit),
-        price_per_unit: parseFloat(item.price_per_unit),
-        quantity: parseFloat(item.quantity),
-        status: item.status.toLowerCase(),
-      }));
-
-      setProducts(mappedProducts);
+      if (Array.isArray(data)) {
+        const mappedProducts = data.map((item) => ({
+          id: parseInt(item.product_id),
+          product_id: parseInt(item.product_id),
+          name: `Organic ${item.crop_name}`,
+          crop_name: item.crop_name,
+          image: imageMap[item.crop_name] || null,
+          description: item.description,
+          price: parseFloat(item.price_per_unit),
+          price_per_unit: parseFloat(item.price_per_unit),
+          quantity: parseFloat(item.quantity),
+          status: item.status ? item.status.toLowerCase() : "",
+        }));
+        setProducts(mappedProducts);
+      } else {
+        console.error("API did not return an array:", data);
+        setProducts([]);
+      }
     } catch (err) {
       console.error("Failed to load products:", err);
+      setProducts([]);
     }
   };
 

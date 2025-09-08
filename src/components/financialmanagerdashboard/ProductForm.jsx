@@ -4,13 +4,9 @@ import axios from "axios";
 const rootUrl = import.meta.env.VITE_API_URL;
 
 const ProductForm = ({ product, onSave, onCancel }) => {
- 
   if (!product || !product.product_id) {
     return <p className="text-red-600">Invalid product data. Cannot edit.</p>;
   }
-
-
-  const isEditing = true;
 
   const [formData, setFormData] = useState({
     product_id: "",
@@ -51,7 +47,8 @@ const ProductForm = ({ product, onSave, onCancel }) => {
 
     console.log("Sending formData:", formattedData);
 
-    const url = `${rootUrl}/update_product.php`;
+    // Updated endpoint for MVC structure
+    const url = `${rootUrl}/ProductRoute.php?action=updateProduct`;
 
     try {
       const res = await axios.post(url, formattedData, {
