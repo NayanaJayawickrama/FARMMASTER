@@ -22,7 +22,8 @@ const ResetPassword = () => {
         `${import.meta.env.VITE_API_URL}/reset_password.php`,
         { email, token, password }
       );
-      setMsg(res.data.message);
+      alert(res.data.message);
+      //setMsg(res.data.message);
       if (res.data.status === 'success') {
         setTimeout(() => {
           navigate('/login');

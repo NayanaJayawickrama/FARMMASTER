@@ -109,7 +109,7 @@ const handleForgotPassword = async (e) => {
       frontendUrl: window.location.origin 
     });
     alert(res.data.message);
-    setForgotMsg(res.data.message);
+    //setForgotMsg(res.data.message);
   } catch {
     alert('❌ Server error. Please try again.');
     setForgotMsg('❌ Server error. Please try again.');
