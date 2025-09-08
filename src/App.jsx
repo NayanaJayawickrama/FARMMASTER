@@ -7,6 +7,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Register from "./pages/Register";
 import Login from "./pages/Login"; 
+import ResetPassword from './pages/ResetPassword';
 
 import LandownerDashboard from "./pages/landownerpages/LandownerDashboard";
 import LandAssessmentStripePaymentPage from "./pages/landownerpages/LandAssessmentStripePaymentPage";
@@ -46,6 +47,8 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} /> 
+        <Route path="/reset-password" element={<ResetPassword />} />
+
 
         <Route path="/landownerdashboard" element={<LandownerDashboard />} />
         <Route path="/landassessment" element={<LandAssessmentStripePaymentPage />} />

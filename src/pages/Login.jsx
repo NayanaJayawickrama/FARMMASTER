@@ -11,6 +11,12 @@ const Login = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Forgot password states
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotMsg, setForgotMsg] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+
   const rootUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
 
@@ -37,17 +43,17 @@ const Login = () => {
 
     // Frontend validation
     if (!email || !password) {
-      setMessage('⚠️ Please fill in all fields.');
+      alert('⚠️ Please fill in all fields.');
       return;
     }
 
     if (!email.includes('@')) {
-      setMessage('⚠️ Please enter a valid email address.');
+      alert('⚠️ Please enter a valid email address.');
       return;
     }
 
     if (password.length < 6) {
-      setMessage('⚠️ Password must be at least 6 characters long.');
+      alert('⚠️ Password must be at least 6 characters long.');
       return;
     }
 
@@ -70,23 +76,87 @@ const Login = () => {
         };
 
         localStorage.setItem("user", JSON.stringify(user));
-        setMessage('✅ Login successful! Redirecting...');
-        
+        alert('✅ Login successful...!!!');
+
         setTimeout(() => {
           navigate(roleToPath[user.role]);
         }, 1000);
       } else {
-        setMessage('❌ ' + response.data.message);
+        alert('❌ ' + response.data.message);
       }
     } catch (error) {
       setLoading(false);
       console.error('Login error:', error);
-      setMessage('❌ Server error. Please try again.');
+      alert('❌ Server error. Please try again.');
     }
   };
 
+  // Forgot Password Handler
+  
+const handleForgotPassword = async (e) => {
+  e.preventDefault();
+  setForgotMsg('');
+  if (!forgotEmail || !forgotEmail.includes('@')) {
+    alert('⚠️ Please enter a valid email address.');
+    setForgotMsg('⚠️ Please enter a valid email address.');
+    return;
+  }
+  setForgotLoading(true);
+  try {
+    // Send the current frontend URL to the backend
+    const res = await axios.post(`${rootUrl}/forgot_password.php`, {
+      email: forgotEmail,
+      frontendUrl: window.location.origin 
+    });
+    alert(res.data.message);
+    //setForgotMsg(res.data.message);
+  } catch {
+    alert('❌ Server error. Please try again.');
+    setForgotMsg('❌ Server error. Please try again.');
+  }
+  setForgotLoading(false);
+};
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+      {/* Forgot Password Modal */}
+      {showForgot && (
+        <div className="fixed inset-0 bg-white bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h2 className="text-xl font-bold mb-2">Forgot Password</h2>
+            <form onSubmit={handleForgotPassword} className="space-y-3">
+              <input
+                type="email"
+                value={forgotEmail}
+                onChange={e => setForgotEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+              <button
+                type="submit"
+                disabled={forgotLoading}
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md transition"
+              >
+                {forgotLoading ? "Sending..." : "Send Reset Link"}
+              </button>
+              {forgotMsg && (
+                <div className={`text-center text-sm ${forgotMsg.toLowerCase().includes('success') ? 'text-green-600' : 'text-red-600'}`}>
+                  {forgotMsg}
+                </div>
+              )}
+              <button
+                type="button"
+                className="w-full mt-2 text-gray-500 hover:underline"
+                onClick={() => { setShowForgot(false); setForgotMsg(''); setForgotEmail(''); }}
+              >
+                Cancel
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="mt-10 mb-6 text-center">
         <img src={logo} alt="FarmMaster" className="w-32 h-auto mx-auto mb-1" />
         <p className="text-xl text-gray-600">Welcome back to your farming journey</p>
@@ -147,7 +217,13 @@ const Login = () => {
           )}
 
           <div className="text-center text-sm text-gray-600 space-y-1">
-            <a href="#" className="text-green-600 hover:underline block">Forgot your password?</a>
+            <button
+              type="button"
+              className="text-green-600 hover:underline inline-block"
+              onClick={() => setShowForgot(true)}
+            >
+              Forgot your password?
+            </button>
             <p>
               Don't have an account? <a href="/register" className="text-green-600 font-medium hover:underline">Sign Up</a>
             </p>
