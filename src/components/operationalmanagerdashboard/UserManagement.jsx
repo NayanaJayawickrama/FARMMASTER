@@ -196,7 +196,10 @@ export default function UserManagementPage() {
               required
             >
               <option value="">Select Role</option>
+              <option value="Landowner">Landowner</option>
               <option value="Supervisor">Supervisor</option>
+              <option value="Buyer">Buyer</option>
+              <option value="Operational_Manager">Operational Manager</option>
               <option value="Financial_Manager">Financial Manager</option>
             </select>
           </div>
@@ -278,29 +281,38 @@ export default function UserManagementPage() {
             <p className="text-center text-gray-600">No users found.</p>
           ) : (
             <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
-              <table className="min-w-full text-sm text-left">
+              <table className="min-w-full text-sm text-center table-fixed">
+                <colgroup>
+                  <col className="w-1/5" />
+                  <col className="w-1/5" />
+                  <col className="w-1/5" />
+                  <col className="w-1/5" />
+                  <col className="w-1/5" />
+                </colgroup>
                 <thead className="bg-green-50 text-black font-semibold">
                   <tr>
-                    <th className="px-6 py-4">Name</th>
-                    <th className="px-6 py-4">Email</th>
-                    <th className="px-6 py-4">Role</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-green-700">Actions</th>
+                    <th className="px-2 py-4">Name</th>
+                    <th className="px-2 py-4">Email</th>
+                    <th className="px-2 py-4">Role</th>
+                    <th className="px-2 py-4">Status</th>
+                    <th className="px-2 py-4 text-green-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => (
                     <tr key={user.user_id} className="border-t hover:bg-green-50">
-                      <td className="px-6 py-4">{user.name}</td>
-                      <td className="px-6 py-4 text-green-600">{user.email}</td>
-                      <td className="px-6 py-4 w-32">
-                        <span className="bg-green-50 text-black font-semibold px-4 py-1 rounded-md block text-center">
+                      <td className="px-2 py-4 break-words">{user.name}</td>
+                      <td className="px-2 py-4 break-words text-green-600">
+                        {user.email}
+                      </td>
+                      <td className="px-2 py-4">
+                        <span className="bg-green-50 text-black font-semibold px-2 py-1 rounded text-center inline-block">
                           {user.role.replace("_", " ")}
                         </span>
                       </td>
-                      <td className="px-6 py-4 w-28">
+                      <td className="px-2 py-4">
                         <span
-                          className={`font-semibold px-3 py-1 rounded-full block text-center ${
+                          className={`font-semibold px-2 py-1 rounded text-center inline-block ${
                             user.status === "Active"
                               ? "bg-green-100 text-green-700"
                               : "bg-gray-200 text-red-600"
@@ -309,17 +321,16 @@ export default function UserManagementPage() {
                           {user.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-black font-semibold text-sm whitespace-nowrap">
-                        <div className="flex flex-wrap gap-3 items-center">
+                      <td className="px-2 py-4 font-semibold text-sm whitespace-nowrap">
+                        <div className="flex flex-wrap gap-3 items-center justify-center">
                           <button
                             onClick={() => openEditUserForm(user)}
                             className="hover:underline hover:text-green-600 cursor-pointer"
                           >
                             Edit
                           </button>
-
                           {/* Toggle switch for status */}
-                          <label className="inline-flex items-center cursor-pointer ml-2">
+                          <label className="inline-flex items-center cursor-pointer ml-2 group">
                             <input
                               type="checkbox"
                               className="form-checkbox h-5 w-5 text-green-600"
@@ -328,7 +339,9 @@ export default function UserManagementPage() {
                                 handleToggleStatus(user.user_id, user.status)
                               }
                             />
-                            <span className="ml-2 text-sm">
+                            <span
+                              className="ml-2 text-sm text-black group-hover:text-green-600 transition-colors duration-200"
+                            >
                               {user.status === "Active" ? "Active" : "Inactive"}
                             </span>
                           </label>
