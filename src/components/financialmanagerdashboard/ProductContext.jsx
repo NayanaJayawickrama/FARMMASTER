@@ -1,20 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 
-import carrotImg from "../../assets/images/marketplaceimages/carrot.png";
-import cabbageImg from "../../assets/images/marketplaceimages/cabbage.png";
-import tomatoImg from "../../assets/images/marketplaceimages/tomato.png";
-import leekImg from "../../assets/images/marketplaceimages/leeks.png";
-
 const rootUrl = import.meta.env.VITE_API_URL;
 const ProductContext = createContext();
-
-const imageMap = {
-  Carrot: carrotImg,
-  Cabbage: cabbageImg,
-  Tomato: tomatoImg,
-  Leeks: leekImg,
-};
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
@@ -30,7 +18,7 @@ export const ProductProvider = ({ children }) => {
           product_id: parseInt(item.product_id),
           name: `Organic ${item.crop_name}`,
           crop_name: item.crop_name,
-          image: imageMap[item.crop_name] || null,
+          image_url: item.image_url,
           description: item.description,
           price: parseFloat(item.price_per_unit),
           price_per_unit: parseFloat(item.price_per_unit),
@@ -39,11 +27,9 @@ export const ProductProvider = ({ children }) => {
         }));
         setProducts(mappedProducts);
       } else {
-        console.error("API did not return an array:", data);
         setProducts([]);
       }
     } catch (err) {
-      console.error("Failed to load products:", err);
       setProducts([]);
     }
   };

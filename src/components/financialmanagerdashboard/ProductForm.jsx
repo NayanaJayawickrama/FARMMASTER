@@ -15,20 +15,25 @@ const ProductForm = ({ product, onSave, onCancel }) => {
     quantity: "",
     description: "",
     status: "",
+    image_url: product.image_url || ""
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(product.image_url || "");
 
   useEffect(() => {
     if (product) {
+      const autoStatus = product.quantity === 0 ? "Sold" : "Available";
       setFormData({
         product_id: product.product_id,
         crop_name: product.crop_name || "",
         price_per_unit: product.price_per_unit || "",
         quantity: product.quantity || "",
         description: product.description || "",
-        status: product.status
-          ? product.status.charAt(0).toUpperCase() + product.status.slice(1)
-          : "Available",
+        status: autoStatus,
+        image_url: product.image_url || ""
       });
+      setImagePreview(product.image_url || "");
+      setImageFile(null);
     }
   }, [product]);
 
@@ -37,41 +42,61 @@ const ProductForm = ({ product, onSave, onCancel }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImageFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(formData.image_url || "");
+    }
+  };
+
+  const handleCancel = () => {
+    setImagePreview(product.image_url || "");
+    setImageFile(null);
+    onCancel();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    // Status is always auto-set based on quantity
+    const autoStatus = Number(formData.quantity) === 0 ? "Sold" : "Available";
     const formattedData = {
       ...formData,
-      status: formData.status.charAt(0).toUpperCase() + formData.status.slice(1),
+      status: autoStatus,
     };
-
-    console.log("Sending formData:", formattedData);
-
-    // Updated endpoint for MVC structure
     const url = `${rootUrl}/ProductRoute.php?action=updateProduct`;
-
+    const form = new FormData();
+    Object.entries(formattedData).forEach(([key, value]) => {
+      form.append(key, value);
+    });
+    if (imageFile) {
+      form.append("image", imageFile);
+    }
     try {
-      const res = await axios.post(url, formattedData, {
-        headers: { "Content-Type": "application/json" },
+      const res = await axios.post(url, form, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-
-      console.log("Server response:", res.data);
-
       if (res.data.success) {
-        onSave({ ...formData });
+        const newImageUrl = res.data.image_url || formData.image_url;
+        onSave({ ...formData, image_url: newImageUrl });
       } else {
-        alert(`Error: ${res.data.message || "Failed to update product."}`);
+        onSave({ ...formData, error: res.data.message || "Failed to update product." });
       }
     } catch (error) {
-      console.error("Error updating product:", error);
-      alert("Failed to connect to the server.");
+      onSave({ ...formData, error: "Failed to connect to the server." });
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 shadow rounded mb-4">
       <div className="mb-2">
-        <label className="block font-semibold">Product ID (read-only)</label>
+        <label className="block font-semibold">Product ID (Can't Change)</label>
         <input
           name="product_id"
           value={formData.product_id}
@@ -79,7 +104,6 @@ const ProductForm = ({ product, onSave, onCancel }) => {
           className="w-full border p-2 rounded bg-gray-100"
         />
       </div>
-
       <div className="mb-2">
         <label className="block font-semibold">Crop Name</label>
         <select
@@ -98,7 +122,6 @@ const ProductForm = ({ product, onSave, onCancel }) => {
           <option value="Cabbage">Cabbage</option>
         </select>
       </div>
-
       <div className="mb-2">
         <label className="block font-semibold">Price Per Unit (Rs.)</label>
         <input
@@ -111,20 +134,16 @@ const ProductForm = ({ product, onSave, onCancel }) => {
           required
         />
       </div>
-
       <div className="mb-2">
-        <label className="block font-semibold">Quantity (Kg)</label>
+        <label className="block font-semibold">Quantity (Kg) (Can't Change)</label>
         <input
           name="quantity"
-          value={formData.quantity}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          type="number"
-          step="0.001"
-          required
+          value={Number(formData.quantity) === 0 ? "No inventory (Sold out)" : formData.quantity}
+          readOnly
+          className={`w-full border p-2 rounded bg-gray-100 ${Number(formData.quantity) === 0 ? 'text-red-700 font-bold' : ''}`}
+          type="text"
         />
       </div>
-
       <div className="mb-2">
         <label className="block font-semibold">Description</label>
         <textarea
@@ -135,30 +154,32 @@ const ProductForm = ({ product, onSave, onCancel }) => {
           required
         />
       </div>
-
-      <div className="mb-4">
-        <label className="block font-semibold">Status</label>
-        <select
+      <div className="mb-2">
+        <label className="block font-semibold">Status (auto-set)</label>
+        <input
           name="status"
-          value={formData.status}
-          onChange={handleChange}
-          className="w-full border p-2 rounded bg-white text-gray-700 appearance-none"
-          required
-        >
-          <option value="" disabled>
-            -- Select Status --
-          </option>
-          <option value="Available">Available</option>
-          <option value="Sold">Sold</option>
-          <option value="Unavailable">Unavailable</option>
-        </select>
+          value={Number(formData.quantity) === 0 ? "Sold" : "Available"}
+          readOnly
+          className={`w-full border p-2 rounded ${Number(formData.quantity) === 0 ? 'bg-red-100 text-red-700 font-bold' : 'bg-gray-100'}`}
+        />
       </div>
-
+      <div className="mb-2">
+        <label className="block font-semibold">Product Image</label>
+        <input
+          type="file"
+          accept="image/png, image/jpeg, image/jpg"
+          onChange={handleImageChange}
+          className="w-full border p-2 rounded"
+        />
+        {imagePreview && (
+          <img src={imagePreview} alt="Product Preview" className="mt-2 w-24 h-24 object-contain" />
+        )}
+      </div>
       <div className="space-x-2">
         <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded cursor-pointer">
           Update Product
         </button>
-        <button type="button" onClick={onCancel} className="text-gray-600 px-4 py-2 cursor-pointer">
+        <button type="button" onClick={handleCancel} className="text-gray-600 px-4 py-2 cursor-pointer">
           Cancel
         </button>
       </div>

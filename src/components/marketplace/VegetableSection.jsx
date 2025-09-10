@@ -7,18 +7,6 @@ import { useNavigate } from "react-router-dom";
 import rightImg from "../../assets/images/marketplaceimages/right-veg.png";
 import leftImg from "../../assets/images/marketplaceimages/left-veg1.png";
 
-import carrotImg from "../../assets/images/marketplaceimages/carrot.png";
-import cabbageImg from "../../assets/images/marketplaceimages/cabbage.png";
-import tomatoImg from "../../assets/images/marketplaceimages/tomato.png";
-import leekImg from "../../assets/images/marketplaceimages/leeks.png";
-
-const productImages = {
-  1: carrotImg,
-  4: cabbageImg,
-  3: tomatoImg,
-  2: leekImg,
-};
-
 const VegetableSection = () => {
   const { products } = useProducts();
   const { addToCart } = useCart();
@@ -93,7 +81,7 @@ const VegetableSection = () => {
               className="rounded-lg shadow-md border border-gray-200 p-4 flex flex-col justify-between items-center text-center h-[370px] bg-white"
             >
               <img
-                src={productImages[item.id] || ""}
+                src={item.image_url || ""}
                 alt={item.name}
                 className="w-24 h-24 object-contain mb-2"
               />
@@ -120,7 +108,14 @@ const VegetableSection = () => {
                 </button>
               </div>
 
-              {item.status === "available" ? (
+              {item.quantity === 0 ? (
+                <button
+                  disabled
+                  className="mt-3 bg-red-500 text-white font-semibold px-4 py-1 rounded cursor-not-allowed text-sm"
+                >
+                  Sold
+                </button>
+              ) : item.status === "available" ? (
                 <button
                   onClick={() => handleAddToCart(item, quantities[index])}
                   className="mt-3 bg-green-600 text-white font-semibold px-4 py-1 rounded hover:bg-green-700 text-sm cursor-pointer"

@@ -5,11 +5,50 @@ import ProductForm from "./ProductForm";
 const MarketplaceProducts = () => {
   const { products, updateProduct, fetchProducts } = useProducts();
   const [editingProduct, setEditingProduct] = useState(null);
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "success",
+    message: "",
+  });
 
   const saveProduct = async (updatedProduct) => {
-    updateProduct(updatedProduct.product_id || updatedProduct.id, updatedProduct);
-    await fetchProducts();
-    setEditingProduct(null);
+    if (updatedProduct.error) {
+      setPopup({
+        show: true,
+        type: "error",
+        message:
+          updatedProduct.error === "No changes made or product not found."
+            ? "No changes made."
+            : updatedProduct.error,
+      });
+      setEditingProduct(null);
+      return;
+    }
+    try {
+      updateProduct(updatedProduct.product_id || updatedProduct.id, updatedProduct);
+      await fetchProducts();
+      setEditingProduct(null);
+      setPopup({
+        show: true,
+        type: "success",
+        message: "Product updated successfully!",
+      });
+    } catch (err) {
+      setPopup({
+        show: true,
+        type: "error",
+        message: "Failed to update product.",
+      });
+    }
+  };
+
+  const handleClosePopup = () => {
+    setPopup({ show: false, type: "success", message: "" });
+  };
+
+  const handleSeeUpdates = () => {
+    setPopup({ show: false, type: "success", message: "" });
+    window.location.href = "/marketplace";
   };
 
   return (
@@ -50,7 +89,7 @@ const MarketplaceProducts = () => {
                 <tr
                   key={p.product_id || p.id || index}
                   className={`border-t hover:bg-green-50 ${
-                    p.status === "unavailable" ? "bg-red-50" : ""
+                    (p.status === "unavailable" || p.quantity === 0) ? "bg-red-50" : ""
                   }`}
                 >
                   <td className="px-6 py-4">{index + 1}</td>
@@ -61,12 +100,14 @@ const MarketplaceProducts = () => {
                   <td className="px-6 py-4 w-28">
                     <span
                       className={`font-semibold px-3 py-1 rounded-full block text-center capitalize ${
-                        p.status === "available"
+                        Number(p.quantity) === 0
+                          ? "bg-red-100 text-red-700"
+                          : p.status === "available"
                           ? "bg-green-100 text-green-700"
                           : "bg-gray-200 text-red-600"
                       }`}
                     >
-                      {p.status}
+                      {Number(p.quantity) === 0 ? "Sold" : "Available"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-black font-semibold text-sm whitespace-nowrap">
@@ -81,6 +122,40 @@ const MarketplaceProducts = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {popup.show && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div
+            className={`bg-white border p-6 rounded-lg shadow-xl text-center ${
+              popup.type === "success" ? "border-green-600" : "border-red-600"
+            }`}
+          >
+            <h2
+              className={`text-lg font-bold mb-2 ${
+                popup.type === "success" ? "text-green-700" : "text-red-700"
+              }`}
+            >
+              {popup.message}
+            </h2>
+            <div className="flex justify-center gap-4 mt-4">
+              {popup.type === "success" && (
+                <button
+                  onClick={handleSeeUpdates}
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                >
+                  See Updates
+                </button>
+              )}
+              <button
+                onClick={handleClosePopup}
+                className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

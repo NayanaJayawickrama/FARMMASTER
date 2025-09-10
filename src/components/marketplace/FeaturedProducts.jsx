@@ -60,7 +60,7 @@ const FeaturedProducts = () => {
                 className="bg-white border rounded-lg p-4 text-center shadow-sm hover:shadow-md transition h-[280px] flex-shrink-0 relative"
               >
                 <img
-                  src={product.image}
+                  src={product.image_url || ""}
                   alt={product.name}
                   className="w-28 h-28 mx-auto mb-4 object-contain"
                 />
