@@ -8,6 +8,8 @@ export default function LeaseProposalBody() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const rootUrl = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     fetchProposals();
   }, []);
@@ -18,11 +20,13 @@ export default function LeaseProposalBody() {
     try {
       // Get user from localStorage
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user.user_id || 21; // Default to user_id 21 for testing
+      const userId = user.id || user.user_id || 21; // Check both 'id' and 'user_id' properties
       
+      console.log('User from localStorage:', user);
       console.log('Fetching proposals for user_id:', userId);
+      console.log('API URL:', `${rootUrl}/get_proposals.php?user_id=${userId}`);
       
-      const response = await axios.get(`http://localhost/fmf/b/get_proposals.php?user_id=${userId}`);
+      const response = await axios.get(`${rootUrl}/get_proposals.php?user_id=${userId}`);
       
       console.log('Proposals API response:', response.data);
       
@@ -38,6 +42,12 @@ export default function LeaseProposalBody() {
       }
     } catch (err) {
       console.error('Error fetching proposals:', err);
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        url: err.config?.url
+      });
       setError("Failed to fetch proposals: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
@@ -46,7 +56,7 @@ export default function LeaseProposalBody() {
 
   const handleProposalAction = async (proposalId, action) => {
     try {
-      const response = await axios.post(`http://localhost/fmf/b/update_proposal_status.php`, {
+      const response = await axios.post(`${rootUrl}/update_proposal_status.php`, {
         proposal_id: proposalId,
         action: action
       });

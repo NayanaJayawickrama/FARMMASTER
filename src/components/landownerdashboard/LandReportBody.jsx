@@ -59,28 +59,6 @@ export default function LandReportBody() {
     }
   };
 
-  const handleDownloadText = async (reportId) => {
-    try {
-      const response = await fetch(`${rootUrl}/download_land_report_txt.php?report_id=${reportId}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to download text report');
-      }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `land_report_${reportId}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      alert("Failed to download text report: " + err.message);
-    }
-  };
-
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'approved': return 'text-green-600 bg-green-100';
@@ -315,13 +293,6 @@ export default function LandReportBody() {
                         >
                           <Download size={16} />
                           View/Print Report
-                        </button>
-                        <button
-                          onClick={() => handleDownloadText(selectedItem.report_id)}
-                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-semibold rounded-md transition"
-                        >
-                          <Download size={14} />
-                          Download .txt
                         </button>
                       </div>
                     )}
