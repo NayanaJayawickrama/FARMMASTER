@@ -1,14 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useProducts } from "./ProductContext";
 import ProductForm from "./ProductForm";
 
 const MarketplaceProducts = () => {
-  const { products, updateProduct, fetchProducts } = useProducts();
+  const { products, updateProduct, fetchProducts, newCrops, fetchNewCrops } = useProducts();
   const [editingProduct, setEditingProduct] = useState(null);
+  const [addingProduct, setAddingProduct] = useState(false);
   const [popup, setPopup] = useState({
     show: false,
     type: "success",
     message: "",
+  });
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchNewCrops();
+    }, 10000); // poll every 10 seconds
+    return () => clearInterval(interval);
+  }, [fetchNewCrops]);
+
+  useEffect(() => {
+    const handler = (e) => setSearchTerm(e.detail || "");
+    window.addEventListener("marketplace-search", handler);
+    return () => window.removeEventListener("marketplace-search", handler);
+  }, []);
+
+  const filteredProducts = products.filter((p) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      p.crop_name.toLowerCase().includes(term) ||
+      p.description.toLowerCase().includes(term) ||
+      String(p.price).includes(term)
+    );
   });
 
   const saveProduct = async (updatedProduct) => {
@@ -42,6 +66,37 @@ const MarketplaceProducts = () => {
     }
   };
 
+  const handleAddProduct = () => {
+    setAddingProduct(true);
+  };
+
+  const saveNewProduct = async (newProduct) => {
+    if (newProduct.error) {
+      setPopup({
+        show: true,
+        type: "error",
+        message: newProduct.error,
+      });
+      setAddingProduct(false);
+      return;
+    }
+    try {
+      await fetchProducts();
+      setAddingProduct(false);
+      setPopup({
+        show: true,
+        type: "success",
+        message: "Product added successfully!",
+      });
+    } catch (err) {
+      setPopup({
+        show: true,
+        type: "error",
+        message: "Failed to add product.",
+      });
+    }
+  };
+
   const handleClosePopup = () => {
     setPopup({ show: false, type: "success", message: "" });
   };
@@ -59,7 +114,20 @@ const MarketplaceProducts = () => {
       <p className="text-green-700 text-sm mb-6">
         You can only update existing product details in the online marketplace.
       </p>
-
+      <button
+        onClick={handleAddProduct}
+        className="mb-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 font-semibold"
+      >
+        Add Product
+      </button>
+      {addingProduct && (
+        <ProductForm
+          product={null}
+          onSave={saveNewProduct}
+          onCancel={() => setAddingProduct(false)}
+          mode="add"
+        />
+      )}
       {editingProduct && (
         <ProductForm
           product={editingProduct}
@@ -68,7 +136,7 @@ const MarketplaceProducts = () => {
         />
       )}
 
-      {products.length === 0 ? (
+      {filteredProducts.length === 0 ? (
         <p className="text-center text-gray-600">No products available.</p>
       ) : (
         <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
@@ -85,11 +153,11 @@ const MarketplaceProducts = () => {
               </tr>
             </thead>
             <tbody>
-              {products.map((p, index) => (
+              {filteredProducts.map((p, index) => (
                 <tr
                   key={p.product_id || p.id || index}
                   className={`border-t hover:bg-green-50 ${
-                    (p.status === "unavailable" || p.quantity === 0) ? "bg-red-50" : ""
+                    (p.quantity === 0) ? "bg-red-50" : ""
                   }`}
                 >
                   <td className="px-6 py-4">{index + 1}</td>
@@ -102,9 +170,7 @@ const MarketplaceProducts = () => {
                       className={`font-semibold px-3 py-1 rounded-full block text-center capitalize ${
                         Number(p.quantity) === 0
                           ? "bg-red-100 text-red-700"
-                          : p.status === "available"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-200 text-red-600"
+                          : "bg-green-100 text-green-700"
                       }`}
                     >
                       {Number(p.quantity) === 0 ? "Sold" : "Available"}
@@ -122,6 +188,20 @@ const MarketplaceProducts = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Add space between table and notification */}
+      <div className="mt-4" />
+
+      {newCrops.length > 0 && (
+        <div className="mb-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
+          <strong>New crop(s) detected!</strong> Please add the following crop(s) to the marketplace:
+          <ul className="list-disc ml-6 mt-2">
+            {newCrops.map(crop => (
+              <li key={crop.crop_id}>{crop.crop_name} (Available: {crop.quantity}kg)</li>
+            ))}
+          </ul>
         </div>
       )}
 

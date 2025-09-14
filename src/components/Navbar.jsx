@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 import { Menu, X, Search, ShoppingCart, User } from "lucide-react";
@@ -9,8 +9,10 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
+  const inputRef = React.useRef(null);
 
   const { cartItems } = useCart();
   const { user, logout } = useAuth();
@@ -42,6 +44,15 @@ export default function Navbar() {
       navigate("/buyercart");
     }
   };
+
+  // Dispatch search term to window for marketplace page
+  useEffect(() => {
+    if (isMarketplace) {
+      window.dispatchEvent(
+        new CustomEvent("marketplace-search", { detail: searchTerm })
+      );
+    }
+  }, [searchTerm, isMarketplace]);
 
   return (
     <nav
@@ -82,14 +93,35 @@ export default function Navbar() {
           <>
             {showSearch && (
               <input
+                ref={inputRef}
                 type="text"
                 placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    window.dispatchEvent(
+                      new CustomEvent("marketplace-search", { detail: searchTerm })
+                    );
+                    e.preventDefault();
+                  }
+                }}
                 className="border border-gray-300 rounded-full px-4 py-1 w-48 outline-none focus:ring-2 focus:ring-green-300 transition duration-300"
               />
             )}
             <Search
               className="hover:text-green-700 cursor-pointer transition"
-              onClick={() => setShowSearch(!showSearch)}
+              onClick={() => {
+                setShowSearch(!showSearch);
+                // If opening search, focus input
+                setTimeout(() => {
+                  if (inputRef.current) inputRef.current.focus();
+                }, 100);
+                // Always dispatch search event on icon click
+                window.dispatchEvent(
+                  new CustomEvent("marketplace-search", { detail: searchTerm })
+                );
+              }}
             />
             <button onClick={handleCartClick} className="relative">
               <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />
@@ -135,14 +167,33 @@ export default function Navbar() {
           <>
             {showSearch && (
               <input
+                ref={inputRef}
                 type="text"
                 placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === "Enter") {
+                    window.dispatchEvent(
+                      new CustomEvent("marketplace-search", { detail: searchTerm })
+                    );
+                    e.preventDefault();
+                  }
+                }}
                 className="border border-gray-300 rounded-full px-4 py-1 w-40 outline-none focus:ring-2 focus:ring-green-300 transition duration-300"
               />
             )}
             <Search
               className="hover:text-green-700 cursor-pointer transition"
-              onClick={() => setShowSearch(!showSearch)}
+              onClick={() => {
+                setShowSearch(!showSearch);
+                setTimeout(() => {
+                  if (inputRef.current) inputRef.current.focus();
+                }, 100);
+                window.dispatchEvent(
+                  new CustomEvent("marketplace-search", { detail: searchTerm })
+                );
+              }}
             />
             <button onClick={handleCartClick} className="relative">
               <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />

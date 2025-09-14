@@ -44,7 +44,7 @@ const VegetableSection = () => {
   };
 
   const availableProducts = products.filter(
-    (item) => item.status !== "unavailable"
+    (item) => item.quantity > 0
   );
 
   return (
@@ -81,7 +81,7 @@ const VegetableSection = () => {
               className="rounded-lg shadow-md border border-gray-200 p-4 flex flex-col justify-between items-center text-center h-[370px] bg-white"
             >
               <img
-                src={item.image_url || ""}
+                src={item.image_url || "/default_marketplace.png"}
                 alt={item.name}
                 className="w-24 h-24 object-contain mb-2"
               />
@@ -115,19 +115,12 @@ const VegetableSection = () => {
                 >
                   Sold
                 </button>
-              ) : item.status === "available" ? (
+              ) : (
                 <button
                   onClick={() => handleAddToCart(item, quantities[index])}
                   className="mt-3 bg-green-600 text-white font-semibold px-4 py-1 rounded hover:bg-green-700 text-sm cursor-pointer"
                 >
                   Add to Cart
-                </button>
-              ) : (
-                <button
-                  disabled
-                  className="mt-3 bg-red-500 text-white font-semibold px-4 py-1 rounded cursor-not-allowed text-sm"
-                >
-                  Sold Out
                 </button>
               )}
             </div>

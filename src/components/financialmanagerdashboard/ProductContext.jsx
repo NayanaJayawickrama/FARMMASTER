@@ -6,6 +6,8 @@ const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
+  const [newCrops, setNewCrops] = useState([]);
+  const [allCrops, setAllCrops] = useState([]);
 
   const fetchProducts = async () => {
     try {
@@ -23,7 +25,7 @@ export const ProductProvider = ({ children }) => {
           price: parseFloat(item.price_per_unit),
           price_per_unit: parseFloat(item.price_per_unit),
           quantity: parseFloat(item.quantity),
-          status: item.status ? item.status.toLowerCase() : "",
+          status: parseFloat(item.quantity) === 0 ? "sold" : "available",
         }));
         setProducts(mappedProducts);
       } else {
@@ -34,8 +36,28 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
+  const fetchNewCrops = async () => {
+    try {
+      const res = await axios.get(`${rootUrl}/ProductRoute.php?action=getNewCrops`);
+      setNewCrops(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setNewCrops([]);
+    }
+  };
+
+  const fetchAllCrops = async () => {
+    try {
+      const res = await axios.get(`${rootUrl}/ProductRoute.php?action=getAllCrops`);
+      setAllCrops(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      setAllCrops([]);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchNewCrops();
+    fetchAllCrops();
   }, []);
 
   const updateProduct = (id, updatedFields) => {
@@ -47,7 +69,15 @@ export const ProductProvider = ({ children }) => {
   };
 
   return (
-    <ProductContext.Provider value={{ products, updateProduct, fetchProducts }}>
+    <ProductContext.Provider value={{
+      products,
+      updateProduct,
+      fetchProducts,
+      newCrops,
+      fetchNewCrops,
+      allCrops,
+      fetchAllCrops
+    }}>
       {children}
     </ProductContext.Provider>
   );

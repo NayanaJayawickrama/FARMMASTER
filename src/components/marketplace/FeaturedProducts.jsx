@@ -17,9 +17,9 @@ const FeaturedProducts = () => {
     }
   };
 
-  // Show products that are not 'unavailable'
+  // Show products that are available (quantity > 0)
   const filteredProducts = products.filter(
-    (product) => product.status !== "unavailable"
+    (product) => product.quantity > 0
   );
 
   return (
@@ -60,7 +60,7 @@ const FeaturedProducts = () => {
                 className="bg-white border rounded-lg p-4 text-center shadow-sm hover:shadow-md transition h-[280px] flex-shrink-0 relative"
               >
                 <img
-                  src={product.image_url || ""}
+                  src={product.image_url || "/default_marketplace.png"}
                   alt={product.name}
                   className="w-28 h-28 mx-auto mb-4 object-contain"
                 />
@@ -71,8 +71,8 @@ const FeaturedProducts = () => {
                   {product.description || "No description available"}
                 </p>
 
-                {/* Show 'Sold Out' badge if product.status is soldout */}
-                {product.status === "soldout" && (
+                {/* Show 'Sold Out' badge if quantity is 0 */}
+                {product.quantity === 0 && (
                   <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
                     Sold Out
                   </span>
