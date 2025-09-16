@@ -25,14 +25,16 @@ export default function LandReportBody() {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.get(`${rootUrl}/get_assessment_requests.php?user_id=${testUserId}`);
-      if (response.data.error) {
-        setError(response.data.error);
-      } else {
-        setAssessmentRequests(response.data);
-        if (response.data.length > 0) {
-          setSelectedItem(response.data[0]);
+      const response = await axios.get(`${rootUrl}/assessments?user_id=${testUserId}`, {
+        withCredentials: true
+      });
+      if (response.data.status === 'success') {
+        setAssessmentRequests(response.data.data || []);
+        if (response.data.data && response.data.data.length > 0) {
+          setSelectedItem(response.data.data[0]);
         }
+      } else {
+        setError(response.data.message || "Failed to fetch assessment requests");
       }
     } catch (err) {
       setError("Failed to fetch assessment requests: " + (err.response?.data?.message || err.message));
@@ -44,7 +46,7 @@ export default function LandReportBody() {
   const handleDownloadPDF = async (reportId) => {
     try {
       // Open the report in a new window for printing/saving as PDF
-      const reportUrl = `${rootUrl}/download_land_report_pdf.php?report_id=${reportId}`;
+      const reportUrl = `${rootUrl}/reports/land/${reportId}/pdf`;
       const newWindow = window.open(reportUrl, '_blank');
       
       if (!newWindow) {

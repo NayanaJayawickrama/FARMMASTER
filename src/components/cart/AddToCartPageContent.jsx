@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { useCart } from "./CartContext";
 import { HashLink } from "react-router-hash-link";
 import { Link } from "react-router-dom";
+import placeholderImg from "../../assets/images/marketplaceimages/vegetables.jpg";
 
 const AddToCartPageContent = () => {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -47,9 +48,13 @@ const AddToCartPageContent = () => {
                   
                   <div className="col-span-2 flex items-center gap-4">
                     <img
-                      src={item.image}
+                      src={item.image_url || item.image || placeholderImg}
                       alt={item.name || "Product image"}
                       className="w-16 h-16 object-contain"
+                      onError={(e) => {
+                        e.target.src = placeholderImg;
+                        e.target.onerror = null; // Prevent infinite loop
+                      }}
                     />
                     <div>
                       <p className="font-medium text-gray-800">{item.name}</p>

@@ -60,32 +60,38 @@ function StripePaymentForm({ landData, onSuccess, onError }) {
 
     try {
       // Step 1: Insert land details
-      const landResponse = await axios.post(`${rootUrl}/insert_land.php`, {
+      const landResponse = await axios.post(`${rootUrl}/api/lands`, {
         user_id: testUserId,
         size: landData.size,
         location: landData.location,
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
       });
 
       if (landResponse.data.status !== "success") {
         throw new Error(landResponse.data.message);
       }
 
-      const landId = landResponse.data.land_id;
+      const landId = landResponse.data.data.land_id;
 
       // Step 2: Create payment intent with Stripe
-      const paymentIntentResponse = await axios.post(`${rootUrl}/stripe_payment.php`, {
+      const paymentIntentResponse = await axios.post(`${rootUrl}/api/payments/process`, {
         action: "create_payment_intent",
         user_id: testUserId,
         land_id: landId,
         amount: assessmentFee
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
       });
 
       if (paymentIntentResponse.data.status !== "success") {
         throw new Error(paymentIntentResponse.data.message);
       }
 
-      const clientSecret = paymentIntentResponse.data.client_secret;
-      const paymentIntentId = paymentIntentResponse.data.payment_intent_id;
+      const clientSecret = paymentIntentResponse.data.data.client_secret;
+      const paymentIntentId = paymentIntentResponse.data.data.payment_intent_id;
 
       // Step 3: Confirm payment with Stripe
       const cardNumberElement = elements.getElement(CardNumberElement);
@@ -106,11 +112,14 @@ function StripePaymentForm({ landData, onSuccess, onError }) {
 
       if (paymentIntent.status === "succeeded") {
         // Step 4: Confirm payment on our backend
-        const confirmResponse = await axios.post(`${rootUrl}/stripe_payment.php`, {
+        const confirmResponse = await axios.post(`${rootUrl}/api/payments/process`, {
           action: "confirm_payment",
           payment_intent_id: paymentIntentId,
           user_id: testUserId,
           land_id: landId
+        }, {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
         });
 
         if (confirmResponse.data.status === "success") {
@@ -430,6 +439,9 @@ export default function LandAssessmentStripePayment() {
                   <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 font-semibold">
                     LKR {5000}
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Payment processed in USD (approximately $15.15) for secure international processing
+                  </p>
                 </div>
               </div>
 

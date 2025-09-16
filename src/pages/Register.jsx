@@ -142,13 +142,17 @@ const Register = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${rootUrl}/register.php`, {
+      const response = await axios.post(`${rootUrl}/api/users/register`, {
         first_name: firstName,
         last_name: lastName,
         email: email,
         phone: phone === "+94" ? "" : phone, // Send empty if only +94
         password: password,
-        account_type: accountType,
+        user_role: accountType, // Changed from account_type to user_role
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       setLoading(false);

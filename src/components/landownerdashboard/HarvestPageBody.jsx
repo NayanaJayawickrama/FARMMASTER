@@ -24,13 +24,15 @@ const HarvestPage = () => {
         
         console.log('Fetching harvest data for user_id:', userId);
 
-        const response = await axios.get(`${rootUrl}/get_harvest_data.php?user_id=${userId}`);
+        const response = await axios.get(`${rootUrl}/api/harvest?user_id=${userId}`, {
+          withCredentials: true
+        });
         
         console.log('Harvest API response:', response.data);
         
-        // The API returns data directly as an array
-        if (Array.isArray(response.data)) {
-          const data = response.data;
+        // The API returns data in response.data.data for MVC format
+        if (response.data.status === 'success') {
+          const data = response.data.data || [];
           setHarvestData(data);
           
           // Calculate totals

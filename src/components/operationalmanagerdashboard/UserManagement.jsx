@@ -17,8 +17,21 @@ export default function UserManagementPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.get(`${rootUrl}/get_users.php`);
-      setUserList(response.data);
+      const response = await axios.get(`${rootUrl}/api/users`, {
+        withCredentials: true
+      });
+      if (response.data.status === 'success') {
+        // Transform backend data to match frontend expectations
+        const transformedUsers = response.data.data.map(user => ({
+          ...user,
+          name: `${user.first_name} ${user.last_name}`,
+          role: user.user_role,
+          status: user.is_active ? "Active" : "Inactive"
+        }));
+        setUserList(transformedUsers);
+      } else {
+        setError(response.data.message || "Failed to load users.");
+      }
     } catch (err) {
       setError("Failed to load users.");
     } finally {
@@ -45,47 +58,92 @@ export default function UserManagementPage() {
   const handleFormSubmit = async (formData) => {
     try {
       if (editUser) {
-        const res = await axios.post(`${rootUrl}/update_user.php`, {
-          user_id: editUser.user_id,
-          ...formData,
+        const res = await axios.put(`${rootUrl}/api/users/${editUser.user_id}`, formData, {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
         });
-        if (res.data.success) {
+        if (res.data.status === 'success') {
           alert("User updated successfully");
           setShowForm(false);
           fetchUsers();
         } else {
-          alert(res.data.error || "Failed to update user");
+          alert(res.data.message || "Failed to update user");
         }
       } else {
-        const res = await axios.post(`${rootUrl}/add_user.php`, formData);
-        if (res.data.success) {
+        const res = await axios.post(`${rootUrl}/api/users`, formData, {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        });
+        if (res.data.status === 'success') {
           alert("User added successfully");
           setShowForm(false);
           fetchUsers();
         } else {
-          alert(res.data.error || "Failed to add user");
+          alert(res.data.message || "Failed to add user");
         }
       }
     } catch (err) {
-      alert("Server error. Please try again.");
+      console.error("User management error:", err);
+      
+      // Show more detailed error message
+      let errorMessage = "Server error. Please try again.";
+      
+      if (err.response) {
+        // Server responded with error
+        if (err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else {
+          errorMessage = `Server error (${err.response.status}): ${err.response.statusText}`;
+        }
+      } else if (err.request) {
+        // Network error
+        errorMessage = "Network error. Please check your connection.";
+      } else {
+        // Other error
+        errorMessage = err.message || "Unknown error occurred.";
+      }
+      
+      alert(errorMessage);
     }
   };
 
   const handleToggleStatus = async (userId, currentStatus) => {
     const newStatus = currentStatus === "Active" ? "inactive" : "active";
     try {
-      const res = await axios.post(`${rootUrl}/update_user_status.php`, {
-        user_id: userId,
+      const res = await axios.put(`${rootUrl}/api/users/${userId}/status`, {
         status: newStatus,
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
       });
-      if (res.data.success) {
+      if (res.data.status === 'success') {
         alert("User status updated successfully");
         fetchUsers();
       } else {
-        alert(res.data.error || "Failed to update user status");
+        alert(res.data.message || "Failed to update user status");
       }
-    } catch {
-      alert("Server error. Please try again.");
+    } catch (err) {
+      console.error("Status toggle error:", err);
+      
+      // Show more detailed error message
+      let errorMessage = "Server error. Please try again.";
+      
+      if (err.response) {
+        // Server responded with error
+        if (err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else {
+          errorMessage = `Server error (${err.response.status}): ${err.response.statusText}`;
+        }
+      } else if (err.request) {
+        // Network error
+        errorMessage = "Network error. Please check your connection.";
+      } else {
+        // Other error
+        errorMessage = err.message || "Unknown error occurred.";
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -103,7 +161,7 @@ export default function UserManagementPage() {
     const [lastName, setLastName] = useState(initialData?.last_name || "");
     const [email, setEmail] = useState(initialData?.email || "");
     const [phone, setPhone] = useState(initialData?.phone || "");
-    const [userRole, setUserRole] = useState(initialData?.role || "");
+    const [userRole, setUserRole] = useState(initialData?.user_role || initialData?.role || "");
     const [password, setPassword] = useState("");
 
     const handleSubmit = (e) => {
@@ -295,7 +353,7 @@ export default function UserManagementPage() {
                       <td className="px-6 py-4 text-green-600">{user.email}</td>
                       <td className="px-6 py-4 w-32">
                         <span className="bg-green-50 text-black font-semibold px-4 py-1 rounded-md block text-center">
-                          {user.role.replace("_", " ")}
+                          {(user.role || "").replace("_", " ")}
                         </span>
                       </td>
                       <td className="px-6 py-4 w-28">

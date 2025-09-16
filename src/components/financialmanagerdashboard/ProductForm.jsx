@@ -70,21 +70,28 @@ const ProductForm = ({ product, onSave, onCancel }) => {
       ...formData,
       status: autoStatus,
     };
-    const url = `${rootUrl}/ProductRoute.php?action=updateProduct`;
+    const url = `${rootUrl}/api/products/${formData.product_id}`;
     const form = new FormData();
     Object.entries(formattedData).forEach(([key, value]) => {
       form.append(key, value);
     });
+    // Add method override for proper REST API handling
+    form.append('_method', 'PUT');
     if (imageFile) {
       form.append("image", imageFile);
     }
     try {
+      // Use POST with method override instead of PUT for multipart/form-data
       const res = await axios.post(url, form, {
         headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true
       });
-      if (res.data.success) {
-        const newImageUrl = res.data.image_url || formData.image_url;
+      if (res.data.status === 'success') {
+        const newImageUrl = res.data.data?.image_url || formData.image_url;
         onSave({ ...formData, image_url: newImageUrl });
+      } else if (res.data.status === 'info') {
+        // Handle "no changes made" case
+        onSave({ ...formData, error: res.data.message });
       } else {
         onSave({ ...formData, error: res.data.message || "Failed to update product." });
       }

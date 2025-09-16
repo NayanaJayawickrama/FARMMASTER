@@ -30,21 +30,21 @@ export default function DashboardContent() {
     try {
       // Fetch assessment requests (includes both requests and reports)
       const [requestsResponse, landsResponse] = await Promise.all([
-        axios.get(`${rootUrl}/get_assessment_requests.php?user_id=${testUserId}`),
-        axios.get(`${rootUrl}/get_user_lands.php?user_id=${testUserId}`)
+        axios.get(`${rootUrl}/assessments?user_id=${testUserId}`, { withCredentials: true }),
+        axios.get(`${rootUrl}/api/lands?user_id=${testUserId}`, { withCredentials: true })
       ]);
 
-      if (!requestsResponse.data.error) {
+      if (requestsResponse.data.status === 'success') {
         // Store full assessment requests data
-        const assessmentData = requestsResponse.data;
+        const assessmentData = requestsResponse.data.data || [];
         setAssessmentRequests(assessmentData);
         // Convert assessment requests to land reports format for compatibility
         const completedReports = assessmentData.filter(item => item.has_report);
         setLandReports(completedReports);
       }
       
-      if (!landsResponse.data.error) {
-        setUserLands(landsResponse.data);
+      if (landsResponse.data.status === 'success') {
+        setUserLands(landsResponse.data.data || []);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);

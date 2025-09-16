@@ -19,8 +19,13 @@ const ResetPassword = () => {
     setLoading(true);
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/reset_password.php`,
-        { email, token, password }
+        `${import.meta.env.VITE_API_URL}/users/reset-password`,
+        { email, token, password },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
       );
       alert(res.data.message);
       //setMsg(res.data.message);

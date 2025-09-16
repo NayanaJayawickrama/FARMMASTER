@@ -32,14 +32,25 @@ const VegetableSection = () => {
   };
 
   const handleAddToCart = (product, quantity) => {
-    if (!user) {
+    // Debug: Log the user object to console for troubleshooting
+    console.log('Add to cart - Current user:', user);
+    console.log('User role:', user?.role);
+    
+    // Check if user is logged in
+    if (!user || !user.id) {
+      console.log('User not logged in, showing register popup');
       setShowPopup(true);
       return;
     }
-    if (user.role !== "Buyer") {
+    
+    // Check if user is a buyer (handle both 'Buyer' and potential variations)
+    if (user.role !== "Buyer" && user.role !== "buyer") {
+      console.log('User is not a buyer, showing role popup');
       setShowRolePopup(true);
       return;
     }
+    
+    console.log('Adding to cart:', product, 'quantity:', quantity);
     addToCart(product, quantity);
   };
 
@@ -89,7 +100,7 @@ const VegetableSection = () => {
               <p className="text-sm text-gray-600 mb-1">{item.description}</p>
 
               <p className="text-green-600 font-semibold text-md">
-                Rs. {item.price}.00
+                Rs. {parseFloat(item.price).toFixed(2)}
               </p>
 
               <div className="border mt-1 rounded flex justify-between items-center w-32 text-sm whitespace-nowrap">
@@ -145,17 +156,23 @@ const VegetableSection = () => {
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center border border-green-600">
               <h2 className="text-lg font-bold mb-2 text-gray-800">
-                Please Register First
+                Sign in as Buyer
               </h2>
               <p className="text-gray-600 mb-4">
-                You must be registered to add items to your cart.
+                You must be logged in as a buyer to add items to your cart.
               </p>
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-center gap-3">
                 <button
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/login")}
                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
                 >
-                  Go to Register
+                  Sign In
+                </button>
+                <button
+                  onClick={() => navigate("/register")}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                >
+                  Register
                 </button>
                 <button
                   onClick={() => setShowPopup(false)}

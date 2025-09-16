@@ -94,7 +94,7 @@ const MarketplaceProducts = () => {
                 >
                   <td className="px-6 py-4">{index + 1}</td>
                   <td className="px-6 py-4">{p.crop_name}</td>
-                  <td className="px-6 py-4">Rs. {p.price}</td>
+                  <td className="px-6 py-4">Rs. {parseFloat(p.price).toFixed(2)}</td>
                   <td className="px-6 py-4">{p.quantity}</td>
                   <td className="px-6 py-4">{p.description}</td>
                   <td className="px-6 py-4 w-28">

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:safe": "nodemon --watch src --ext js,jsx,ts,tsx --exec \"vite\"",
+    "dev:restart": "powershell -Command \"while ($true) { Start-Process -NoNewWindow -Wait -FilePath 'npm' -ArgumentList 'run', 'dev'; Write-Host 'Server crashed, restarting in 2 seconds...'; Start-Sleep 2 }\"",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -34,6 +36,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "nodemon": "^3.1.10",
     "vite": "^6.3.5"
   }
 }
