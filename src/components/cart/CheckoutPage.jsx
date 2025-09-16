@@ -2,6 +2,7 @@ import React from "react";
 import { useCart } from "./CartContext";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import placeholderImg from "../../assets/images/marketplaceimages/vegetables.jpg";
 
 export default function CheckoutPage() {
   const { cartItems } = useCart();
@@ -30,9 +31,13 @@ export default function CheckoutPage() {
             cartItems.map((item, index) => (
               <div key={index} className="mb-3 flex items-center gap-4">
                 <img
-                  src={item.image}
-                  alt={item.name}
+                  src={item.image_url || item.image || placeholderImg}
+                  alt={item.name || "Product image"}
                   className="w-14 h-14 object-contain rounded-md"
+                  onError={(e) => {
+                    e.target.src = placeholderImg;
+                    e.target.onerror = null; // Prevent infinite loop
+                  }}
                 />
                 <div>
                   <p className="font-medium">{item.name}</p>
