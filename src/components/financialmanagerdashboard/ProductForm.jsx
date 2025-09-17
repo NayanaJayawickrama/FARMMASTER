@@ -14,23 +14,22 @@ const ProductForm = ({ product, onSave, onCancel }) => {
     price_per_unit: "",
     quantity: "",
     description: "",
-    status: "",
-    image_url: product.image_url || ""
+    image_url: product.image_url || "",
+    is_featured: product.is_featured ? true : false
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(product.image_url || "");
 
   useEffect(() => {
     if (product) {
-      const autoStatus = product.quantity === 0 ? "Sold" : "Available";
       setFormData({
         product_id: product.product_id,
         crop_name: product.crop_name || "",
         price_per_unit: product.price_per_unit || "",
         quantity: product.quantity || "",
         description: product.description || "",
-        status: autoStatus,
-        image_url: product.image_url || ""
+        image_url: product.image_url || "",
+        is_featured: product.is_featured ? true : false
       });
       setImagePreview(product.image_url || "");
       setImageFile(null);
@@ -38,8 +37,12 @@ const ProductForm = ({ product, onSave, onCancel }) => {
   }, [product]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    if (type === "checkbox") {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleImageChange = (e) => {
@@ -64,39 +67,40 @@ const ProductForm = ({ product, onSave, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Status is always auto-set based on quantity
-    const autoStatus = Number(formData.quantity) === 0 ? "Sold" : "Available";
     const formattedData = {
-      ...formData,
-      status: autoStatus,
+      price_per_unit: formData.price_per_unit,
+      description: formData.description,
+      is_featured: formData.is_featured ? 1 : 0
     };
     const url = `${rootUrl}/api/products/${formData.product_id}`;
     const form = new FormData();
     Object.entries(formattedData).forEach(([key, value]) => {
       form.append(key, value);
     });
-    // Add method override for proper REST API handling
     form.append('_method', 'PUT');
     if (imageFile) {
       form.append("image", imageFile);
     }
     try {
-      // Use POST with method override instead of PUT for multipart/form-data
+      // Do NOT set Content-Type header manually for FormData
       const res = await axios.post(url, form, {
-        headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true
       });
       if (res.data.status === 'success') {
         const newImageUrl = res.data.data?.image_url || formData.image_url;
         onSave({ ...formData, image_url: newImageUrl });
       } else if (res.data.status === 'info') {
-        // Handle "no changes made" case
         onSave({ ...formData, error: res.data.message });
       } else {
         onSave({ ...formData, error: res.data.message || "Failed to update product." });
       }
     } catch (error) {
-      onSave({ ...formData, error: "Failed to connect to the server." });
+      // If error.response exists, show backend error message
+      if (error.response && error.response.data && error.response.data.message) {
+        onSave({ ...formData, error: error.response.data.message });
+      } else {
+        onSave({ ...formData, error: "Failed to connect to the server." });
+      }
     }
   };
 
@@ -113,21 +117,12 @@ const ProductForm = ({ product, onSave, onCancel }) => {
       </div>
       <div className="mb-2">
         <label className="block font-semibold">Crop Name</label>
-        <select
+        <input
           name="crop_name"
           value={formData.crop_name}
-          onChange={handleChange}
-          className="w-full border p-2 rounded bg-white text-gray-700 appearance-none"
-          required
-        >
-          <option value="" disabled>
-            -- Select Crop --
-          </option>
-          <option value="Carrot">Carrots</option>
-          <option value="Leeks">Leeks</option>
-          <option value="Tomato">Tomatoes</option>
-          <option value="Cabbage">Cabbage</option>
-        </select>
+          readOnly
+          className="w-full border p-2 rounded bg-gray-100"
+        />
       </div>
       <div className="mb-2">
         <label className="block font-semibold">Price Per Unit (Rs.)</label>
@@ -136,9 +131,11 @@ const ProductForm = ({ product, onSave, onCancel }) => {
           value={formData.price_per_unit}
           onChange={handleChange}
           className="w-full border p-2 rounded"
-          type="number"
-          step="0.01"
+          type="text"
+          pattern="^\d+(\.\d{0,2})?$"
           required
+          inputMode="decimal"
+          autoComplete="off"
         />
       </div>
       <div className="mb-2">
@@ -181,6 +178,30 @@ const ProductForm = ({ product, onSave, onCancel }) => {
         {imagePreview && (
           <img src={imagePreview} alt="Product Preview" className="mt-2 w-24 h-24 object-contain" />
         )}
+      </div>
+      <div className="mb-2">
+        <label className="inline-flex items-center">
+          <span className="font-semibold mr-3">Set as Featured Product</span>
+          <button
+            type="button"
+            className={`w-12 h-6 flex items-center rounded-full px-1 transition-colors duration-200 ${
+              formData.is_featured ? "bg-green-500" : "bg-gray-300"
+            }`}
+            onClick={() =>
+              setFormData((prev) => ({
+                ...prev,
+                is_featured: !prev.is_featured,
+              }))
+            }
+            aria-pressed={formData.is_featured}
+          >
+            <span
+              className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform duration-200 ${
+                formData.is_featured ? "translate-x-6" : ""
+              }`}
+            />
+          </button>
+        </label>
       </div>
       <div className="space-x-2">
         <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded cursor-pointer">

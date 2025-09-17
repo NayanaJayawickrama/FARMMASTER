@@ -55,18 +55,17 @@ const VegetableSection = () => {
   };
 
   const availableProducts = products.filter(
-    (item) => item.status !== "unavailable"
+    (item) => item.status === "available" || item.quantity === 0
   );
 
   return (
     <section
       id="vegetables"
-      className="relative flex justify-center py-14 px-4 md:px-10"
+      className="relative flex justify-center py-20 px-4 md:px-10"
     >
-      <div className="bg-[#F0FFED] rounded-2xl max-w-5xl w-full pt-0 pb-10 overflow-hidden relative">
-        
-        <div className="bg-green-600 text-white text-center py-10 px-4 relative">
-          <h2 className="text-3xl md:text-5xl font-extrabold">
+      <div className="bg-white rounded-2xl max-w-5xl w-full pt-0 pb-10 overflow-hidden relative shadow-2xl">
+        <div className="bg-green-600 text-white text-center py-10 px-4 relative rounded-t-2xl">
+          <h2 className="text-3xl md:text-5xl font-extrabold drop-shadow-lg">
             All Organic Vegetables
           </h2>
           <img
@@ -83,30 +82,29 @@ const VegetableSection = () => {
 
         
         <div
-          className="grid gap-6 px-6 mt-10"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
+          className="grid gap-8 px-8 mt-10"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}
         >
           {availableProducts.map((item, index) => (
             <div
               key={item.id}
-              className="rounded-lg shadow-md border border-gray-200 p-4 flex flex-col justify-between items-center text-center h-[370px] bg-white"
+              className="rounded-xl shadow-lg border border-gray-200 p-6 flex flex-col justify-between items-center text-center h-[370px] bg-white transition hover:scale-105 hover:shadow-xl"
             >
               <img
                 src={item.image_url || ""}
                 alt={item.name}
-                className="w-24 h-24 object-contain mb-2"
+                className="w-28 h-28 object-contain mb-2"
               />
-              <h3 className="font-bold text-lg text-black">{item.name}</h3>
+              <h3 className="font-bold text-lg text-green-700 mb-1">{item.name}</h3>
               <p className="text-sm text-gray-600 mb-1">{item.description}</p>
-
-              <p className="text-green-600 font-semibold text-md">
+              <p className="text-green-600 font-semibold text-md mb-2">
                 Rs. {parseFloat(item.price).toFixed(2)}
               </p>
-
               <div className="border mt-1 rounded flex justify-between items-center w-32 text-sm whitespace-nowrap">
                 <button
                   className="px-3 cursor-pointer"
                   onClick={() => decreaseQuantity(index)}
+                  disabled={item.quantity === 0}
                 >
                   −
                 </button>
@@ -114,11 +112,11 @@ const VegetableSection = () => {
                 <button
                   className="px-3 cursor-pointer"
                   onClick={() => increaseQuantity(index)}
+                  disabled={item.quantity === 0}
                 >
                   +
                 </button>
               </div>
-
               {item.quantity === 0 ? (
                 <button
                   disabled
@@ -126,19 +124,12 @@ const VegetableSection = () => {
                 >
                   Sold
                 </button>
-              ) : item.status === "available" ? (
+              ) : (
                 <button
                   onClick={() => handleAddToCart(item, quantities[index])}
                   className="mt-3 bg-green-600 text-white font-semibold px-4 py-1 rounded hover:bg-green-700 text-sm cursor-pointer"
                 >
                   Add to Cart
-                </button>
-              ) : (
-                <button
-                  disabled
-                  className="mt-3 bg-red-500 text-white font-semibold px-4 py-1 rounded cursor-not-allowed text-sm"
-                >
-                  Sold Out
                 </button>
               )}
             </div>

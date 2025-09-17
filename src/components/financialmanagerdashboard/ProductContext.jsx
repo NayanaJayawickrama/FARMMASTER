@@ -12,22 +12,24 @@ export const ProductProvider = ({ children }) => {
       const res = await axios.get(`${rootUrl}/api/products`, {
         withCredentials: true
       });
-      
+
       if (res.data.status === 'success') {
         const data = res.data.data;
-        
+
         if (Array.isArray(data)) {
           const mappedProducts = data.map((item) => ({
             id: parseInt(item.product_id),
             product_id: parseInt(item.product_id),
             name: `Organic ${item.crop_name}`,
             crop_name: item.crop_name,
-            image_url: item.image_url,
+            // Use backend-provided full image URL
+            image_url: item.image_url || "",
             description: item.description,
             price: parseFloat(item.price_per_unit),
             price_per_unit: parseFloat(item.price_per_unit),
             quantity: parseFloat(item.quantity),
-            status: item.status ? item.status.toLowerCase() : "",
+            status: item.quantity === 0 ? "sold" : item.status ? item.status.toLowerCase() : "",
+            is_featured: item.is_featured ? true : false
           }));
           setProducts(mappedProducts);
         } else {

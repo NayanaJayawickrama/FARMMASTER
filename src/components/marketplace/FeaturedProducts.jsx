@@ -17,15 +17,15 @@ const FeaturedProducts = () => {
     }
   };
 
-  // Show products that are not 'unavailable'
+  // Show only featured products that are not unavailable
   const filteredProducts = products.filter(
-    (product) => product.status !== "unavailable"
+    (product) => product.is_featured && product.status !== "unavailable"
   );
 
   return (
-    <section className="flex justify-center py-14 px-4 md:px-10">
-      <div className="bg-[#F3FFF0] rounded-2xl max-w-6xl w-full p-8 relative">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-10">
+    <section className="flex justify-center py-20 px-4 md:px-10 mt-15">
+      <div className="bg-white rounded-2xl max-w-6xl w-full p-10 relative shadow-2xl">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-10 text-green-700 drop-shadow-lg">
           Featured Products
         </h2>
 
@@ -46,8 +46,8 @@ const FeaturedProducts = () => {
         {/* Product list */}
         <div
           ref={scrollRef}
-          className="grid gap-6 overflow-x-auto md:overflow-visible scrollbar-hide scroll-smooth px-1"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
+          className="grid gap-8 overflow-x-auto md:overflow-visible scrollbar-hide scroll-smooth px-1"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}
         >
           {filteredProducts.length === 0 ? (
             <p className="text-gray-600 text-center col-span-full">
@@ -57,22 +57,22 @@ const FeaturedProducts = () => {
             filteredProducts.map((product, index) => (
               <div
                 key={index}
-                className="bg-white border rounded-lg p-4 text-center shadow-sm hover:shadow-md transition h-[280px] flex-shrink-0 relative"
+                className="bg-white border border-green-200 rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition h-[280px] flex-shrink-0 relative"
               >
                 <img
                   src={product.image_url || ""}
                   alt={product.name}
                   className="w-28 h-28 mx-auto mb-4 object-contain"
                 />
-                <h3 className="text-lg font-semibold text-black mb-1">
+                <h3 className="text-lg font-semibold text-green-700 mb-1">
                   {product.name}
                 </h3>
                 <p className="text-sm text-gray-600 mb-2">
                   {product.description || "No description available"}
                 </p>
 
-                {/* Show 'Sold Out' badge if product.status is soldout */}
-                {product.status === "soldout" && (
+                {/* Show 'Sold Out' badge if product.status is sold */}
+                {product.status === "sold" && (
                   <span className="absolute top-2 right-2 bg-red-500 text-white text-xs font-semibold px-2 py-1 rounded">
                     Sold Out
                   </span>
