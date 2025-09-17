@@ -1,0 +1,42 @@
+{
+  "name": "farmmaster",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:safe": "nodemon --watch src --ext js,jsx,ts,tsx --exec \"vite\"",
+    "dev:restart": "powershell -Command \"while ($true) { Start-Process -NoNewWindow -Wait -FilePath 'npm' -ArgumentList 'run', 'dev'; Write-Host 'Server crashed, restarting in 2 seconds...'; Start-Sleep 2 }\"",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@stripe/react-stripe-js": "^3.9.2",
+    "@stripe/stripe-js": "^7.9.0",
+    "@tailwindcss/vite": "^4.1.10",
+    "axios": "^1.10.0",
+    "dotenv": "^17.0.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.522.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-icons": "^5.5.0",
+    "react-leaflet": "^5.0.0",
+    "react-router-dom": "^7.7.0",
+    "react-router-hash-link": "^2.4.3",
+    "recharts": "^3.1.0",
+    "tailwindcss": "^4.1.10"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "nodemon": "^3.1.10",
+    "vite": "^6.3.5"
+  }
+}
