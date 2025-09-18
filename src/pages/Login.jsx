@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/images/logo.png';
 
@@ -24,7 +24,11 @@ const Login = () => {
 
   const rootUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
+  const location = useLocation();
   const { login: authLogin, user: currentUser } = useAuth();
+
+  // Get the intended destination from location state
+  const from = location.state?.from || null;
 
   // Redirect if already logged in
   useEffect(() => {
@@ -94,8 +98,9 @@ const Login = () => {
         // Use AuthContext login method to update both localStorage and state
         authLogin(user);
 
-        // Navigate immediately without popup
-        navigate(roleToPath[user.role]);
+        // Navigate to intended page or default dashboard
+        const redirectTo = from || roleToPath[user.role];
+        navigate(redirectTo);
       } else {
         // Show specific error message for invalid credentials
         if (response.data.message.toLowerCase().includes('invalid') || 

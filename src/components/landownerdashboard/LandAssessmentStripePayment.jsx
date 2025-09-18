@@ -295,6 +295,17 @@ export default function LandAssessmentStripePayment() {
 
   const handleLandInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // If it's the size field, validate it's positive
+    if (name === 'size') {
+      const numValue = parseFloat(value);
+      if (value !== '' && (isNaN(numValue) || numValue <= 0)) {
+        setMessage("⚠️ Land size must be positive.");
+      } else {
+        setMessage("");
+      }
+    }
+    
     setLandData(prev => ({
       ...prev,
       [name]: value
@@ -311,6 +322,13 @@ export default function LandAssessmentStripePayment() {
   const proceedToPayment = () => {
     if (!landData.size || !landData.location) {
       setMessage("⚠️ Please fill in all land details.");
+      return;
+    }
+
+    // Validate land size is positive
+    const sizeValue = parseFloat(landData.size);
+    if (isNaN(sizeValue) || sizeValue <= 0) {
+      setMessage("⚠️ Land size must be positive.");
       return;
     }
     
@@ -423,11 +441,13 @@ export default function LandAssessmentStripePayment() {
                     Land Size (Acres) *
                   </label>
                   <input
-                    type="text"
+                    type="number"
                     name="size"
                     placeholder="e.g., 5.5"
                     value={landData.size}
                     onChange={handleLandInputChange}
+                    min="0.1"
+                    step="0.1"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-green-50 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
                   />
                 </div>
@@ -439,9 +459,7 @@ export default function LandAssessmentStripePayment() {
                   <div className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 font-semibold">
                     LKR {5000}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Payment processed in USD (approximately $15.15) for secure international processing
-                  </p>
+                  
                 </div>
               </div>
 

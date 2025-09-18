@@ -1,5 +1,8 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LogoutWarningModal from "./components/LogoutWarningModal";
+import useAutoLogout from "./hooks/useAutoLogout";
 
 import HomePage from "./pages/HomePage";
 import Marketplace from "./pages/Marketplace";
@@ -8,6 +11,7 @@ import Contact from "./pages/Contact";
 import Register from "./pages/Register";
 import Login from "./pages/Login"; 
 import ResetPassword from './pages/ResetPassword';
+import NotFound from './pages/NotFound';
 
 import LandownerDashboard from "./pages/landownerpages/LandownerDashboard";
 import LandAssessmentStripePaymentPage from "./pages/landownerpages/LandAssessmentStripePaymentPage";
@@ -38,6 +42,9 @@ import FinancialMMarketplaceProducts from "./pages/financialmanagerpages/Financi
 import FinancialMFinancialReportManagement from "./pages/financialmanagerpages/FinancialMFinancialReportManagement";
 
 function App() {
+  // Auto-logout after 60 minutes of inactivity (with 2-minute warning)
+  const { showWarning, onStayLoggedIn, onLogout } = useAutoLogout(60, 2);
+
   return (
     <main>
       <Routes>
@@ -49,37 +56,148 @@ function App() {
         <Route path="/login" element={<Login />} /> 
         <Route path="/reset-password" element={<ResetPassword />} />
 
+        {/* Landowner Protected Routes */}
+        <Route path="/landownerdashboard" element={
+          <ProtectedRoute requiredRoles={['Landowner']}>
+            <LandownerDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/landassessment" element={
+          <ProtectedRoute requiredRoles={['Landowner']}>
+            <LandAssessmentStripePaymentPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/landassessmentstripe" element={
+          <ProtectedRoute requiredRoles={['Landowner']}>
+            <LandAssessmentStripePaymentPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/landreport" element={
+          <ProtectedRoute requiredRoles={['Landowner']}>
+            <LandReportPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/leaseproposal" element={
+          <ProtectedRoute requiredRoles={['Landowner']}>
+            <LeaseProposalPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/harvest" element={
+          <ProtectedRoute requiredRoles={['Landowner']}>
+            <HarvestPage />
+          </ProtectedRoute>
+        } />
 
-        <Route path="/landownerdashboard" element={<LandownerDashboard />} />
-        <Route path="/landassessment" element={<LandAssessmentStripePaymentPage />} />
-        <Route path="/landassessmentstripe" element={<LandAssessmentStripePaymentPage />} />
-        <Route path="/landreport" element={<LandReportPage />} />
-        <Route path="/leaseproposal" element={<LeaseProposalPage />} />
-        <Route path="/harvest" element={<HarvestPage />} />
+        {/* Operational Manager Protected Routes */}
+        <Route path="/operationalmanagerdashboard" element={
+          <ProtectedRoute requiredRoles={['Operational Manager', 'Operational_Manager']}>
+            <OperationalMDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/operationalmanagerusermanagement" element={
+          <ProtectedRoute requiredRoles={['Operational Manager', 'Operational_Manager']}>
+            <OperationalMUserManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/operationalmanagerproposalmanagement" element={
+          <ProtectedRoute requiredRoles={['Operational Manager', 'Operational_Manager']}>
+            <OperationalMProposalManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/operationalmanagercropinventorymanagement" element={
+          <ProtectedRoute requiredRoles={['Operational Manager', 'Operational_Manager']}>
+            <OperationalMCropInventoryManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/operationalmanagerlandreportmanagement" element={
+          <ProtectedRoute requiredRoles={['Operational Manager', 'Operational_Manager']}>
+            <OperationalMLandReportManagement />
+          </ProtectedRoute>
+        } />
 
-        <Route path="/operationalmanagerdashboard" element={<OperationalMDashboard />} />
-        <Route path="/operationalmanagerusermanagement" element={<OperationalMUserManagement />} />
-        <Route path="/operationalmanagerproposalmanagement" element={<OperationalMProposalManagement />} />
-        <Route path="/operationalmanagercropinventorymanagement" element={<OperationalMCropInventoryManagement />} />
-        <Route path="/operationalmanagerlandreportmanagement" element={<OperationalMLandReportManagement />} />
+        {/* Field Supervisor Protected Routes */}
+        <Route path="/fieldsupervisordashboard" element={
+          <ProtectedRoute requiredRoles={['Supervisor']}>
+            <FSDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/fieldsupervisorassignedtasks" element={
+          <ProtectedRoute requiredRoles={['Supervisor']}>
+            <FSAssignedTasks />
+          </ProtectedRoute>
+        } />
+        <Route path="/fieldsupervisorlanddatasubmission" element={
+          <ProtectedRoute requiredRoles={['Supervisor']}>
+            <FSLandDataSubmission />
+          </ProtectedRoute>
+        } />
 
-        <Route path="/fieldsupervisordashboard" element={<FSDashboard />} />
-        <Route path="/fieldsupervisorassignedtasks" element={<FSAssignedTasks />} />
-        <Route path="/fieldsupervisorlanddatasubmission" element={<FSLandDataSubmission />} />
+        {/* Buyer Protected Routes */}
+        <Route path="/buyerdashboard" element={
+          <ProtectedRoute requiredRoles={['Buyer']}>
+            <BuyerDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/buyerorders" element={
+          <ProtectedRoute requiredRoles={['Buyer']}>
+            <BuyerOrders />
+          </ProtectedRoute>
+        } />
+        <Route path="/buyercart" element={
+          <ProtectedRoute requiredRoles={['Buyer']}>
+            <BuyerCart />
+          </ProtectedRoute>
+        } />
+        <Route path="/checkoutpage" element={
+          <ProtectedRoute requiredRoles={['Buyer']}>
+            <BuyerCheckout />
+          </ProtectedRoute>
+        } />
 
-        <Route path="/buyerdashboard" element={<BuyerDashboard />}/>
-        <Route path="/buyerorders" element={<BuyerOrders />}/>
-        <Route path="/buyercart" element={<BuyerCart />}/>
-        <Route path="/checkoutpage" element={<BuyerCheckout />}/>
+        {/* Financial Manager Protected Routes */}
+        <Route path="/financialmanagerdashboard" element={
+          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
+            <FinancialMDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/financialmanagerpaymentmanagement" element={
+          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
+            <FinancialMPaymentManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/financialmanagerprofitrentcalculation" element={
+          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
+            <FinancialMProfitRentCalculation />
+          </ProtectedRoute>
+        } />
+        <Route path="/financialmanagermarketplacefinance" element={
+          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
+            <FinancialMMarketplaceFinance />
+          </ProtectedRoute>
+        } />
+        <Route path="/financialmanagermarketplaceproducts" element={
+          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
+            <FinancialMMarketplaceProducts />
+          </ProtectedRoute>
+        } />
+        <Route path="/financialmanagermarfinancialreportmanagement" element={
+          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
+            <FinancialMFinancialReportManagement />
+          </ProtectedRoute>
+        } />
 
-        <Route path="/financialmanagerdashboard" element={<FinancialMDashboard />} />
-        <Route path="/financialmanagerpaymentmanagement" element={<FinancialMPaymentManagement />} />
-        <Route path="/financialmanagerprofitrentcalculation" element={<FinancialMProfitRentCalculation />} />
-        <Route path="/financialmanagermarketplacefinance" element={<FinancialMMarketplaceFinance />} />
-        <Route path="/financialmanagermarketplaceproducts" element={<FinancialMMarketplaceProducts />} />
-        <Route path="/financialmanagermarfinancialreportmanagement" element={<FinancialMFinancialReportManagement />} />
+        {/* 404 - Catch all undefined routes */}
+        <Route path="*" element={<NotFound />} />
 
       </Routes>
+
+      {/* Auto-logout warning modal */}
+      <LogoutWarningModal
+        isVisible={showWarning}
+        onStayLoggedIn={onStayLoggedIn}
+        onLogout={onLogout}
+        countdownSeconds={30}
+      />
     </main>
   );
 }
