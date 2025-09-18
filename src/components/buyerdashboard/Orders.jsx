@@ -1,55 +1,93 @@
-import React, { useState } from "react";
-import { FiSearch } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
-const initialOrders = [
-  {
-    id: "#12345",
-    date: "2024-07-26",
-    product: "Organic Vegetables",
-    total: "$50.00",
-    status: "Delivered",
-  },
-  {
-    id: "#12346",
-    date: "2024-07-20",
-    product: "Organic Fruits",
-    total: "$75.00",
-    status: "Shipped",
-  },
-  {
-    id: "#12347",
-    date: "2024-07-15",
-    product: "Organic Spices",
-    total: "$30.00",
-    status: "Processing",
-  },
-  {
-    id: "#12348",
-    date: "2024-07-10",
-    product: "Organic Vegetables",
-    total: "$60.00",
-    status: "Delivered",
-  },
-  {
-    id: "#12349",
-    date: "2024-07-05",
-    product: "Organic Fruits",
-    total: "$90.00",
-    status: "Delivered",
-  },
-];
+export default function Orders({ user, rootUrl }) {
+  // Use env variable if rootUrl is not passed as prop
+  const apiRootUrl = rootUrl || import.meta.env.VITE_API_URL;
 
-export default function Orders() {
   const [activeTab, setActiveTab] = useState("All");
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Try to get user from props, then localStorage (as object)
+    let userObj = user && user.id ? user : null;
+    if (!userObj) {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          userObj = JSON.parse(storedUser);
+        } catch (e) {
+          userObj = null;
+        }
+      }
+    }
+    const userId = userObj && userObj.id ? userObj.id : null;
+    console.log("Orders userId from localStorage:", userObj && userObj.id);
+    console.log("Orders userId from prop:", user && user.id);
+    console.log("Orders userId used:", userId);
+
+    if (!userId) {
+      setError("User not found.");
+      setLoading(false);
+      return;
+    }
+    if (!apiRootUrl) {
+      setError("API root URL not set.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    axios
+      .post(
+        `${apiRootUrl}/api/buyer/orders`,
+        { userId },
+        { withCredentials: true }
+      )
+      .then((res) => {
+        console.log("Orders API response:", res.data); // Debug log
+        if (
+          res.data &&
+          res.data.status === 'success' &&
+          res.data.data &&
+          Array.isArray(res.data.data.orders)
+        ) {
+          setOrders(res.data.data.orders);
+          setError("");
+          console.log("Orders set in state:", res.data.data.orders); // Debug log
+        } else {
+          setOrders([]);
+          setError(res.data.message || "No orders found.");
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setOrders([]);
+        setError("Failed to fetch orders.");
+        setLoading(false);
+      });
+  }, [user, rootUrl]);
 
   const filterOrders = () => {
-    if (activeTab === "All") return initialOrders;
+    let filtered = orders;
     if (activeTab === "Active")
-      return initialOrders.filter(
-        (order) => order.status === "Shipped" || order.status === "Processing"
+      filtered = orders.filter(
+        (order) =>
+          order.status !== "delivered" &&
+          order.status !== "cancelled" &&
+          order.status !== "Delivered" &&
+          order.status !== "Cancelled"
       );
     if (activeTab === "Completed")
-      return initialOrders.filter((order) => order.status === "Delivered");
+      filtered = orders.filter(
+        (order) =>
+          order.status === "delivered" ||
+          order.status === "cancelled" ||
+          order.status === "Delivered" ||
+          order.status === "Cancelled"
+      );
+    return filtered;
   };
 
   const tabClass = (tab) =>
@@ -66,16 +104,6 @@ export default function Orders() {
       <p className="text-green-600 mb-6 text-sm sm:text-base">
         View and manage your order history
       </p>
-
-      {/* Search Bar */}
-      <div className="relative mb-6">
-        <FiSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-green-600" />
-        <input
-          type="text"
-          placeholder="Search orders"
-          className="w-full bg-green-50 rounded-md pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-green-400"
-        />
-      </div>
 
       {/* Tabs */}
       <div className="flex gap-6 mb-6 border-b border-gray-200">
@@ -98,43 +126,59 @@ export default function Orders() {
 
       {/* Table */}
       <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
-        <table className="min-w-full text-sm text-left">
-          <thead className="bg-green-50 text-black font-semibold">
-            <tr>
-              <th className="px-4 py-3">Order ID</th>
-              <th className="px-4 py-3">Date</th>
-              <th className="px-4 py-3">Products</th>
-              <th className="px-4 py-3">Total</th>
-              <th className="px-4 py-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filterOrders().map((order, idx) => (
-              <tr key={idx} className="border-t hover:bg-green-50">
-                <td className="px-4 py-3">{order.id}</td>
-                <td className="px-4 py-3 text-green-600">{order.date}</td>
-                <td className="px-4 py-3">{order.product}</td>
-                <td className="px-4 py-3">{order.total}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      order.status === "Delivered"
-                        ? "bg-green-100 text-green-700"
-                        : order.status === "Shipped"
-                        ? "bg-blue-100 text-blue-700"
-                        : order.status === "Processing"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : ""
-                    }`}
-                  >
-                    {order.status}
-                  </span>
-                </td>
+        {loading ? (
+          <div className="p-6 text-center text-gray-500">Loading orders...</div>
+        ) : error ? (
+          <div className="p-6 text-center text-red-500">{error}</div>
+        ) : (
+          <table className="min-w-full text-sm text-left">
+            <thead className="bg-green-50 text-black font-semibold">
+              <tr>
+                <th className="px-4 py-3">Order ID</th>
+                <th className="px-4 py-3">Payment Date</th>
+                <th className="px-4 py-3">Products</th>
+                <th className="px-4 py-3">Total Amount</th>
+                <th className="px-4 py-3">Order Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filterOrders().length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                    No orders to display.
+                  </td>
+                </tr>
+              ) : (
+                filterOrders().map((order, idx) => (
+                  <tr key={order.id || idx} className="border-t hover:bg-green-50">
+                    <td className="px-4 py-3">{order.order_number || order.id}</td>
+                    <td className="px-4 py-3 text-green-600">{order.date}</td>
+                    <td className="px-4 py-3">{order.product || "No products"}</td>
+                    <td className="px-4 py-3">{order.total}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          order.status === "Delivered" || order.status === "delivered"
+                            ? "bg-green-100 text-green-700"
+                            : order.status === "Shipped" || order.status === "shipped"
+                            ? "bg-blue-100 text-blue-700"
+                            : order.status === "Processing" || order.status === "pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : ""
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
 }
+
+

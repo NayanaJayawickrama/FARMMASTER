@@ -1,51 +1,44 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-
-import vegImage from '../../assets/images/marketplaceimages/vegetables.jpg';
-import fruitsImage from '../../assets/images/marketplaceimages/fruits.jpg';
-import spicesImage from '../../assets/images/marketplaceimages/spices.jpg';
-import grainsImage from '../../assets/images/marketplaceimages/grains.png';
+import vegNewImage from '../../assets/images/marketplaceimages/vegetablesnew.png';
 
 const ProductCategories = () => {
-  const categories = [
-    { name: 'Vegetables', image: vegImage, path: '/marketplace' },
-    { name: 'Fruits', image: fruitsImage, path: '/marketplace' },
-    { name: 'Spices', image: spicesImage, path: '/marketplace' },
-    { name: 'Grains', image: grainsImage, path: '/marketplace' },
-  ];
+  const handleShopClick = (e) => {
+    e.preventDefault();
+    const section = document.getElementById("vegetables");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
-    <section className="max-w-6xl mx-auto px-6 py-24">
-      <h2 className="text-4xl md:text-5xl font-bold text-center mb-16 text-green-700">
-        Explore Our Product Categories
-      </h2>
-
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-12 place-items-center">
-        {categories.map((category, index) => (
-          <Link
-            to={category.path}
-            key={index}
-            className="group relative w-44 h-44 rounded-full overflow-hidden shadow-2xl transform transition duration-500 hover:scale-110 hover:rotate-1 bg-white"
+    <section className="pt-16 mt-10">
+      <div className="relative z-10 max-w-4xl w-full mx-auto rounded-3xl shadow-2xl bg-white/95 p-10 flex flex-col md:flex-row items-center justify-between">
+        {/* Right: Transparent vegetable image (now first) */}
+        <div className="flex-1 flex justify-center items-center mb-8 md:mb-0 md:order-1">
+          <img
+            src={vegNewImage}
+            alt="Vegetable Marketplace"
+            className="w-72 h-72 object-contain drop-shadow-xl"
+            style={{ background: "none" }}
+          />
+        </div>
+        {/* Left: About Us and Welcome */}
+        <div className="flex-1 flex flex-col items-start justify-center px-2 md:px-6 md:order-2">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-green-700 mb-4 text-left drop-shadow-lg tracking-tight">
+            Organic Marketplace
+          </h2>
+          <p className="text-gray-700 mb-6 text-left text-lg leading-relaxed">
+            Welcome to Sri Lanka's trusted online marketplace for organic vegetables. Browse, shop, and enjoy fresh, healthy produce delivered from local farms directly to your table.
+          </p>
+          <a
+            href="#vegetables"
+            onClick={handleShopClick}
+            className="bg-gradient-to-r from-green-600 to-lime-400 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition text-lg"
           >
-            {/* Gradient border effect */}
-            <div className="absolute inset-0 z-0 rounded-full bg-gradient-to-tr from-green-300 via-lime-100 to-green-300 group-hover:blur-sm group-hover:scale-105 transition-all duration-500" />
-
-            {/* Image Layer */}
-            <img
-              src={category.image}
-              alt={category.name}
-              className="relative z-10 w-full h-full object-cover rounded-full border-4 border-white"
-            />
-
-            {/* Glow ring on hover */}
-            <div className="absolute inset-0 rounded-full z-10 border-4 border-transparent group-hover:border-green-400 transition-all duration-500" />
-
-            {/* Category Label */}
-            <div className="absolute bottom-3 left-1/2 z-20 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-4 py-1 rounded-full text-sm font-semibold text-green-800 shadow-md group-hover:bg-green-100 transition duration-300">
-              {category.name}
-            </div>
-          </Link>
-        ))}
+            Shop Now
+          </a>
+        </div>
       </div>
     </section>
   );

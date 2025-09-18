@@ -7,18 +7,6 @@ import { useNavigate } from "react-router-dom";
 import rightImg from "../../assets/images/marketplaceimages/right-veg.png";
 import leftImg from "../../assets/images/marketplaceimages/left-veg1.png";
 
-import carrotImg from "../../assets/images/marketplaceimages/carrot.png";
-import cabbageImg from "../../assets/images/marketplaceimages/cabbage.png";
-import tomatoImg from "../../assets/images/marketplaceimages/tomato.png";
-import leekImg from "../../assets/images/marketplaceimages/leeks.png";
-
-const productImages = {
-  1: carrotImg,
-  4: cabbageImg,
-  3: tomatoImg,
-  2: leekImg,
-};
-
 const VegetableSection = () => {
   const { products } = useProducts();
   const { addToCart } = useCart();
@@ -44,30 +32,40 @@ const VegetableSection = () => {
   };
 
   const handleAddToCart = (product, quantity) => {
-    if (!user) {
+    // Debug: Log the user object to console for troubleshooting
+    console.log('Add to cart - Current user:', user);
+    console.log('User role:', user?.role);
+    
+    // Check if user is logged in
+    if (!user || !user.id) {
+      console.log('User not logged in, showing register popup');
       setShowPopup(true);
       return;
     }
-    if (user.role !== "Buyer") {
+    
+    // Check if user is a buyer (handle both 'Buyer' and potential variations)
+    if (user.role !== "Buyer" && user.role !== "buyer") {
+      console.log('User is not a buyer, showing role popup');
       setShowRolePopup(true);
       return;
     }
+    
+    console.log('Adding to cart:', product, 'quantity:', quantity);
     addToCart(product, quantity);
   };
 
   const availableProducts = products.filter(
-    (item) => item.status !== "unavailable"
+    (item) => item.status === "available" || item.quantity === 0
   );
 
   return (
     <section
       id="vegetables"
-      className="relative flex justify-center py-14 px-4 md:px-10"
+      className="relative flex justify-center py-20 px-4 md:px-10"
     >
-      <div className="bg-[#F0FFED] rounded-2xl max-w-5xl w-full pt-0 pb-10 overflow-hidden relative">
-        
-        <div className="bg-green-600 text-white text-center py-10 px-4 relative">
-          <h2 className="text-3xl md:text-5xl font-extrabold">
+      <div className="bg-white rounded-2xl max-w-5xl w-full pt-0 pb-10 overflow-hidden relative shadow-2xl">
+        <div className="bg-green-600 text-white text-center py-10 px-4 relative rounded-t-2xl">
+          <h2 className="text-3xl md:text-5xl font-extrabold drop-shadow-lg">
             All Organic Vegetables
           </h2>
           <img
@@ -84,30 +82,29 @@ const VegetableSection = () => {
 
         
         <div
-          className="grid gap-6 px-6 mt-10"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}
+          className="grid gap-8 px-8 mt-10"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}
         >
           {availableProducts.map((item, index) => (
             <div
               key={item.id}
-              className="rounded-lg shadow-md border border-gray-200 p-4 flex flex-col justify-between items-center text-center h-[370px] bg-white"
+              className="rounded-xl shadow-lg border border-gray-200 p-6 flex flex-col justify-between items-center text-center h-[370px] bg-white transition hover:scale-105 hover:shadow-xl"
             >
               <img
-                src={productImages[item.id] || ""}
+                src={item.image_url || ""}
                 alt={item.name}
-                className="w-24 h-24 object-contain mb-2"
+                className="w-28 h-28 object-contain mb-2"
               />
-              <h3 className="font-bold text-lg text-black">{item.name}</h3>
+              <h3 className="font-bold text-lg text-green-700 mb-1">{item.name}</h3>
               <p className="text-sm text-gray-600 mb-1">{item.description}</p>
-
-              <p className="text-green-600 font-semibold text-md">
-                Rs. {item.price}.00
+              <p className="text-green-600 font-semibold text-md mb-2">
+                Rs. {parseFloat(item.price).toFixed(2)}
               </p>
-
               <div className="border mt-1 rounded flex justify-between items-center w-32 text-sm whitespace-nowrap">
                 <button
                   className="px-3 cursor-pointer"
                   onClick={() => decreaseQuantity(index)}
+                  disabled={item.quantity === 0}
                 >
                   −
                 </button>
@@ -115,24 +112,24 @@ const VegetableSection = () => {
                 <button
                   className="px-3 cursor-pointer"
                   onClick={() => increaseQuantity(index)}
+                  disabled={item.quantity === 0}
                 >
                   +
                 </button>
               </div>
-
-              {item.status === "available" ? (
+              {item.quantity === 0 ? (
+                <button
+                  disabled
+                  className="mt-3 bg-red-500 text-white font-semibold px-4 py-1 rounded cursor-not-allowed text-sm"
+                >
+                  Sold
+                </button>
+              ) : (
                 <button
                   onClick={() => handleAddToCart(item, quantities[index])}
                   className="mt-3 bg-green-600 text-white font-semibold px-4 py-1 rounded hover:bg-green-700 text-sm cursor-pointer"
                 >
                   Add to Cart
-                </button>
-              ) : (
-                <button
-                  disabled
-                  className="mt-3 bg-red-500 text-white font-semibold px-4 py-1 rounded cursor-not-allowed text-sm"
-                >
-                  Sold Out
                 </button>
               )}
             </div>
@@ -150,17 +147,23 @@ const VegetableSection = () => {
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center border border-green-600">
               <h2 className="text-lg font-bold mb-2 text-gray-800">
-                Please Register First
+                Sign in as Buyer
               </h2>
               <p className="text-gray-600 mb-4">
-                You must be registered to add items to your cart.
+                You must be logged in as a buyer to add items to your cart.
               </p>
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-center gap-3">
                 <button
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/login")}
                   className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
                 >
-                  Go to Register
+                  Sign In
+                </button>
+                <button
+                  onClick={() => navigate("/register")}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                >
+                  Register
                 </button>
                 <button
                   onClick={() => setShowPopup(false)}

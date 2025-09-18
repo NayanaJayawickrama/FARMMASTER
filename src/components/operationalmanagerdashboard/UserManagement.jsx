@@ -17,8 +17,21 @@ export default function UserManagementPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.get(`${rootUrl}/get_users.php`);
-      setUserList(response.data);
+      const response = await axios.get(`${rootUrl}/api/users`, {
+        withCredentials: true
+      });
+      if (response.data.status === 'success') {
+        // Transform backend data to match frontend expectations
+        const transformedUsers = response.data.data.map(user => ({
+          ...user,
+          name: `${user.first_name} ${user.last_name}`,
+          role: user.user_role,
+          status: user.is_active ? "Active" : "Inactive"
+        }));
+        setUserList(transformedUsers);
+      } else {
+        setError(response.data.message || "Failed to load users.");
+      }
     } catch (err) {
       setError("Failed to load users.");
     } finally {
@@ -45,47 +58,92 @@ export default function UserManagementPage() {
   const handleFormSubmit = async (formData) => {
     try {
       if (editUser) {
-        const res = await axios.post(`${rootUrl}/update_user.php`, {
-          user_id: editUser.user_id,
-          ...formData,
+        const res = await axios.put(`${rootUrl}/api/users/${editUser.user_id}`, formData, {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
         });
-        if (res.data.success) {
+        if (res.data.status === 'success') {
           alert("User updated successfully");
           setShowForm(false);
           fetchUsers();
         } else {
-          alert(res.data.error || "Failed to update user");
+          alert(res.data.message || "Failed to update user");
         }
       } else {
-        const res = await axios.post(`${rootUrl}/add_user.php`, formData);
-        if (res.data.success) {
+        const res = await axios.post(`${rootUrl}/api/users`, formData, {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        });
+        if (res.data.status === 'success') {
           alert("User added successfully");
           setShowForm(false);
           fetchUsers();
         } else {
-          alert(res.data.error || "Failed to add user");
+          alert(res.data.message || "Failed to add user");
         }
       }
     } catch (err) {
-      alert("Server error. Please try again.");
+      console.error("User management error:", err);
+      
+      // Show more detailed error message
+      let errorMessage = "Server error. Please try again.";
+      
+      if (err.response) {
+        // Server responded with error
+        if (err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else {
+          errorMessage = `Server error (${err.response.status}): ${err.response.statusText}`;
+        }
+      } else if (err.request) {
+        // Network error
+        errorMessage = "Network error. Please check your connection.";
+      } else {
+        // Other error
+        errorMessage = err.message || "Unknown error occurred.";
+      }
+      
+      alert(errorMessage);
     }
   };
 
   const handleToggleStatus = async (userId, currentStatus) => {
     const newStatus = currentStatus === "Active" ? "inactive" : "active";
     try {
-      const res = await axios.post(`${rootUrl}/update_user_status.php`, {
-        user_id: userId,
+      const res = await axios.put(`${rootUrl}/api/users/${userId}/status`, {
         status: newStatus,
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
       });
-      if (res.data.success) {
+      if (res.data.status === 'success') {
         alert("User status updated successfully");
         fetchUsers();
       } else {
-        alert(res.data.error || "Failed to update user status");
+        alert(res.data.message || "Failed to update user status");
       }
-    } catch {
-      alert("Server error. Please try again.");
+    } catch (err) {
+      console.error("Status toggle error:", err);
+      
+      // Show more detailed error message
+      let errorMessage = "Server error. Please try again.";
+      
+      if (err.response) {
+        // Server responded with error
+        if (err.response.data && err.response.data.message) {
+          errorMessage = err.response.data.message;
+        } else {
+          errorMessage = `Server error (${err.response.status}): ${err.response.statusText}`;
+        }
+      } else if (err.request) {
+        // Network error
+        errorMessage = "Network error. Please check your connection.";
+      } else {
+        // Other error
+        errorMessage = err.message || "Unknown error occurred.";
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -103,7 +161,7 @@ export default function UserManagementPage() {
     const [lastName, setLastName] = useState(initialData?.last_name || "");
     const [email, setEmail] = useState(initialData?.email || "");
     const [phone, setPhone] = useState(initialData?.phone || "");
-    const [userRole, setUserRole] = useState(initialData?.role || "");
+    const [userRole, setUserRole] = useState(initialData?.user_role || initialData?.role || "");
     const [password, setPassword] = useState("");
 
     const handleSubmit = (e) => {
@@ -196,10 +254,7 @@ export default function UserManagementPage() {
               required
             >
               <option value="">Select Role</option>
-              <option value="Landowner">Landowner</option>
               <option value="Supervisor">Supervisor</option>
-              <option value="Buyer">Buyer</option>
-              <option value="Operational_Manager">Operational Manager</option>
               <option value="Financial_Manager">Financial Manager</option>
             </select>
           </div>
@@ -281,38 +336,29 @@ export default function UserManagementPage() {
             <p className="text-center text-gray-600">No users found.</p>
           ) : (
             <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
-              <table className="min-w-full text-sm text-center table-fixed">
-                <colgroup>
-                  <col className="w-1/5" />
-                  <col className="w-1/5" />
-                  <col className="w-1/5" />
-                  <col className="w-1/5" />
-                  <col className="w-1/5" />
-                </colgroup>
+              <table className="min-w-full text-sm text-left">
                 <thead className="bg-green-50 text-black font-semibold">
                   <tr>
-                    <th className="px-2 py-4">Name</th>
-                    <th className="px-2 py-4">Email</th>
-                    <th className="px-2 py-4">Role</th>
-                    <th className="px-2 py-4">Status</th>
-                    <th className="px-2 py-4 text-green-700">Actions</th>
+                    <th className="px-6 py-4">Name</th>
+                    <th className="px-6 py-4">Email</th>
+                    <th className="px-6 py-4">Role</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-green-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => (
                     <tr key={user.user_id} className="border-t hover:bg-green-50">
-                      <td className="px-2 py-4 break-words">{user.name}</td>
-                      <td className="px-2 py-4 break-words text-green-600">
-                        {user.email}
-                      </td>
-                      <td className="px-2 py-4">
-                        <span className="bg-green-50 text-black font-semibold px-2 py-1 rounded text-center inline-block">
-                          {user.role.replace("_", " ")}
+                      <td className="px-6 py-4">{user.name}</td>
+                      <td className="px-6 py-4 text-green-600">{user.email}</td>
+                      <td className="px-6 py-4 w-32">
+                        <span className="bg-green-50 text-black font-semibold px-4 py-1 rounded-md block text-center">
+                          {(user.role || "").replace("_", " ")}
                         </span>
                       </td>
-                      <td className="px-2 py-4">
+                      <td className="px-6 py-4 w-28">
                         <span
-                          className={`font-semibold px-2 py-1 rounded text-center inline-block ${
+                          className={`font-semibold px-3 py-1 rounded-full block text-center ${
                             user.status === "Active"
                               ? "bg-green-100 text-green-700"
                               : "bg-gray-200 text-red-600"
@@ -321,16 +367,17 @@ export default function UserManagementPage() {
                           {user.status}
                         </span>
                       </td>
-                      <td className="px-2 py-4 font-semibold text-sm whitespace-nowrap">
-                        <div className="flex flex-wrap gap-3 items-center justify-center">
+                      <td className="px-6 py-4 text-black font-semibold text-sm whitespace-nowrap">
+                        <div className="flex flex-wrap gap-3 items-center">
                           <button
                             onClick={() => openEditUserForm(user)}
                             className="hover:underline hover:text-green-600 cursor-pointer"
                           >
                             Edit
                           </button>
+
                           {/* Toggle switch for status */}
-                          <label className="inline-flex items-center cursor-pointer ml-2 group">
+                          <label className="inline-flex items-center cursor-pointer ml-2">
                             <input
                               type="checkbox"
                               className="form-checkbox h-5 w-5 text-green-600"
@@ -339,9 +386,7 @@ export default function UserManagementPage() {
                                 handleToggleStatus(user.user_id, user.status)
                               }
                             />
-                            <span
-                              className="ml-2 text-sm text-black group-hover:text-green-600 transition-colors duration-200"
-                            >
+                            <span className="ml-2 text-sm">
                               {user.status === "Active" ? "Active" : "Inactive"}
                             </span>
                           </label>

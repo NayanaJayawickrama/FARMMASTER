@@ -8,6 +8,8 @@ export default function LeaseProposalBody() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const rootUrl = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     fetchProposals();
   }, []);
@@ -18,26 +20,34 @@ export default function LeaseProposalBody() {
     try {
       // Get user from localStorage
       const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user.user_id || 21; // Default to user_id 21 for testing
+      const userId = user.id || user.user_id || 21; // Check both 'id' and 'user_id' properties
       
+      console.log('User from localStorage:', user);
       console.log('Fetching proposals for user_id:', userId);
+      console.log('API URL:', `${rootUrl}/proposals?user_id=${userId}`);
       
-      const response = await axios.get(`http://localhost/fmf/b/get_proposals.php?user_id=${userId}`);
+      const response = await axios.get(`${rootUrl}/api/proposals?user_id=${userId}`, {
+        withCredentials: true
+      });
       
       console.log('Proposals API response:', response.data);
       
-      if (response.data.success === false) {
-        setError(response.data.message);
-      } else if (Array.isArray(response.data)) {
-        setProposals(response.data);
-        if (response.data.length > 0) {
-          setSelectedProposal(response.data[0]);
+      if (response.data.status === 'success') {
+        setProposals(response.data.data || []);
+        if (response.data.data && response.data.data.length > 0) {
+          setSelectedProposal(response.data.data[0]);
         }
       } else {
-        setError("Invalid response format from server");
+        setError(response.data.message || "Failed to fetch proposals");
       }
     } catch (err) {
       console.error('Error fetching proposals:', err);
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        url: err.config?.url
+      });
       setError("Failed to fetch proposals: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
@@ -46,28 +56,30 @@ export default function LeaseProposalBody() {
 
   const handleProposalAction = async (proposalId, action) => {
     try {
-      const response = await axios.post(`http://localhost/fmf/b/update_proposal_status.php`, {
-        proposal_id: proposalId,
+      const response = await axios.put(`${rootUrl}/api/proposals/${proposalId}/status`, {
         action: action
+      }, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
       });
       
-      if (response.data.success) {
+      if (response.data.status === 'success') {
         // Update local state
         const updatedProposals = proposals.map(proposal => 
           proposal.proposal_id === proposalId 
-            ? { ...proposal, status: response.data.new_status }
+            ? { ...proposal, status: response.data.data.new_status }
             : proposal
         );
         setProposals(updatedProposals);
         
         // Update selected proposal if it's the one being updated
         if (selectedProposal && selectedProposal.proposal_id === proposalId) {
-          setSelectedProposal({ ...selectedProposal, status: response.data.new_status });
+          setSelectedProposal({ ...selectedProposal, status: response.data.data.new_status });
         }
         
         alert(`Proposal ${action}ed successfully!`);
       } else {
-        alert("Failed to update proposal: " + response.data.error);
+        alert("Failed to update proposal: " + response.data.message);
       }
     } catch (err) {
       alert("Error updating proposal: " + (err.response?.data?.error || err.message));

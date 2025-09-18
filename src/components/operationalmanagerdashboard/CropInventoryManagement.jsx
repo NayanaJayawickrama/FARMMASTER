@@ -19,13 +19,13 @@ export default function CropInventoryManagement() {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get(`${rootUrl}/get_crops.php`);
-      if (Array.isArray(res.data)) {
-        setCropList(res.data);
-      } else if (res.data.success === false) {
-        setError(res.data.error || "Failed to load crops.");
+      const res = await axios.get(`${rootUrl}/api/crops`, {
+        withCredentials: true
+      });
+      if (res.data.status === 'success') {
+        setCropList(res.data.data || []);
       } else {
-        setCropList([]);
+        setError(res.data.message || "Failed to load crops.");
       }
     } catch {
       setError("Server error while fetching crops.");
@@ -42,11 +42,13 @@ export default function CropInventoryManagement() {
   const handleDeleteCrop = async (cropId) => {
     if (!window.confirm("Are you sure you want to delete this crop?")) return;
     try {
-      const res = await axios.post(`${rootUrl}/delete_crop.php`, { crop_id: cropId });
-      if (res.data.success) {
+      const res = await axios.delete(`${rootUrl}/api/crops/${cropId}`, {
+        withCredentials: true
+      });
+      if (res.data.status === 'success') {
         fetchCrops();
       } else {
-        alert(res.data.error || "Failed to delete crop.");
+        alert(res.data.message || "Failed to delete crop.");
       }
     } catch {
       alert("Server error while deleting crop.");
@@ -62,15 +64,17 @@ export default function CropInventoryManagement() {
   // Handle Update Crop form submission
   const handleFormSubmit = async (formData) => {
     try {
-      const payload = { crop_id: editCrop.crop_id, ...formData };
-      const res = await axios.post(`${rootUrl}/update_crop.php`, payload);
+      const res = await axios.put(`${rootUrl}/api/crops/${editCrop.crop_id}`, formData, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
+      });
 
-      if (res.data.success) {
+      if (res.data.status === 'success') {
         alert("Crop updated successfully");
         setShowForm(false);
         fetchCrops();
       } else {
-        alert(res.data.error || "Failed to update crop");
+        alert(res.data.message || "Failed to update crop");
       }
     } catch {
       alert("Server error. Please try again.");

@@ -1,45 +1,45 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 
-import carrotImg from "../../assets/images/marketplaceimages/carrot.png";
-import cabbageImg from "../../assets/images/marketplaceimages/cabbage.png";
-import tomatoImg from "../../assets/images/marketplaceimages/tomato.png";
-import leekImg from "../../assets/images/marketplaceimages/leeks.png";
-
 const rootUrl = import.meta.env.VITE_API_URL;
 const ProductContext = createContext();
-
-const imageMap = {
-  Carrot: carrotImg,
-  Cabbage: cabbageImg,
-  Tomato: tomatoImg,
-  Leeks: leekImg,
-};
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${rootUrl}/get_products.php`);
-      const data = res.data;
+      const res = await axios.get(`${rootUrl}/api/products`, {
+        withCredentials: true
+      });
 
-      const mappedProducts = data.map((item) => ({
-        id: parseInt(item.product_id),
-        product_id: parseInt(item.product_id), 
-        name: `Organic ${item.crop_name}`,
-        crop_name: item.crop_name,
-        image: imageMap[item.crop_name] || null,
-        description: item.description,
-        price: parseFloat(item.price_per_unit),
-        price_per_unit: parseFloat(item.price_per_unit),
-        quantity: parseFloat(item.quantity),
-        status: item.status.toLowerCase(),
-      }));
+      if (res.data.status === 'success') {
+        const data = res.data.data;
 
-      setProducts(mappedProducts);
+        if (Array.isArray(data)) {
+          const mappedProducts = data.map((item) => ({
+            id: parseInt(item.product_id),
+            product_id: parseInt(item.product_id),
+            name: `Organic ${item.crop_name}`,
+            crop_name: item.crop_name,
+            // Use backend-provided full image URL
+            image_url: item.image_url || "",
+            description: item.description,
+            price: parseFloat(item.price_per_unit),
+            price_per_unit: parseFloat(item.price_per_unit),
+            quantity: parseFloat(item.quantity),
+            status: item.quantity === 0 ? "sold" : item.status ? item.status.toLowerCase() : "",
+            is_featured: item.is_featured ? true : false
+          }));
+          setProducts(mappedProducts);
+        } else {
+          setProducts([]);
+        }
+      } else {
+        setProducts([]);
+      }
     } catch (err) {
-      console.error("Failed to load products:", err);
+      setProducts([]);
     }
   };
 

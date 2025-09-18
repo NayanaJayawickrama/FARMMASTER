@@ -25,14 +25,16 @@ export default function LandReportBody() {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.get(`${rootUrl}/get_assessment_requests.php?user_id=${testUserId}`);
-      if (response.data.error) {
-        setError(response.data.error);
-      } else {
-        setAssessmentRequests(response.data);
-        if (response.data.length > 0) {
-          setSelectedItem(response.data[0]);
+      const response = await axios.get(`${rootUrl}/assessments?user_id=${testUserId}`, {
+        withCredentials: true
+      });
+      if (response.data.status === 'success') {
+        setAssessmentRequests(response.data.data || []);
+        if (response.data.data && response.data.data.length > 0) {
+          setSelectedItem(response.data.data[0]);
         }
+      } else {
+        setError(response.data.message || "Failed to fetch assessment requests");
       }
     } catch (err) {
       setError("Failed to fetch assessment requests: " + (err.response?.data?.message || err.message));
@@ -44,7 +46,7 @@ export default function LandReportBody() {
   const handleDownloadPDF = async (reportId) => {
     try {
       // Open the report in a new window for printing/saving as PDF
-      const reportUrl = `${rootUrl}/download_land_report_pdf.php?report_id=${reportId}`;
+      const reportUrl = `${rootUrl}/reports/land/${reportId}/pdf`;
       const newWindow = window.open(reportUrl, '_blank');
       
       if (!newWindow) {
@@ -56,28 +58,6 @@ export default function LandReportBody() {
       }
     } catch (err) {
       alert("Failed to open report: " + err.message);
-    }
-  };
-
-  const handleDownloadText = async (reportId) => {
-    try {
-      const response = await fetch(`${rootUrl}/download_land_report_txt.php?report_id=${reportId}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to download text report');
-      }
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `land_report_${reportId}.txt`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      alert("Failed to download text report: " + err.message);
     }
   };
 
@@ -315,13 +295,6 @@ export default function LandReportBody() {
                         >
                           <Download size={16} />
                           View/Print Report
-                        </button>
-                        <button
-                          onClick={() => handleDownloadText(selectedItem.report_id)}
-                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm font-semibold rounded-md transition"
-                        >
-                          <Download size={14} />
-                          Download .txt
                         </button>
                       </div>
                     )}

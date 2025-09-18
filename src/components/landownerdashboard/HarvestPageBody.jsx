@@ -12,23 +12,27 @@ const HarvestPage = () => {
     landowenerTotal: 0
   });
 
+  const rootUrl = import.meta.env.VITE_API_URL;
+
   // Fetch harvest data from backend
   useEffect(() => {
     const fetchHarvestData = async () => {
       try {
         setLoading(true);
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const userId = user.user_id || 21; // Default to user_id 21 for testing
+        const userId = user.id || user.user_id || 21; // Check both 'id' and 'user_id' properties
         
         console.log('Fetching harvest data for user_id:', userId);
 
-        const response = await axios.get(`http://localhost/fmf/b/get_harvest_data.php?user_id=${userId}`);
+        const response = await axios.get(`${rootUrl}/api/harvest?user_id=${userId}`, {
+          withCredentials: true
+        });
         
         console.log('Harvest API response:', response.data);
         
-        // The API returns data directly as an array
-        if (Array.isArray(response.data)) {
-          const data = response.data;
+        // The API returns data in response.data.data for MVC format
+        if (response.data.status === 'success') {
+          const data = response.data.data || [];
           setHarvestData(data);
           
           // Calculate totals

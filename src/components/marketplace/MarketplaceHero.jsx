@@ -22,12 +22,6 @@ const MarketplaceHero = () => {
             grown with love and care
           </p>
 
-          <a
-            href="#vegetables"
-            className="mt-2 bg-green-500 text-white font-bold px-6 py-2 rounded-2xl hover:bg-green-600 transition"
-          >
-            Shop Now
-          </a>
         </div>
       </div>
 

@@ -1,11 +1,29 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { X } from "lucide-react";
 import { useCart } from "./CartContext";
 import { HashLink } from "react-router-hash-link";
 import { Link } from "react-router-dom";
+import placeholderImg from "../../assets/images/marketplaceimages/vegetables.jpg";
 
 const AddToCartPageContent = () => {
-  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, clearCart, setCartItems } = useCart();
+
+  // Load cart from localStorage on mount if cartItems is empty
+  useEffect(() => {
+    const storedCart = localStorage.getItem("cartItems");
+    if (storedCart && cartItems.length === 0) {
+      try {
+        setCartItems(JSON.parse(storedCart));
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }, [setCartItems]);
+
+  // Save cart to localStorage whenever cartItems change
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const subTotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -47,9 +65,13 @@ const AddToCartPageContent = () => {
                   
                   <div className="col-span-2 flex items-center gap-4">
                     <img
-                      src={item.image}
+                      src={item.image_url || item.image || placeholderImg}
                       alt={item.name || "Product image"}
                       className="w-16 h-16 object-contain"
+                      onError={(e) => {
+                        e.target.src = placeholderImg;
+                        e.target.onerror = null; // Prevent infinite loop
+                      }}
                     />
                     <div>
                       <p className="font-medium text-gray-800">{item.name}</p>
