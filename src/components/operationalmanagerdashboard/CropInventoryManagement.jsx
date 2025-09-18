@@ -221,25 +221,26 @@ export default function CropInventoryManagement() {
               <p className="text-gray-600">No crops found.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-green-50 text-black font-semibold">
+            <div className="overflow-x-auto bg-white border border-black rounded-xl shadow-lg">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gradient-to-r from-green-50 to-green-100 text-black font-semibold">
                   <tr>
-                    <th className="px-6 py-4">Crop Name</th>
-                    <th className="px-6 py-4">Quantity (kg)</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-green-700">Actions</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Crop Name</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Quantity (kg)</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Status</th>
+                    <th className="px-6 py-5 text-center border-b border-black text-green-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredCrops.map((crop) => (
-                    <tr key={crop.crop_id} className="border-t hover:bg-green-50 transition-colors">
-                      <td className="px-6 py-4 font-medium">{crop.crop_name}</td>
-                      <td className="px-6 py-4">
-                        <span className="font-semibold">{crop.quantity}</span> kg
+                    <tr key={crop.crop_id} className="border-b border-black hover:bg-green-50 transition-colors duration-200">
+                      <td className="px-6 py-5 text-center font-medium text-gray-900">{crop.crop_name}</td>
+                      <td className="px-6 py-5 text-center">
+                        <span className="font-semibold text-lg text-gray-600">{crop.quantity}</span>
+                        <span className="text-black-600 ml-1">kg</span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <td className="px-6 py-5 text-center">
+                        <span className={`px-3 py-2 rounded-full text-sm font-medium inline-block transition-colors duration-200 ${
                           crop.quantity > 50 
                             ? 'bg-green-100 text-green-800' 
                             : crop.quantity > 10 
@@ -249,17 +250,17 @@ export default function CropInventoryManagement() {
                           {crop.quantity > 50 ? 'In Stock' : crop.quantity > 10 ? 'Low Stock' : 'Very Low'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-3">
+                      <td className=" text-center">
+                        <div className="flex items-center justify-center ">
                           <button
                             onClick={() => openEditCropForm(crop)}
-                            className="text-green-600 hover:text-green-800 hover:underline text-sm font-medium transition-colors"
+                            className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors duration-200 px-3 py-1 rounded-md hover:bg-blue-50"
                           >
                             Update Quantity
                           </button>
                           <button
                             onClick={() => handleDeleteCrop(crop.crop_id)}
-                            className="text-red-600 hover:text-red-800 hover:underline text-sm font-medium transition-colors"
+                            className="text-red-600 hover:text-red-800 hover:underline text-sm font-medium transition-colors duration-200 px-3 py-1 rounded-md hover:bg-red-50"
                           >
                             Delete
                           </button>
