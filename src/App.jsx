@@ -21,6 +21,7 @@ import OperationalMProposalManagement from "./pages/operationalmanagerpages/Oper
 import OperationalMCropInventoryManagement from "./pages/operationalmanagerpages/OperationalMCropInventoryManagement";
 import OperationalMLandReportManagement from "./pages/operationalmanagerpages/OperationalMLandReportManagement";
 import ProposalDetails from "./components/operationalmanagerdashboard/ProposalDetails";
+import LandReportDetails from "./components/operationalmanagerdashboard/LandReportDetails";
 
 import FSDashboard from "./pages/fieldsupervisorpages/FSDashboard";
 import FSAssignedTasks from "./pages/fieldsupervisorpages/FSAssignedTasks";
@@ -64,6 +65,7 @@ function App() {
         <Route path="/proposal-details/:id" element={<ProposalDetails />} />
         <Route path="/operationalmanagercropinventorymanagement" element={<OperationalMCropInventoryManagement />} />
         <Route path="/operationalmanagerlandreportmanagement" element={<OperationalMLandReportManagement />} />
+        <Route path="/land-report-details/:id" element={<LandReportDetails />} />
 
         <Route path="/fieldsupervisordashboard" element={<FSDashboard />} />
         <Route path="/fieldsupervisorassignedtasks" element={<FSAssignedTasks />} />
