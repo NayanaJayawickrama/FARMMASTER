@@ -4,13 +4,69 @@ import { NavLink } from "react-router-dom";
 
 export default function DashboardContent() {
   const [userName, setUserName] = useState("");
+  const [dashboardStats, setDashboardStats] = useState({
+    total_users: 0,
+    pending_reports: 0,
+    assigned_supervisors: 0,
+    active_cultivations: 0
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser?.name) {
       setUserName(storedUser.name);
     }
+    
+    // Fetch dashboard statistics and recent activity from API
+    fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch dashboard statistics
+      const statsResponse = await fetch('http://localhost/FARMMASTER-Backend/api.php/dashboard/stats');
+      const statsData = await statsResponse.json();
+      
+      if (statsData.status === 'success') {
+        setDashboardStats(statsData.data);
+      }
+      
+      // Fetch recent activity
+      const activityResponse = await fetch('http://localhost/FARMMASTER-Backend/api.php/dashboard/activity');
+      const activityData = await activityResponse.json();
+      
+      if (activityData.status === 'success') {
+        setRecentActivity(activityData.data);
+      }
+      
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'land_report':
+        return <FileText className="text-green-700" size={26} />;
+      case 'proposal':
+        return <Handshake className="text-green-700" size={26} />;
+      default:
+        return <FileText className="text-green-700" size={26} />;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  };
 
   return (
     <div className="p-4 md:p-10 font-poppins">
@@ -27,61 +83,66 @@ export default function DashboardContent() {
       
       <div className="mb-10">
         <h2 className="text-2xl md:text-3xl font-bold mb-6">Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="border rounded-md p-6 shadow-sm text-center">
-            <p className="text-sm text-gray-600">Total Users</p>
-            <p className="text-2xl font-bold mt-1">2,235</p>
+        {loading ? (
+          <div className="text-center text-gray-600">Loading statistics...</div>
+        ) : error ? (
+          <div className="text-center text-red-600">{error}</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="border rounded-md p-6 shadow-sm text-center">
+              <p className="text-sm text-gray-600">Total Users</p>
+              <p className="text-2xl font-bold mt-1">{dashboardStats.total_users}</p>
+            </div>
+            <div className="border rounded-md p-6 shadow-sm text-center">
+              <p className="text-sm text-gray-600">Pending Land Reports</p>
+              <p className="text-2xl font-bold mt-1">{dashboardStats.pending_reports}</p>
+            </div>
+            <div className="border rounded-md p-6 shadow-sm text-center">
+              <p className="text-sm text-gray-600">Assigned Supervisors</p>
+              <p className="text-2xl font-bold mt-1">{dashboardStats.assigned_supervisors}</p>
+            </div>
+            <div className="border rounded-md p-6 shadow-sm text-center">
+              <p className="text-sm text-gray-600">Active Cultivations</p>
+              <p className="text-2xl font-bold mt-1">{dashboardStats.active_cultivations}</p>
+            </div>
           </div>
-          <div className="border rounded-md p-6 shadow-sm text-center">
-            <p className="text-sm text-gray-600">Pending Land Reports</p>
-            <p className="text-2xl font-bold mt-1">34</p>
-          </div>
-          <div className="border rounded-md p-6 shadow-sm text-center">
-            <p className="text-sm text-gray-600">Assigned Supervisors</p>
-            <p className="text-2xl font-bold mt-1">12</p>
-          </div>
-          <div className="border rounded-md p-6 shadow-sm text-center">
-            <p className="text-sm text-gray-600">Active Cultivations</p>
-            <p className="text-2xl font-bold mt-1">80</p>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="mb-10">
         <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
-        <ul className="space-y-4 bg-green-50/50 p-4 rounded-md">
-          <li className="flex items-start gap-5">
-            <div className="bg-green-100 rounded-sm p-2">
-              <FileText className="text-green-700" size={26} />
-            </div>
-            <div>
-              <p className="font-semibold">Land Report Received</p>
-              <p className="text-sm text-green-600">
-                Report submitted by Supervisor 1
-              </p>
-            </div>
-          </li>
-          <li className="flex items-start gap-4">
-            <div className="bg-green-100 rounded-sm p-2">
-              <Handshake className="text-green-700" size={26} />
-            </div>
-            <div>
-              <p className="font-semibold">Cultivation Proposal Received</p>
-              <p className="text-sm text-green-600">
-                Proposal submitted by Supervisor 3
-              </p>
-            </div>
-          </li>
-          <li className="flex items-start gap-4">
-            <div className="bg-green-100 rounded-sm p-2">
-              <FileText className="text-green-700" size={26} />
-            </div>
-            <div>
-              <p className="font-semibold">New Land Report Assigned</p>
-              <p className="text-sm text-green-600">Assigned to Supervisor 2</p>
-            </div>
-          </li>
-        </ul>
+        {loading ? (
+          <div className="text-center text-gray-600">Loading recent activity...</div>
+        ) : error ? (
+          <div className="text-center text-red-600">{error}</div>
+        ) : (
+          <ul className="space-y-4 bg-green-50/50 p-4 rounded-md">
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity, index) => (
+                <li key={index} className="flex items-start gap-5">
+                  <div className="bg-green-100 rounded-sm p-2">
+                    {getActivityIcon(activity.type)}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold">{activity.title}</p>
+                    <p className="text-sm text-green-600 mb-1">
+                      {activity.description.length > 100 
+                        ? activity.description.substring(0, 100) + '...' 
+                        : activity.description}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatDate(activity.activity_date)}
+                    </p>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <li className="text-center text-gray-500 py-4">
+                No recent activity found
+              </li>
+            )}
+          </ul>
+        )}
       </div>
 
      
