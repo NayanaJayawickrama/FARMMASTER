@@ -20,6 +20,31 @@ const LandReportManagement = () => {
     fetchReports();
   }, []);
 
+  // Handle external script interference
+  useEffect(() => {
+    const handleExternalScriptErrors = (event) => {
+      // Check if error is from external scripts like ma_payload.js
+      if (event.filename && (event.filename.includes('ma_payload') || event.filename.includes('facebook'))) {
+        console.warn('External script error caught and ignored:', event.error);
+        event.preventDefault();
+        return true;
+      }
+    };
+
+    // Add global error handler
+    window.addEventListener('error', handleExternalScriptErrors);
+    window.addEventListener('unhandledrejection', (event) => {
+      if (event.reason && event.reason.stack && event.reason.stack.includes('ma_payload')) {
+        console.warn('External script promise rejection caught and ignored:', event.reason);
+        event.preventDefault();
+      }
+    });
+
+    return () => {
+      window.removeEventListener('error', handleExternalScriptErrors);
+    };
+  }, []);
+
   const fetchReports = async () => {
     try {
       setLoading(true);
@@ -63,7 +88,7 @@ const LandReportManagement = () => {
     setSelectedAssignment(assignment);
     setShowAssignModal(true);
     
-    // Fetch available supervisors
+    // Fetch available field supervisors
     try {
       setLoadingSupervisors(true);
       const response = await fetch('http://localhost/FARMMASTER-Backend/api.php/land-reports/supervisors-public', {
@@ -78,31 +103,41 @@ const LandReportManagement = () => {
         if (data.status === 'success') {
           setAvailableSupervisors(data.data);
         } else {
-          console.error('Failed to fetch supervisors:', data.message);
-          alert('Failed to fetch supervisors: ' + data.message);
+          console.error('Failed to fetch field supervisors:', data.message);
+          alert('Failed to fetch field supervisors: ' + data.message);
           setShowAssignModal(false);
         }
       }
     } catch (error) {
-      console.error('Error fetching supervisors:', error);
+      console.error('Error fetching field supervisors:', error);
     } finally {
       setLoadingSupervisors(false);
     }
   };
 
   const handleSubmitAssignment = async () => {
-    if (!selectedSupervisor) {
-      alert("Please select a supervisor");
-      return;
-    }
-
-    const supervisor = availableSupervisors.find(s => s.user_id === selectedSupervisor);
-    if (!supervisor) {
-      alert("Invalid supervisor selection");
-      return;
-    }
-
     try {
+      if (!selectedSupervisor) {
+        alert("Please select a field supervisor");
+        return;
+      }
+
+      console.log("Selected supervisor ID:", selectedSupervisor);
+      console.log("Available supervisors:", availableSupervisors);
+      console.log("Available supervisor IDs:", availableSupervisors.map(s => s.user_id));
+
+      // Convert selectedSupervisor to number for comparison since HTML select returns strings
+      const selectedId = parseInt(selectedSupervisor, 10);
+      const supervisor = availableSupervisors.find(s => parseInt(s.user_id, 10) === selectedId);
+      
+      if (!supervisor) {
+        console.error("Supervisor not found in available list");
+        console.error("Selected ID:", selectedSupervisor, "Type:", typeof selectedSupervisor);
+        console.error("Available IDs:", availableSupervisors.map(s => ({ id: s.user_id, type: typeof s.user_id })));
+        alert("Invalid field supervisor selection");
+        return;
+      }
+
       const response = await fetch(`http://localhost/FARMMASTER-Backend/api.php/land-reports/${selectedAssignment.report_id}/assign-public`, {
         method: 'PUT',
         headers: {
@@ -117,7 +152,7 @@ const LandReportManagement = () => {
       const data = await response.json();
       
       if (data.status === 'success') {
-        alert(`Supervisor ${supervisor.full_name} (ID: ${supervisor.user_id}) assigned successfully!`);
+        alert(`Field Supervisor ${supervisor.full_name} (ID: ${supervisor.user_id}) assigned successfully!`);
         
         // Close modal and reset form
         setShowAssignModal(false);
@@ -128,10 +163,18 @@ const LandReportManagement = () => {
         // Refresh data
         fetchReports();
       } else {
-        alert('Failed to assign supervisor: ' + (data.message || 'Unknown error'));
+        alert('Failed to assign field supervisor: ' + (data.message || 'Unknown error'));
       }
     } catch (err) {
-      alert("Failed to assign supervisor: " + err.message);
+      alert("Failed to assign field supervisor: " + err.message);
+    } finally {
+      // Clean up any external script interference
+      try {
+        // Prevent external scripts from interfering
+        if (window.fbAsyncInit) delete window.fbAsyncInit;
+      } catch (e) {
+        // Ignore cleanup errors
+      }
     }
   };
 
@@ -250,7 +293,7 @@ const LandReportManagement = () => {
                   <th className="py-3 px-4">Location</th>
                   <th className="py-3 px-4">Landowner Name</th>
                   <th className="py-3 px-4">Date Assigned</th>
-                  <th className="py-3 px-4">Supervisor</th>
+                  <th className="py-3 px-4">Field Supervisor</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-green-600">Actions</th>
                 </tr>
@@ -381,12 +424,12 @@ const LandReportManagement = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Assign Supervisor
+              Assign Field Supervisor
             </h3>
             
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
-                Assigning supervisor for: <span className="font-semibold">{selectedAssignment?.location}</span>
+                Assigning field supervisor for: <span className="font-semibold">{selectedAssignment?.location}</span>
               </p>
               <p className="text-sm text-gray-600">
                 Landowner: <span className="font-semibold">{selectedAssignment?.name}</span>
@@ -396,11 +439,11 @@ const LandReportManagement = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Select Supervisor
+                  Select Field Supervisor
                 </label>
                 {loadingSupervisors ? (
                   <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-500">
-                    Loading supervisors...
+                    Loading field supervisors...
                   </div>
                 ) : (
                   <select
@@ -408,7 +451,7 @@ const LandReportManagement = () => {
                     onChange={(e) => setSelectedSupervisor(e.target.value)}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"
                   >
-                    <option value="">-- Select a supervisor --</option>
+                    <option value="">-- Select a field supervisor --</option>
                     {availableSupervisors.map((supervisor) => (
                       <option key={supervisor.user_id} value={supervisor.user_id}>
                         {supervisor.full_name} ({supervisor.user_id}) - {supervisor.role}
@@ -455,7 +498,7 @@ const LandReportManagement = () => {
                 onClick={handleSubmitAssignment}
                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition"
               >
-                Assign Supervisor
+                Assign Field Supervisor
               </button>
             </div>
           </div>
