@@ -124,6 +124,72 @@ export const AuthProvider = ({ children }) => {
     );
   };
 
+  const switchRole = async (newRole) => {
+    try {
+      const rootUrl = import.meta.env.VITE_API_URL;
+      const response = await axios.post(`${rootUrl}/api/users/switch-role`, {
+        role: newRole
+      }, {
+        withCredentials: true
+      });
+
+      if (response.data.status === 'success') {
+        const updatedUser = {
+          ...user,
+          role: newRole,
+          switched_from: user.role
+        };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        return { success: true, data: response.data };
+      } else {
+        return { success: false, error: response.data.message };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || "Failed to switch role" 
+      };
+    }
+  };
+
+  const resetRole = async () => {
+    try {
+      const rootUrl = import.meta.env.VITE_API_URL;
+      const response = await axios.post(`${rootUrl}/api/users/reset-role`, {}, {
+        withCredentials: true
+      });
+
+      if (response.data.status === 'success') {
+        const resetUser = {
+          ...user,
+          role: response.data.data.role,
+          switched_from: undefined
+        };
+        localStorage.setItem("user", JSON.stringify(resetUser));
+        setUser(resetUser);
+        return { success: true, data: response.data };
+      } else {
+        return { success: false, error: response.data.message };
+      }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || "Failed to reset role" 
+      };
+    }
+  };
+
+  const canSwitchRole = () => {
+    if (!user) return false;
+    return user.role === 'Buyer' || user.role === 'Landowner';
+  };
+
+  const getAvailableRole = () => {
+    if (!user || !canSwitchRole()) return null;
+    return user.role === 'Buyer' ? 'Landowner' : 'Buyer';
+  };
+
   if (loading) {
     // Show a loading spinner while verifying authentication
     return (
@@ -143,6 +209,10 @@ export const AuthProvider = ({ children }) => {
       logout, 
       isAuthenticated, 
       hasRole,
+      switchRole,
+      resetRole,
+      canSwitchRole,
+      getAvailableRole,
       loading 
     }}>
       {children}

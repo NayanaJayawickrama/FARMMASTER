@@ -3,6 +3,7 @@ import { FileText, Handshake, Leaf, Repeat, MapPin, Calendar } from "lucide-reac
 import { NavLink } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import RoleSwitcher from "../RoleSwitcher";
 
 const rootUrl = import.meta.env.VITE_API_URL;
 
@@ -91,10 +92,7 @@ export default function DashboardContent() {
             Welcome back, {user?.name || authUser?.name || "Landowner"}
           </p>
         </div>
-        <button className="border border-black px-4 py-2 rounded-md hover:bg-gray-100 flex items-center gap-2 font-bold text-black mt-4 md:mt-0">
-          <Repeat size={20} />
-          Switch to Buyer
-        </button>
+        <RoleSwitcher className="mt-4 md:mt-0" />
       </div>
 
       {loading ? (

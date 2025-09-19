@@ -1,11 +1,15 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo.png";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  const navigate = useNavigate();
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -20,7 +24,41 @@ const Register = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Validation functions
+  // Field-specific error states
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+    accountType: ""
+  });
+
+  // Clear specific field error
+  const clearError = (fieldName) => {
+    if (errors[fieldName]) {
+      setErrors(prev => ({ ...prev, [fieldName]: "" }));
+    }
+  };
+
+  // Set specific field error
+  const setFieldError = (fieldName, errorMessage) => {
+    setErrors(prev => ({ ...prev, [fieldName]: errorMessage }));
+  };
+
+  // Clear all errors
+  const clearAllErrors = () => {
+    setErrors({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+      confirmPassword: "",
+      accountType: ""
+    });
+  };
   const validateName = (name, fieldName) => {
     if (!name.trim()) {
       return `${fieldName} is required.`;
@@ -56,7 +94,7 @@ const Register = () => {
 
   const validatePhone = (phone) => {
     if (!phone || phone === "+94") {
-      return null; // Phone is optional
+      return "Phone number is required."; // Phone is now required
     }
     
     // Remove +94 prefix for validation
@@ -86,57 +124,99 @@ const Register = () => {
     if (digits.length <= 9) {
       setPhone('+94' + digits);
     }
+    
+    // Clear phone error when user types
+    clearError("phone");
+  };
+
+  // Success Modal Component
+  const SuccessModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-10 max-w-lg w-full text-center shadow-2xl transform scale-100 transition-all duration-300">
+        {/* Success Icon */}
+        <div className="mb-8">
+          <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <Check className="w-12 h-12 text-white" strokeWidth={4} />
+          </div>
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold text-gray-900">Registration Successful!</h2>
+            <p className="text-lg text-gray-600 leading-relaxed px-4">
+              Welcome to <span className="font-semibold text-green-600">FarmMaster</span>! Your account has been successfully created.
+            </p>
+            <p className="text-sm text-gray-500 px-4">
+              Please check your email to verify your account and complete the registration process.
+            </p>
+          </div>
+        </div>
+        
+        {/* Action Button */}
+        <div className="space-y-3">
+          <button
+            onClick={handleGoToDashboard}
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-xl text-lg transition duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            Continue to Login
+          </button>
+          <p className="text-xs text-gray-400">You'll be redirected to the login page</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const handleGoToDashboard = () => {
+    setShowSuccessModal(false);
+    navigate('/login');
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage("");
+    clearAllErrors();
+
+    let hasErrors = false;
 
     // Frontend validation
     const firstNameError = validateName(firstName, "First name");
     if (firstNameError) {
-      setMessage("⚠️ " + firstNameError);
-      alert("⚠️ " + firstNameError);
-      return;
+      setFieldError("firstName", firstNameError);
+      hasErrors = true;
     }
 
     const lastNameError = validateName(lastName, "Last name");
     if (lastNameError) {
-      setMessage("⚠️ " + lastNameError);
-      alert("⚠️ " + lastNameError);
-      return;
+      setFieldError("lastName", lastNameError);
+      hasErrors = true;
     }
 
     const emailError = validateEmail(email);
     if (emailError) {
-      setMessage("⚠️ " + emailError);
-      alert("⚠️ " + emailError);
-      return;
+      setFieldError("email", emailError);
+      hasErrors = true;
     }
 
     const phoneError = validatePhone(phone);
     if (phoneError) {
-      setMessage("⚠️ " + phoneError);
-      alert("⚠️ " + phoneError);
-      return;
+      setFieldError("phone", phoneError);
+      hasErrors = true;
     }
 
     const passwordError = validatePassword(password);
     if (passwordError) {
-      setMessage("⚠️ " + passwordError);
-      alert("⚠️ " + passwordError);
-      return;
+      setFieldError("password", passwordError);
+      hasErrors = true;
     }
 
     if (!accountType) {
-      setMessage("⚠️ Please select an account type.");
-      alert("⚠️ Please select an account type.");
-      return;
+      setFieldError("accountType", "Please select an account type.");
+      hasErrors = true;
     }
 
     if (password !== confirmPassword) {
-      setMessage("❌ Passwords do not match.");
-      alert("❌ Passwords do not match.");
+      setFieldError("confirmPassword", "Passwords do not match.");
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
       return;
     }
 
@@ -146,7 +226,7 @@ const Register = () => {
         first_name: firstName,
         last_name: lastName,
         email: email,
-        phone: phone === "+94" ? "" : phone, // Send empty if only +94
+        phone: phone, // Always send phone since it's required
         password: password,
         user_role: accountType, // Changed from account_type to user_role
       }, {
@@ -158,7 +238,6 @@ const Register = () => {
       setLoading(false);
 
       if (response.data.status === "success") {
-        setMessage("✅ Registration successful! You can now login.");
         // Clear form
         setFirstName("");
         setLastName("");
@@ -167,20 +246,81 @@ const Register = () => {
         setPassword("");
         setConfirmPassword("");
         setAccountType("");
+        // Show success modal
+        setShowSuccessModal(true);
       } else {
-        setMessage("❌ " + response.data.message);
-        alert("❌ " + response.data.message);
+        // Handle specific backend errors
+        const errorMessage = response.data.message;
+        const fieldErrors = response.data.errors;
+        console.log("Backend error message:", errorMessage); // Debug log
+        console.log("Backend field errors:", fieldErrors); // Debug log
+        
+        // If we have specific field errors, use them
+        if (fieldErrors) {
+          if (fieldErrors.email) {
+            setFieldError("email", "This email address is already registered.");
+          }
+          if (fieldErrors.phone) {
+            setFieldError("phone", "This phone number is already registered.");
+          }
+        } else {
+          // Fallback to message parsing for backwards compatibility
+          if (errorMessage === "Email already registered") {
+            setFieldError("email", "This email address is already registered.");
+          } else if (errorMessage === "Phone number already registered") {
+            setFieldError("phone", "This phone number is already registered.");
+          } else if (errorMessage.includes("Email") && errorMessage.includes("Phone")) {
+            // Handle compound error message if backend sends both
+            setFieldError("email", "This email address is already registered.");
+            setFieldError("phone", "This phone number is already registered.");
+          } else {
+            setMessage("❌ " + response.data.message);
+          }
+        }
       }
     } catch (error) {
       setLoading(false);
       console.error("Registration failed:", error);
-      setMessage("❌ Server error. Please try again.");
-      alert("❌ Server error. Please try again.");
+      console.log("Error response:", error.response?.data); // Debug log
+      
+      // Check if it's a validation error from server
+      if (error.response?.data?.message) {
+        const errorMessage = error.response.data.message;
+        const fieldErrors = error.response.data.errors;
+        console.log("Server error message:", errorMessage); // Debug log
+        console.log("Server field errors:", fieldErrors); // Debug log
+        
+        // If we have specific field errors, use them
+        if (fieldErrors) {
+          if (fieldErrors.email) {
+            setFieldError("email", "This email address is already registered.");
+          }
+          if (fieldErrors.phone) {
+            setFieldError("phone", "This phone number is already registered.");
+          }
+        } else {
+          // Fallback to message parsing for backwards compatibility
+          if (errorMessage === "Email already registered") {
+            setFieldError("email", "This email address is already registered.");
+          } else if (errorMessage === "Phone number already registered") {
+            setFieldError("phone", "This phone number is already registered.");
+          } else if (errorMessage.includes("Email") && errorMessage.includes("Phone")) {
+            // Handle compound error message if backend sends both
+            setFieldError("email", "This email address is already registered.");
+            setFieldError("phone", "This phone number is already registered.");
+          } else {
+            setMessage("❌ " + errorMessage);
+          }
+        }
+      } else {
+        setMessage("❌ Server error. Please try again.");
+      }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+    <>
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="mt-10 mb-6 text-center">
         <img src={logo} alt="FarmMaster" className="w-32 h-auto mx-auto mb-1" />
         <p className="text-xl text-gray-600">
@@ -203,22 +343,38 @@ const Register = () => {
               <input
                 type="text"
                 value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                onChange={(e) => {
+                  setFirstName(e.target.value);
+                  clearError("firstName");
+                }}
                 placeholder="John"
-                className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className={`w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  errors.firstName ? 'border-red-500' : ''
+                }`}
                 required
               />
+              {errors.firstName && (
+                <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Last Name *</label>
               <input
                 type="text"
                 value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                onChange={(e) => {
+                  setLastName(e.target.value);
+                  clearError("lastName");
+                }}
                 placeholder="Doe"
-                className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className={`w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  errors.lastName ? 'border-red-500' : ''
+                }`}
                 required
               />
+              {errors.lastName && (
+                <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+              )}
             </div>
           </div>
 
@@ -227,38 +383,61 @@ const Register = () => {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearError("email");
+              }}
               placeholder="john@example.com"
-              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className={`w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                errors.email ? 'border-red-500' : ''
+              }`}
               required
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Phone (Optional)</label>
+            <label className="block text-sm font-medium mb-1">Phone Number *</label>
             <input
               type="tel"
               value={phone}
               onChange={handlePhoneChange}
               placeholder="+94 771234567"
-              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              className={`w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                errors.phone ? 'border-red-500' : ''
+              }`}
               maxLength="12"
+              required
             />
-            <p className="text-xs text-gray-500 mt-1">Format: +94 followed by 9 digits</p>
+            {errors.phone ? (
+              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Format: +94 followed by 9 digits</p>
+            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">Account Type *</label>
             <select
               value={accountType}
-              onChange={(e) => setAccountType(e.target.value)}
-              className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+              onChange={(e) => {
+                setAccountType(e.target.value);
+                clearError("accountType");
+              }}
+              className={`w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                errors.accountType ? 'border-red-500' : ''
+              }`}
               required
             >
               <option value="">Select your account type</option>
               <option value="Landowner">Landowner</option>
               <option value="Buyer">Buyer</option>
             </select>
+            {errors.accountType && (
+              <p className="text-red-500 text-xs mt-1">{errors.accountType}</p>
+            )}
           </div>
 
           <div>
@@ -267,9 +446,18 @@ const Register = () => {
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearError("password");
+                  // Clear confirm password error if passwords now match
+                  if (confirmPassword && e.target.value === confirmPassword) {
+                    clearError("confirmPassword");
+                  }
+                }}
                 placeholder="Create a strong password"
-                className="w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className={`w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  errors.password ? 'border-red-500' : ''
+                }`}
                 required
                 minLength="6"
               />
@@ -280,7 +468,11 @@ const Register = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">At least 6 characters with one letter and one number</p>
+            {errors.password ? (
+              <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">At least 6 characters with one letter and one number</p>
+            )}
           </div>
 
           <div>
@@ -289,9 +481,18 @@ const Register = () => {
               <input
                 type={showConfirm ? "text" : "password"}
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  clearError("confirmPassword");
+                  // Show immediate feedback if passwords don't match
+                  if (password && e.target.value && password !== e.target.value) {
+                    setFieldError("confirmPassword", "Passwords do not match.");
+                  }
+                }}
                 placeholder="Confirm your password"
-                className="w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500"
+                className={`w-full border rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  errors.confirmPassword ? 'border-red-500' : ''
+                }`}
                 required
               />
               <div
@@ -301,6 +502,9 @@ const Register = () => {
                 {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
               </div>
             </div>
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+            )}
           </div>
 
           <button
@@ -339,6 +543,10 @@ const Register = () => {
         © 2025 Farm Master. All rights reserved.
       </p>
     </div>
+
+    {/* Success Modal */}
+    {showSuccessModal && <SuccessModal />}
+    </>
   );
 };
 
