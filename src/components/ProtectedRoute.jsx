@@ -30,7 +30,7 @@ const ProtectedRoute = ({ children, requiredRoles = [] }) => {
     // Map display names to database role names for compatibility
     const roleMapping = {
       'Landowner': 'Landowner',
-      'Field Supervisor': 'Field Supervisor', 
+      'Supervisor': 'Supervisor', 
       'Buyer': 'Buyer',
       'Operational Manager': 'Operational_Manager',
       'Financial Manager': 'Financial_Manager',

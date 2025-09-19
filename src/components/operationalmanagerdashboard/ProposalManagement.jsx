@@ -59,8 +59,6 @@ const ProposalManagement = () => {
     navigate(`/proposal-details/${proposal.proposal_id}`);
   };
 
-  // Note: Operational Manager can only VIEW proposal status, not update it
-  // Status updates are handled by other roles with appropriate permissions
   const statusStyles = {
     Pending: "bg-green-50 text-black",
     Accepted: "bg-green-200 text-black font-semibold",
@@ -74,7 +72,7 @@ const ProposalManagement = () => {
           Proposal Management
         </h1>
         <p className="text-green-600 mt-1">
-          View and monitor proposals sent to landowners.
+          Manage and send proposals to landowners.
         </p>
       </div>
 
@@ -97,7 +95,7 @@ const ProposalManagement = () => {
         </div>
       )}
 
-      {/* Proposals Table - READ ONLY: Operational Manager can view status but cannot update */}
+      {/* Proposals Table */}
       {!loading && (
         <div className="overflow-x-auto bg-white rounded-lg shadow-sm">
           <table className="min-w-full border border-gray-200">
@@ -105,7 +103,7 @@ const ProposalManagement = () => {
               <tr className="bg-green-50 text-left text-sm text-gray-700">
                 <th className="py-3 px-4">Proposal ID</th>
                 <th className="py-3 px-4">Landowner Name</th>
-                <th className="py-3 px-4"> Status</th>
+                <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Profit Estimate</th>
                 <th className="py-3 px-4 text-green-600">Actions</th>
               </tr>

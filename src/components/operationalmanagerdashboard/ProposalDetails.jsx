@@ -7,6 +7,7 @@ const ProposalDetails = () => {
   const [proposal, setProposal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     fetchProposalDetails();
@@ -38,6 +39,37 @@ const ProposalDetails = () => {
       console.error('Error fetching proposal details:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateProposalStatus = async (newStatus) => {
+    try {
+      setUpdatingStatus(true);
+      const response = await fetch(`http://localhost/FARMMASTER-Backend/api.php/proposals/${id}/status-public`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        setProposal(prev => ({ ...prev, status: newStatus }));
+        alert(`Proposal status updated to ${newStatus}`);
+      } else {
+        alert(data.message || 'Failed to update proposal status');
+      }
+    } catch (err) {
+      alert('Failed to update status: ' + err.message);
+      console.error('Error updating proposal status:', err);
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -139,6 +171,29 @@ const ProposalDetails = () => {
           Detailed information about this farming proposal
         </p>
       </div>
+
+      {/* Status Update Actions */}
+      {proposal.status === 'Pending' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-3">Update Proposal Status</h3>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => updateProposalStatus('Accepted')}
+              disabled={updatingStatus}
+              className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              {updatingStatus ? 'Updating...' : 'Accept Proposal'}
+            </button>
+            <button
+              onClick={() => updateProposalStatus('Rejected')}
+              disabled={updatingStatus}
+              className="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 disabled:opacity-50"
+            >
+              {updatingStatus ? 'Updating...' : 'Reject Proposal'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Proposal Details Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
