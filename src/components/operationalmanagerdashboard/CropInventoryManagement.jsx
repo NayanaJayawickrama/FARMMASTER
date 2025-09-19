@@ -4,6 +4,7 @@ import { FiSearch } from "react-icons/fi";
 
 const rootUrl = import.meta.env.VITE_API_URL;
 const allowedCrops = ["Carrot", "Leeks", "Tomato", "Cabbage"];
+const statusOptions = ["Available", "Unavailable", "Sold"];
 
 export default function CropInventoryManagement() {
   const [showForm, setShowForm] = useState(false);
@@ -38,20 +39,23 @@ export default function CropInventoryManagement() {
     fetchCrops();
   }, []);
 
-  // Delete crop
-  const handleDeleteCrop = async (cropId) => {
-    if (!window.confirm("Are you sure you want to delete this crop?")) return;
+  // Update crop status
+  const handleStatusChange = async (cropId, newStatus) => {
     try {
-      const res = await axios.delete(`${rootUrl}/api/crops/${cropId}`, {
-        withCredentials: true
-      });
+      const res = await axios.put(`${rootUrl}/api/crops/${cropId}/status`, 
+        { status: newStatus }, 
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
       if (res.data.status === 'success') {
         fetchCrops();
       } else {
-        alert(res.data.message || "Failed to delete crop.");
+        alert(res.data.message || "Failed to update crop status.");
       }
     } catch {
-      alert("Server error while deleting crop.");
+      alert("Server error while updating crop status.");
     }
   };
 
@@ -96,7 +100,7 @@ export default function CropInventoryManagement() {
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      if (!quantity || quantity <= 0) {
+      if (quantity === "" || quantity < 0) {
         alert("Please enter a valid quantity.");
         return;
       }
@@ -135,7 +139,7 @@ export default function CropInventoryManagement() {
             <label className="block font-medium">New Quantity (kg)*</label>
             <input
               type="number"
-              min="0.1"
+              min="0"
               step="0.1"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
@@ -176,7 +180,7 @@ export default function CropInventoryManagement() {
       ) : (
         <>
           <h1 className="text-3xl md:text-4xl font-bold text-black mb-4 mt-4">Crop Inventory Management</h1>
-          <p className="text-gray-600 mb-6">Update quantities of existing crops in inventory</p>
+          <p className="text-gray-600 mb-6">Update quantities and status of existing crops in inventory</p>
 
           {/* Search & Filter */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -221,25 +225,27 @@ export default function CropInventoryManagement() {
               <p className="text-gray-600">No crops found.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-green-50 text-black font-semibold">
+            <div className="overflow-x-auto bg-white border border-black rounded-xl shadow-lg">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gradient-to-r from-green-50 to-green-100 text-black font-semibold">
                   <tr>
-                    <th className="px-6 py-4">Crop Name</th>
-                    <th className="px-6 py-4">Quantity (kg)</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-green-700">Actions</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Crop Name</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Quantity (kg)</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Stock Status</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Availability Status</th>
+                    <th className="px-6 py-5 text-center border-b border-black ">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredCrops.map((crop) => (
-                    <tr key={crop.crop_id} className="border-t hover:bg-green-50 transition-colors">
-                      <td className="px-6 py-4 font-medium">{crop.crop_name}</td>
-                      <td className="px-6 py-4">
-                        <span className="font-semibold">{crop.quantity}</span> kg
+                    <tr key={crop.crop_id} className="border-b border-black hover:bg-green-50 transition-colors duration-200">
+                      <td className="px-6 py-5 text-center font-medium text-gray-900">{crop.crop_name}</td>
+                      <td className="px-6 py-5 text-center">
+                        <span className="font-semibold text-lg text-gray-600">{crop.quantity}</span>
+                        <span className="text-black-600 ml-1">kg</span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <td className="px-6 py-5 text-center">
+                        <span className={`px-3 py-2 rounded-full text-sm font-medium inline-block transition-colors duration-200 ${
                           crop.quantity > 50 
                             ? 'bg-green-100 text-green-800' 
                             : crop.quantity > 10 
@@ -249,21 +255,35 @@ export default function CropInventoryManagement() {
                           {crop.quantity > 50 ? 'In Stock' : crop.quantity > 10 ? 'Low Stock' : 'Very Low'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => openEditCropForm(crop)}
-                            className="text-green-600 hover:text-green-800 hover:underline text-sm font-medium transition-colors"
-                          >
-                            Update Quantity
-                          </button>
-                          <button
-                            onClick={() => handleDeleteCrop(crop.crop_id)}
-                            className="text-red-600 hover:text-red-800 hover:underline text-sm font-medium transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
+                      <td className="px-6 py-5 text-center">
+                        <select
+                          value={crop.quantity === 0 ? 'Sold' : (crop.status || 'Available')}
+                          onChange={(e) => {
+                            // Prevent changing to 'Sold' manually
+                            if (e.target.value === 'Sold') return;
+                            handleStatusChange(crop.crop_id, e.target.value);
+                          }}
+                          className={`px-3 py-2 rounded-full text-sm font-medium border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 ${
+                            (crop.quantity === 0 || (crop.status || 'Available') === 'Sold')
+                              ? 'bg-blue-100 text-blue-800'
+                              : (crop.status || 'Available') === 'Available' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                          disabled={crop.quantity === 0}
+                        >
+                          <option value="Available">Available</option>
+                          <option value="Unavailable">Unavailable</option>
+                          <option value="Sold" disabled={crop.quantity !== 0}>Sold</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <button
+                          onClick={() => openEditCropForm(crop)}
+                          className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors duration-200 px-3 py-1 rounded-md hover:bg-blue-50"
+                        >
+                          Update Quantity
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -276,7 +296,7 @@ export default function CropInventoryManagement() {
           {!loading && !error && filteredCrops.length > 0 && (
             <div className="mt-6 bg-green-50 p-4 rounded-lg">
               <h3 className="font-semibold text-green-800 mb-2">Inventory Summary</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Total Crops:</span>
                   <span className="ml-2 font-semibold">{filteredCrops.length}</span>
@@ -288,15 +308,21 @@ export default function CropInventoryManagement() {
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Low Stock:</span>
-                  <span className="ml-2 font-semibold text-yellow-600">
-                    {filteredCrops.filter(crop => crop.quantity <= 50 && crop.quantity > 10).length}
+                  <span className="text-gray-600">Available:</span>
+                  <span className="ml-2 font-semibold text-green-600">
+                    {filteredCrops.filter(crop => (crop.status || 'Available') === 'Available').length}
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-600">Very Low Stock:</span>
+                  <span className="text-gray-600">Unavailable:</span>
                   <span className="ml-2 font-semibold text-red-600">
-                    {filteredCrops.filter(crop => crop.quantity <= 10).length}
+                    {filteredCrops.filter(crop => (crop.status || 'Available') === 'Unavailable').length}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Sold:</span>
+                  <span className="ml-2 font-semibold text-blue-600">
+                    {filteredCrops.filter(crop => (crop.status || 'Available') === 'Sold').length}
                   </span>
                 </div>
               </div>

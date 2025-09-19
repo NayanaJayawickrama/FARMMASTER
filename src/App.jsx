@@ -24,6 +24,7 @@ import OperationalMUserManagement from "./pages/operationalmanagerpages/Operatio
 import OperationalMProposalManagement from "./pages/operationalmanagerpages/OperationalMProposalManagement";
 import OperationalMCropInventoryManagement from "./pages/operationalmanagerpages/OperationalMCropInventoryManagement";
 import OperationalMLandReportManagement from "./pages/operationalmanagerpages/OperationalMLandReportManagement";
+import ProposalDetails from "./components/operationalmanagerdashboard/ProposalDetails";
 
 import FSDashboard from "./pages/fieldsupervisorpages/FSDashboard";
 import FSAssignedTasks from "./pages/fieldsupervisorpages/FSAssignedTasks";
@@ -129,6 +130,13 @@ function App() {
         <Route path="/fieldsupervisorlanddatasubmission" element={
           <ProtectedRoute requiredRoles={['Supervisor']}>
             <FSLandDataSubmission />
+          </ProtectedRoute>
+        } />
+
+        {/* Additional Operational Manager Route from master */}
+        <Route path="/proposal-details/:id" element={
+          <ProtectedRoute requiredRoles={['Operational Manager', 'Operational_Manager']}>
+            <ProposalDetails />
           </ProtectedRoute>
         } />
 

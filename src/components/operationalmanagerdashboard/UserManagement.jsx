@@ -335,58 +335,65 @@ export default function UserManagementPage() {
           ) : filteredUsers.length === 0 ? (
             <p className="text-center text-gray-600">No users found.</p>
           ) : (
-            <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
-              <table className="min-w-full text-sm text-left">
-                <thead className="bg-green-50 text-black font-semibold">
+            <div className="overflow-x-auto bg-white border border-black rounded-xl shadow-lg">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gradient-to-r from-green-50 to-green-100 text-black font-semibold">
                   <tr>
-                    <th className="px-6 py-4">Name</th>
-                    <th className="px-6 py-4">Email</th>
-                    <th className="px-6 py-4">Role</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-green-700">Actions</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Name</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Email</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Role</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Status</th>
+                    <th className="px-6 py-5 text-center border-b border-black">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => (
-                    <tr key={user.user_id} className="border-t hover:bg-green-50">
-                      <td className="px-6 py-4">{user.name}</td>
-                      <td className="px-6 py-4 text-green-600">{user.email}</td>
-                      <td className="px-6 py-4 w-32">
-                        <span className="bg-green-50 text-black font-semibold px-4 py-1 rounded-md block text-center">
+                    <tr key={user.user_id} className="border-b border-black hover:bg-green-50 transition-colors duration-200">
+                      <td className="px-6 py-5 text-center font-medium text-gray-900">{user.name}</td>
+                      <td className="px-6 py-5 text-center font-medium text-gray-900">{user.email}</td>
+                      <td className="px-6 py-5 text-center">
+                        <span className="bg-green-100 text-black-800 font-semibold px-4 py-2 rounded-full inline-block">
                           {(user.role || "").replace("_", " ")}
                         </span>
                       </td>
-                      <td className="px-6 py-4 w-28">
+                      <td className="px-6 py-5 text-center">
                         <span
-                          className={`font-semibold px-3 py-1 rounded-full block text-center ${
+                          className={`font-semibold px-4 py-2 rounded-full inline-block transition-colors duration-200 ${
                             user.status === "Active"
                               ? "bg-green-100 text-green-700"
-                              : "bg-gray-200 text-red-600"
+                              : "bg-red-100 text-red-600"
                           }`}
                         >
                           {user.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-black font-semibold text-sm whitespace-nowrap">
-                        <div className="flex flex-wrap gap-3 items-center">
+                      <td className="px-6 py-5 text-center">
+                        <div className="flex items-center justify-center gap-4">
                           <button
                             onClick={() => openEditUserForm(user)}
-                            className="hover:underline hover:text-green-600 cursor-pointer"
+                            className="text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors duration-200"
                           >
                             Edit
                           </button>
 
                           {/* Toggle switch for status */}
-                          <label className="inline-flex items-center cursor-pointer ml-2">
+                          <label className="inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              className="form-checkbox h-5 w-5 text-green-600"
+                              className="sr-only"
                               checked={user.status === "Active"}
                               onChange={() =>
                                 handleToggleStatus(user.user_id, user.status)
                               }
                             />
-                            <span className="ml-2 text-sm">
+                            <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                              user.status === "Active" ? "bg-green-600" : "bg-gray-300"
+                            }`}>
+                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                                user.status === "Active" ? "translate-x-6" : "translate-x-1"
+                              }`} />
+                            </div>
+                            <span className="ml-2 text-sm font-medium text-gray-700">
                               {user.status === "Active" ? "Active" : "Inactive"}
                             </span>
                           </label>
