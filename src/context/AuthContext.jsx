@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }) => {
     // Map display names to database role names for compatibility
     const roleMapping = {
       'Landowner': 'Landowner',
-      'Supervisor': 'Supervisor', 
+      'Field Supervisor': 'Field Supervisor', 
       'Buyer': 'Buyer',
       'Operational Manager': 'Operational_Manager',
       'Financial Manager': 'Financial_Manager',

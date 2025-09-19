@@ -14,8 +14,8 @@ export default function LandReportBody() {
   const [activeTab, setActiveTab] = useState("all"); // "all", "pending", "completed"
   const { user } = useAuth();
 
-  // Test user ID - replace with actual user from auth context
-  const testUserId = user?.id || 32;
+  // Get user ID from auth context, fallback to default if not available
+  const userId = user?.id || 32;
 
   useEffect(() => {
     fetchAssessmentRequests();
@@ -25,7 +25,7 @@ export default function LandReportBody() {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.get(`${rootUrl}/assessments?user_id=${testUserId}`, {
+      const response = await axios.get(`${rootUrl}/assessments?user_id=${userId}`, {
         withCredentials: true
       });
       if (response.data.status === 'success') {

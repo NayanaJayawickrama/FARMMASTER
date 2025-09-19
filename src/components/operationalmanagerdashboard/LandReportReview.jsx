@@ -1,9 +1,54 @@
 import React, { useState } from "react";
 import { Leaf, CheckCircle, Circle, ArrowLeft } from "lucide-react";
 
-export default function LandReportReview({ onBack }) {
+export default function LandReportReview({ report, onBack }) {
   const [decision, setDecision] = useState("Approve");
   const [feedback, setFeedback] = useState("");
+
+  // Helper function to extract supervisor info from environmental_notes
+  const extractSupervisorInfo = (environmentalNotes) => {
+    if (!environmentalNotes) return { name: 'Not assigned', id: 'N/A' };
+    
+    const matches = environmentalNotes.match(/Assigned to: ([^(]+) \(ID: ([^)]+)\)/);
+    if (matches) {
+      return {
+        name: matches[1].trim(),
+        id: matches[2].trim()
+      };
+    }
+    return { name: 'Not assigned', id: 'N/A' };
+  };
+
+  const supervisorInfo = report ? extractSupervisorInfo(report.environmental_notes) : { name: 'N/A', id: 'N/A' };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  if (!report) {
+    return (
+      <div className="flex bg-white min-h-screen">
+        <div className="flex-1 p-4 md:p-10 font-poppins">
+          <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-xl p-6 md:p-10 shadow-sm">
+            <div className="text-center py-8">
+              <p className="text-gray-500">No report selected for review</p>
+              <button 
+                onClick={onBack}
+                className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                Back to Reports
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex bg-white min-h-screen">
@@ -18,13 +63,13 @@ export default function LandReportReview({ onBack }) {
          
           <div className="flex flex-col text-sm mt-6 mb-8 divide-y divide-green-200 border border-green-300 rounded-md">
             {[
-              ["Land Report ID", "#2025-LR-002"],
-              ["Landowner Name", "Mr. Ruwan Perera"],
-              ["Location", "Badulla"],
-              ["Requested Date", "2025-10-19"],
-              ["Supervisor Name", "Mr. Silva"],
-              ["Supervisor ID", "SR0023"],
-              ["Submitted Date", "2025-10-30"],
+              ["Land Report ID", `#${report.report_id}`],
+              ["Landowner Name", `${report.first_name} ${report.last_name}`],
+              ["Location", report.location || 'N/A'],
+              ["Requested Date", formatDate(report.report_date)],
+              ["Supervisor Name", supervisorInfo.name],
+              ["Supervisor ID", supervisorInfo.id],
+              ["Status", report.status || 'Pending'],
             ].map(([label, value], idx) => (
               <div key={idx} className="flex justify-between px-4 py-3">
                 <span className="text-gray-600 font-medium">{label}</span>
@@ -41,11 +86,11 @@ export default function LandReportReview({ onBack }) {
             <table className="w-full text-sm">
               <tbody>
                 {[
-                  ["Soil pH Value", "6.5"],
-                  ["Organic Matter (%)", "4.2%"],
-                  ["Nitrogen (N) Level", "Medium"],
-                  ["Phosphorus (P) Level", "High"],
-                  ["Potassium (K) Level", "Medium"],
+                  ["Soil pH Value", report.ph_value || 'Not tested'],
+                  ["Organic Matter (%)", report.organic_matter ? `${report.organic_matter}%` : 'Not tested'],
+                  ["Nitrogen (N) Level", report.nitrogen_level || 'Not tested'],
+                  ["Phosphorus (P) Level", report.phosphorus_level || 'Not tested'],
+                  ["Potassium (K) Level", report.potassium_level || 'Not tested'],
                 ].map(([label, value], index) => (
                   <tr key={index} className="border-b border-gray-300">
                     <td className="py-2 text-green-600">{label}</td>
@@ -59,47 +104,34 @@ export default function LandReportReview({ onBack }) {
         
           <div className="mb-8">
             <h2 className="text-base font-semibold text-gray-800 mb-3">
-              Environmental Data
+              Environmental Notes
             </h2>
-            <table className="w-full text-sm">
-              <tbody>
-                {[
-                  ["Average Rainfall (mm)", "1500"],
-                  ["Temperature (°C)", "28"],
-                  ["Sunlight Hours (per day)", "7"],
-                  ["Water Source", "Well"],
-                ].map(([label, value], index) => (
-                  <tr key={index} className="border-b border-gray-300">
-                    <td className="py-2 text-green-600">{label}</td>
-                    <td className="py-2 text-right text-gray-800">{value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-700 whitespace-pre-line">
+                {report.environmental_notes || 'No environmental notes available'}
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-base font-semibold text-gray-800 mb-2">
+              Land Description
+            </h2>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-700">
+                {report.land_description || 'No land description available'}
+              </p>
+            </div>
           </div>
 
           <div className="mb-8">
             <h2 className="text-base font-semibold text-gray-800 mb-2">
               Crop Recommendations
             </h2>
-            <p className="text-sm text-gray-700 mb-4">
-              Based on the land assessment, we recommend the following crops for
-              optimal yield and profitability:
-            </p>
-
-            <div className="space-y-3">
-              {[
-                "Organic Rice",
-                "Vegetables (Beans, Tomatoes)",
-                "Fruits (Bananas, Papayas)",
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <div className="bg-green-100 rounded-sm p-1">
-                    <Leaf className="text-green-700" size={16} />
-                  </div>
-                  <span>{item}</span>
-                </div>
-              ))}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-700 whitespace-pre-line">
+                {report.crop_recomendation || 'No crop recommendations available'}
+              </p>
             </div>
           </div>
 

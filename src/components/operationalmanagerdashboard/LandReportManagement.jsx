@@ -9,6 +9,7 @@ const LandReportManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showReview, setShowReview] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [selectedSupervisor, setSelectedSupervisor] = useState("");
@@ -58,6 +59,11 @@ const LandReportManagement = () => {
     navigate(`/land-report-details/${report.report_id}`);
   };
 
+  const handleReviewReport = (report) => {
+    setSelectedReport(report);
+    setShowReview(true);
+  };
+
   // Handle assignment functions
   const handleAssignSupervisor = async (assignment) => {
     setSelectedAssignment(assignment);
@@ -96,9 +102,14 @@ const LandReportManagement = () => {
       return;
     }
 
-    const supervisor = availableSupervisors.find(s => s.user_id === selectedSupervisor);
+    // Convert selectedSupervisor to number for comparison since HTML select returns string
+    const selectedSupervisorId = parseInt(selectedSupervisor, 10);
+    
+    // Find the supervisor in the available supervisors list
+    const supervisor = availableSupervisors.find(s => parseInt(s.user_id, 10) === selectedSupervisorId);
+    
     if (!supervisor) {
-      alert("Invalid field supervisor selection");
+      alert("Invalid field supervisor selection. Please refresh and try again.");
       return;
     }
 
@@ -178,7 +189,13 @@ const LandReportManagement = () => {
   };
 
   if (showReview) {
-    return <LandReportReview onBack={() => setShowReview(false)} />;
+    return <LandReportReview 
+      report={selectedReport} 
+      onBack={() => {
+        setShowReview(false);
+        setSelectedReport(null);
+      }} 
+    />;
   }
 
   return (
@@ -361,10 +378,10 @@ const LandReportManagement = () => {
                       </td>
                       <td className="py-3 px-4">
                         <button
-                          onClick={() => handleViewDetails(report)}
+                          onClick={() => handleReviewReport(report)}
                           className="text-black font-semibold hover:underline hover:text-green-600 cursor-pointer"
                         >
-                          View Details
+                          Review Report
                         </button>
                       </td>
                     </tr>
@@ -398,9 +415,16 @@ const LandReportManagement = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Select Field Supervisor
                 </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Only showing unassigned field supervisors available for new assignments
+                </p>
                 {loadingSupervisors ? (
                   <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-500">
-                    Loading field supervisors...
+                    Loading available field supervisors...
+                  </div>
+                ) : availableSupervisors.length === 0 ? (
+                  <div className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-500 bg-gray-50">
+                    No unassigned field supervisors available at this time
                   </div>
                 ) : (
                   <select
@@ -408,10 +432,10 @@ const LandReportManagement = () => {
                     onChange={(e) => setSelectedSupervisor(e.target.value)}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"
                   >
-                    <option value="">-- Select a field supervisor --</option>
+                    <option value="">-- Select an available field supervisor --</option>
                     {availableSupervisors.map((supervisor) => (
                       <option key={supervisor.user_id} value={supervisor.user_id}>
-                        {supervisor.full_name} ({supervisor.user_id}) - {supervisor.role}
+                        {supervisor.full_name} ({supervisor.user_id}) - Available
                       </option>
                     ))}
                   </select>

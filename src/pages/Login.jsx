@@ -40,7 +40,7 @@ const Login = () => {
 
   const roleToPath = {
     'Landowner': '/landownerdashboard',
-    'Supervisor': '/fieldsupervisordashboard',
+    'Field Supervisor': '/fieldsupervisordashboard',
     'Buyer': '/buyerdashboard',
     'Operational Manager': '/operationalmanagerdashboard',
     'Financial Manager': '/financialmanagerdashboard'
