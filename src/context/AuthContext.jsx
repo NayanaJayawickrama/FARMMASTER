@@ -19,22 +19,39 @@ export const AuthProvider = ({ children }) => {
           // Verify the session is still valid with backend
           const rootUrl = import.meta.env.VITE_API_URL;
           try {
-            const response = await axios.get(`${rootUrl}/api/users/${userData.id}`, {
+            const response = await axios.get(`${rootUrl}/api/users/session`, {
               withCredentials: true,
               timeout: 5000 // 5 second timeout
             });
             
             if (response.data.status === 'success') {
-              // Session is valid, keep user logged in
-              setUser(userData);
+              // Session is valid, use the server's user data which might be more up-to-date
+              const serverUserData = response.data.data.user_data;
+              setUser(serverUserData);
+              
+              // Update localStorage with the fresh data
+              localStorage.setItem("user", JSON.stringify(serverUserData));
             } else {
-              // Session invalid, clear storage
+              // Session invalid, clear storage including cart
+              if (userData?.id) {
+                localStorage.removeItem(`cartItems_${userData.id}`);
+              }
               localStorage.removeItem("user");
               setUser(null);
             }
           } catch (error) {
-            // If verification fails, clear the session for security
-            console.warn("Session verification failed, logging out for security");
+            // Handle different types of errors appropriately
+            if (error.response?.status === 401) {
+              // 401 is expected when no valid session exists - don't log as error
+              console.log("No active session found");
+            } else {
+              // Other errors might indicate real problems
+              console.warn("Session verification failed:", error.response?.status || error.message);
+            }
+            // Clear cart data for the user if we had their data
+            if (userData?.id) {
+              localStorage.removeItem(`cartItems_${userData.id}`);
+            }
             localStorage.removeItem("user");
             setUser(null);
           }
@@ -60,6 +77,17 @@ export const AuthProvider = ({ children }) => {
       const wasClosingBrowser = sessionStorage.getItem("closingBrowser");
       if (!wasClosingBrowser) {
         // This was a browser close and reopen, logout the user
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            if (userData?.id) {
+              localStorage.removeItem(`cartItems_${userData.id}`);
+            }
+          } catch (e) {
+            console.warn("Failed to parse user data for cart cleanup", e);
+          }
+        }
         localStorage.removeItem("user");
         setUser(null);
       }
@@ -92,6 +120,11 @@ export const AuthProvider = ({ children }) => {
       });
     } catch (error) {
       console.warn("Backend logout failed:", error.message);
+    }
+    
+    // Clear user-specific cart data
+    if (user?.id) {
+      localStorage.removeItem(`cartItems_${user.id}`);
     }
     
     // Clear localStorage and state
