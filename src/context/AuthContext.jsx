@@ -11,8 +11,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const verifySession = async () => {
       try {
-        // Use sessionStorage instead of localStorage for better security
-        const stored = sessionStorage.getItem("user");
+        // Use localStorage to persist across page refreshes
+        const stored = localStorage.getItem("user");
         if (stored) {
           const userData = JSON.parse(stored);
           
@@ -29,19 +29,19 @@ export const AuthProvider = ({ children }) => {
               setUser(userData);
             } else {
               // Session invalid, clear storage
-              sessionStorage.removeItem("user");
+              localStorage.removeItem("user");
               setUser(null);
             }
           } catch (error) {
             // If verification fails, clear the session for security
             console.warn("Session verification failed, logging out for security");
-            sessionStorage.removeItem("user");
+            localStorage.removeItem("user");
             setUser(null);
           }
         }
       } catch (e) {
         console.error("Failed to parse stored user", e);
-        sessionStorage.removeItem("user");
+        localStorage.removeItem("user");
         setUser(null);
       }
       setLoading(false);
@@ -49,25 +49,36 @@ export const AuthProvider = ({ children }) => {
 
     verifySession();
 
-    // Add cleanup on browser close/refresh
-    const handleBeforeUnload = () => {
-      // Clear session data when browser is closed
-      sessionStorage.removeItem("user");
+    // Handle browser close (but not page refresh)
+    const handleBeforeUnload = (e) => {
+      // Set a flag in sessionStorage to detect if it's a browser close or refresh
+      sessionStorage.setItem("closingBrowser", "true");
     };
 
-    // Add event listener for browser close
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    const handleLoad = () => {
+      // Check if we're loading after a browser close or just a refresh
+      const wasClosingBrowser = sessionStorage.getItem("closingBrowser");
+      if (!wasClosingBrowser) {
+        // This was a browser close and reopen, logout the user
+        localStorage.removeItem("user");
+        setUser(null);
+      }
+      // Clear the flag
+      sessionStorage.removeItem("closingBrowser");
+    };
 
-    // Cleanup event listener
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('load', handleLoad);
+
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('load', handleLoad);
     };
   }, []);
 
   const login = (userData) => {
-    // Use sessionStorage instead of localStorage for better security
-    // This ensures logout when browser is closed
-    sessionStorage.setItem("user", JSON.stringify(userData));
+    // Use localStorage to persist across page refreshes
+    localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
   };
 
@@ -83,8 +94,8 @@ export const AuthProvider = ({ children }) => {
       console.warn("Backend logout failed:", error.message);
     }
     
-    // Always clear session storage and state
-    sessionStorage.removeItem("user");
+    // Clear localStorage and state
+    localStorage.removeItem("user");
     setUser(null);
   };
 
