@@ -153,12 +153,12 @@ const LandReportManagement = () => {
       name: `${report.first_name} ${report.last_name}`,
       email: report.email,
       date: new Date(report.report_date).toLocaleDateString(),
-      status: report.status,
+      status: report.status || 'Pending',
       report_id: report.report_id,
       land_id: report.land_id,
       user_id: report.user_id,
       supervisor_info: supervisorInfo,
-      is_assigned: report.status === 'Assigned'
+      is_assigned: supervisorInfo !== 'To be assigned' // Based on actual supervisor assignment
     };
   });
 
@@ -170,8 +170,10 @@ const LandReportManagement = () => {
         return "bg-red-100 text-red-700";
       case "Pending":
         return "bg-yellow-100 text-yellow-700";
+      case "Assigned":
+        return "bg-blue-100 text-blue-700";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-yellow-100 text-yellow-700"; // Default to Pending style for any unknown status
     }
   };
 
@@ -288,12 +290,6 @@ const LandReportManagement = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => handleViewDetails(assignment)}
-                            className="text-blue-600 font-semibold hover:underline hover:text-blue-700 cursor-pointer text-xs"
-                          >
-                            View Details
-                          </button>
                           {!assignment.is_assigned && (
                             <button
                               onClick={() => handleAssignSupervisor(assignment)}
@@ -353,7 +349,7 @@ const LandReportManagement = () => {
                       key={report.report_id || index}
                       className="border-t border-gray-200 hover:bg-green-50 transition"
                     >
-                      <td className="py-3 px-4">{report.id}</td>
+                      <td className="py-3 px-4">{report.report_id}</td>
                       <td className="py-3 px-4 text-green-700">{report.location}</td>
                       <td className="py-3 px-4">{report.name}</td>
                       <td className="py-3 px-4">{report.email}</td>
