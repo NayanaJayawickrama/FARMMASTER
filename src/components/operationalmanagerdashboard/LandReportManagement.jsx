@@ -20,31 +20,6 @@ const LandReportManagement = () => {
     fetchReports();
   }, []);
 
-  // Handle external script interference
-  useEffect(() => {
-    const handleExternalScriptErrors = (event) => {
-      // Check if error is from external scripts like ma_payload.js
-      if (event.filename && (event.filename.includes('ma_payload') || event.filename.includes('facebook'))) {
-        console.warn('External script error caught and ignored:', event.error);
-        event.preventDefault();
-        return true;
-      }
-    };
-
-    // Add global error handler
-    window.addEventListener('error', handleExternalScriptErrors);
-    window.addEventListener('unhandledrejection', (event) => {
-      if (event.reason && event.reason.stack && event.reason.stack.includes('ma_payload')) {
-        console.warn('External script promise rejection caught and ignored:', event.reason);
-        event.preventDefault();
-      }
-    });
-
-    return () => {
-      window.removeEventListener('error', handleExternalScriptErrors);
-    };
-  }, []);
-
   const fetchReports = async () => {
     try {
       setLoading(true);
@@ -116,28 +91,18 @@ const LandReportManagement = () => {
   };
 
   const handleSubmitAssignment = async () => {
+    if (!selectedSupervisor) {
+      alert("Please select a field supervisor");
+      return;
+    }
+
+    const supervisor = availableSupervisors.find(s => s.user_id === selectedSupervisor);
+    if (!supervisor) {
+      alert("Invalid field supervisor selection");
+      return;
+    }
+
     try {
-      if (!selectedSupervisor) {
-        alert("Please select a field supervisor");
-        return;
-      }
-
-      console.log("Selected supervisor ID:", selectedSupervisor);
-      console.log("Available supervisors:", availableSupervisors);
-      console.log("Available supervisor IDs:", availableSupervisors.map(s => s.user_id));
-
-      // Convert selectedSupervisor to number for comparison since HTML select returns strings
-      const selectedId = parseInt(selectedSupervisor, 10);
-      const supervisor = availableSupervisors.find(s => parseInt(s.user_id, 10) === selectedId);
-      
-      if (!supervisor) {
-        console.error("Supervisor not found in available list");
-        console.error("Selected ID:", selectedSupervisor, "Type:", typeof selectedSupervisor);
-        console.error("Available IDs:", availableSupervisors.map(s => ({ id: s.user_id, type: typeof s.user_id })));
-        alert("Invalid field supervisor selection");
-        return;
-      }
-
       const response = await fetch(`http://localhost/FARMMASTER-Backend/api.php/land-reports/${selectedAssignment.report_id}/assign-public`, {
         method: 'PUT',
         headers: {
@@ -167,14 +132,6 @@ const LandReportManagement = () => {
       }
     } catch (err) {
       alert("Failed to assign field supervisor: " + err.message);
-    } finally {
-      // Clean up any external script interference
-      try {
-        // Prevent external scripts from interfering
-        if (window.fbAsyncInit) delete window.fbAsyncInit;
-      } catch (e) {
-        // Ignore cleanup errors
-      }
     }
   };
 
