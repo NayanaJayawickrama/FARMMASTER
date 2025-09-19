@@ -16,12 +16,6 @@ const Login = () => {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Forgot password states
-  const [showForgot, setShowForgot] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
-  const [forgotMsg, setForgotMsg] = useState('');
-  const [forgotLoading, setForgotLoading] = useState(false);
-
   const rootUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
   const location = useLocation();
@@ -133,36 +127,6 @@ const Login = () => {
     }
   };
 
-  // Forgot Password Handler
-  
-const handleForgotPassword = async (e) => {
-  e.preventDefault();
-  setForgotMsg('');
-  if (!forgotEmail || !forgotEmail.includes('@')) {
-    showCustomError('Please enter a valid email address.');
-    setForgotMsg('⚠️ Please enter a valid email address.');
-    return;
-  }
-  setForgotLoading(true);
-  try {
-    // Send the current frontend URL to the backend
-    const res = await axios.post(`${rootUrl}/api/users/forgot-password`, {
-      email: forgotEmail,
-      frontendUrl: window.location.origin 
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    alert(res.data.message);
-    //setForgotMsg(res.data.message);
-  } catch {
-    showCustomError('Server error. Please try again.');
-    setForgotMsg('❌ Server error. Please try again.');
-  }
-  setForgotLoading(false);
-};
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       {/* Custom Error Popup */}
@@ -188,44 +152,6 @@ const handleForgotPassword = async (e) => {
                 Close
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Forgot Password Modal */}
-      {showForgot && (
-        <div className="fixed inset-0 bg-white bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
-            <h2 className="text-xl font-bold mb-2">Forgot Password</h2>
-            <form onSubmit={handleForgotPassword} className="space-y-3">
-              <input
-                type="email"
-                value={forgotEmail}
-                onChange={e => setForgotEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="w-full border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              />
-              <button
-                type="submit"
-                disabled={forgotLoading}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 rounded-md transition"
-              >
-                {forgotLoading ? "Sending..." : "Send Reset Link"}
-              </button>
-              {forgotMsg && (
-                <div className={`text-center text-sm ${forgotMsg.toLowerCase().includes('success') ? 'text-green-600' : 'text-red-600'}`}>
-                  {forgotMsg}
-                </div>
-              )}
-              <button
-                type="button"
-                className="w-full mt-2 text-gray-500 hover:underline"
-                onClick={() => { setShowForgot(false); setForgotMsg(''); setForgotEmail(''); }}
-              >
-                Cancel
-              </button>
-            </form>
           </div>
         </div>
       )}
@@ -290,13 +216,6 @@ const handleForgotPassword = async (e) => {
           )}
 
           <div className="text-center text-sm text-gray-600 space-y-1">
-            <button
-              type="button"
-              className="text-green-600 hover:underline inline-block"
-              onClick={() => setShowForgot(true)}
-            >
-              Forgot your password?
-            </button>
             <p>
               Don't have an account? <a href="/register" className="text-green-600 font-medium hover:underline">Sign Up</a>
             </p>

@@ -10,7 +10,6 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Register from "./pages/Register";
 import Login from "./pages/Login"; 
-import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 
 import LandownerDashboard from "./pages/landownerpages/LandownerDashboard";
@@ -55,7 +54,6 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} /> 
-        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Landowner Protected Routes */}
         <Route path="/landownerdashboard" element={
