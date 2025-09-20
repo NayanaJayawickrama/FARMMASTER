@@ -26,51 +26,78 @@ export default function LandReportManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Helper function to get auth headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    console.log('Auth token:', token ? 'Present' : 'Missing');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  };
+
   // Fetch assignment reports
   const fetchAssignmentReports = async () => {
     try {
-      const response = await axios.get(`${rootUrl}/api/land-reports/assignments-public`);
+      console.log('Fetching assignment reports from:', `${rootUrl}/api/land-reports/assignments`);
+      const response = await axios.get(`${rootUrl}/api/land-reports/assignments`, {
+        headers: getAuthHeaders()
+      });
+      console.log('Assignment reports response:', response.data);
       if (response.data.status === 'success') {
         setAssignmentData(response.data.data || []);
       }
     } catch (error) {
       console.error('Error fetching assignment reports:', error);
-      setError('Failed to load assignment reports');
+      console.error('Error response:', error.response?.data);
+      setError('Failed to load assignment reports: ' + (error.response?.data?.message || error.message));
     }
   };
 
   // Fetch review reports
   const fetchReviewReports = async () => {
     try {
-      const response = await axios.get(`${rootUrl}/api/land-reports/reviews-public`);
+      console.log('Fetching review reports from:', `${rootUrl}/api/land-reports/reviews`);
+      const response = await axios.get(`${rootUrl}/api/land-reports/reviews`, {
+        headers: getAuthHeaders()
+      });
+      console.log('Review reports response:', response.data);
       if (response.data.status === 'success') {
         setReviewData(response.data.data || []);
       }
     } catch (error) {
       console.error('Error fetching review reports:', error);
-      setError('Failed to load review reports');
+      console.error('Error response:', error.response?.data);
+      setError('Failed to load review reports: ' + (error.response?.data?.message || error.message));
     }
   };
 
   // Fetch available supervisors
   const fetchAvailableSupervisors = async () => {
     try {
-      const response = await axios.get(`${rootUrl}/api/land-reports/supervisors-public`);
+      console.log('Fetching supervisors from:', `${rootUrl}/api/land-reports/supervisors`);
+      const response = await axios.get(`${rootUrl}/api/land-reports/supervisors`, {
+        headers: getAuthHeaders()
+      });
+      console.log('Supervisors response:', response.data);
       if (response.data.status === 'success') {
         setAvailableSupervisors(response.data.data || []);
       }
     } catch (error) {
       console.error('Error fetching supervisors:', error);
-      setError('Failed to load supervisors');
+      console.error('Error response:', error.response?.data);
+      setError('Failed to load supervisors: ' + (error.response?.data?.message || error.message));
     }
   };
 
   // Assign supervisor to a report
   const assignSupervisor = async (reportId, supervisorId, supervisorName) => {
     try {
-      const response = await axios.put(`${rootUrl}/api/land-reports/${reportId}/assign-public`, {
+      const response = await axios.put(`${rootUrl}/api/land-reports/${reportId}/assign`, {
         supervisor_id: supervisorId,
         supervisor_name: supervisorName
+      }, {
+        headers: getAuthHeaders()
       });
       
       if (response.data.status === 'success') {
@@ -130,9 +157,11 @@ export default function LandReportManagement() {
       report={selectedReport}
       onReviewSubmit={async (reportId, decision, feedback) => {
         try {
-          const response = await axios.put(`${rootUrl}/api/land-reports/${reportId}/review-public`, {
+          const response = await axios.put(`${rootUrl}/api/land-reports/${reportId}/review`, {
             decision,
             feedback
+          }, {
+            headers: getAuthHeaders()
           });
           
           if (response.data.status === 'success') {
@@ -163,6 +192,12 @@ export default function LandReportManagement() {
       <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
         <div className="flex justify-center items-center h-64">
           <div className="text-lg text-red-600">{error}</div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="ml-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
