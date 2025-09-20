@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login"; 
 import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
+import Profile from './pages/Profile';
 
 import LandownerDashboard from "./pages/landownerpages/LandownerDashboard";
 import LandAssessmentStripePaymentPage from "./pages/landownerpages/LandAssessmentStripePaymentPage";
@@ -56,6 +57,13 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} /> 
         <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* Profile Route - Protected */}
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        } />
 
         {/* Landowner Protected Routes */}
         <Route path="/landownerdashboard" element={

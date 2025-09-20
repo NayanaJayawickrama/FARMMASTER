@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
           try {
             const response = await axios.get(`${rootUrl}/api/users/session`, {
               withCredentials: true,
-              timeout: 5000 // 5 second timeout
+              timeout: 10000 // Increased timeout to 10 seconds
             });
             
             if (response.data.status === 'success') {
@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }) => {
               localStorage.setItem("user", JSON.stringify(serverUserData));
             } else {
               // Session invalid, clear storage including cart
+              console.log("Session verification failed:", response.data.message || "Unknown error");
               if (userData?.id) {
                 localStorage.removeItem(`cartItems_${userData.id}`);
               }
@@ -43,17 +44,27 @@ export const AuthProvider = ({ children }) => {
             // Handle different types of errors appropriately
             if (error.response?.status === 401) {
               // 401 is expected when no valid session exists - don't log as error
-              console.log("No active session found");
+              console.log("No active session found - this is normal on first visit");
+            } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+              // Network/server connection issues - keep user logged in locally
+              console.warn("Cannot connect to server for session verification, keeping user logged in locally");
+              setUser(userData);
             } else {
               // Other errors might indicate real problems
               console.warn("Session verification failed:", error.response?.status || error.message);
+              // Only clear session for server-side errors, not network issues
+              if (error.response) {
+                if (userData?.id) {
+                  localStorage.removeItem(`cartItems_${userData.id}`);
+                }
+                localStorage.removeItem("user");
+                setUser(null);
+              } else {
+                // Network error - keep user logged in locally
+                setUser(userData);
+              }
             }
-            // Clear cart data for the user if we had their data
-            if (userData?.id) {
-              localStorage.removeItem(`cartItems_${userData.id}`);
-            }
-            localStorage.removeItem("user");
-            setUser(null);
+            // Note: Removed automatic session clearing for network errors
           }
         }
       } catch (e) {
