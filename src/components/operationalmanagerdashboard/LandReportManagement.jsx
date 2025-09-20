@@ -1,96 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import LandReportReview from "./LandReportReview";
+import AssignFieldSupervisor from "./AssignFieldSupervisor";
 
-const assignmentData = [
-  {
-    id: "#2024-LR-023",
-    location: "Kandy",
-    name: "Nimal Perera",
-    date: "2025-02-11",
-    supervisor: "Mr. Perera",
-    status: "Assigned",
-  },
-  {
-    id: "#2024-LR-011",
-    location: "Nuwara Eliya",
-    name: "Roshan Silva",
-    date: "2025-02-11",
-    supervisor: "Unassigned",
-    status: "Unassigned",
-  },
-  {
-    id: "#2024-LR-091",
-    location: "Kurunegala",
-    name: "Harsha Silva",
-    date: "2025-02-11",
-    supervisor: "Mr. Fernando",
-    status: "Assigned",
-  },
-  {
-    id: "#2024-LR-073",
-    location: "Matara",
-    name: "Dumindu Perera",
-    date: "2025-02-11",
-    supervisor: "Ms. De Silva",
-    status: "In Progress",
-  },
-  {
-    id: "#2024-LR-055",
-    location: "Matale",
-    name: "Ruwan Aravinda",
-    date: "2025-02-11",
-    supervisor: "Mr. Perera",
-    status: "Assigned",
-  },
-];
-
-const reviewData = [
-  {
-    id: "#2024-LR-023",
-    location: "Kandy",
-    name: "Nimal Perera",
-    supervisorId: "SR0021",
-    supervisor: "Mr. Perera",
-    status: "Approved",
-  },
-  {
-    id: "#2024-LR-011",
-    location: "Nuwara Eliya",
-    name: "Roshan Silva",
-    supervisorId: "SR0044",
-    supervisor: "Ms. Silva",
-    status: "Not Reviewed",
-  },
-  {
-    id: "#2024-LR-091",
-    location: "Kurunegala",
-    name: "Harsha Silva",
-    supervisorId: "SR0021",
-    supervisor: "Mr. Fernando",
-    status: "Rejected",
-  },
-  {
-    id: "#2024-LR-073",
-    location: "Matara",
-    name: "Dumindu Perera",
-    supervisorId: "SR0021",
-    supervisor: "Ms. De Silva",
-    status: "Not Reviewed",
-  },
-  {
-    id: "#2024-LR-055",
-    location: "Matale",
-    name: "Ruwan Aravinda",
-    supervisorId: "SR0021",
-    supervisor: "Mr. Perera",
-    status: "Not Reviewed",
-  },
-];
+const rootUrl = import.meta.env.VITE_API_URL;
 
 const statusColors = {
   Assigned: "bg-green-100 text-green-800",
   "In Progress": "bg-yellow-100 text-yellow-800",
   Unassigned: "bg-gray-100 text-gray-800",
+  "Not Assigned": "bg-gray-100 text-gray-800",
   Approved: "bg-green-100 text-green-800",
   Rejected: "bg-red-100 text-red-700",
   "Not Reviewed": "bg-gray-100 text-gray-800",
@@ -98,9 +17,155 @@ const statusColors = {
 
 export default function LandReportManagement() {
   const [showReview, setShowReview] = useState(false);
+  const [showAssignSupervisor, setShowAssignSupervisor] = useState(false);
+  const [selectedReportForAssignment, setSelectedReportForAssignment] = useState(null);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [assignmentData, setAssignmentData] = useState([]);
+  const [reviewData, setReviewData] = useState([]);
+  const [availableSupervisors, setAvailableSupervisors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch assignment reports
+  const fetchAssignmentReports = async () => {
+    try {
+      const response = await axios.get(`${rootUrl}/api/land-reports/assignments-public`);
+      if (response.data.status === 'success') {
+        setAssignmentData(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching assignment reports:', error);
+      setError('Failed to load assignment reports');
+    }
+  };
+
+  // Fetch review reports
+  const fetchReviewReports = async () => {
+    try {
+      const response = await axios.get(`${rootUrl}/api/land-reports/reviews-public`);
+      if (response.data.status === 'success') {
+        setReviewData(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching review reports:', error);
+      setError('Failed to load review reports');
+    }
+  };
+
+  // Fetch available supervisors
+  const fetchAvailableSupervisors = async () => {
+    try {
+      const response = await axios.get(`${rootUrl}/api/land-reports/supervisors-public`);
+      if (response.data.status === 'success') {
+        setAvailableSupervisors(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching supervisors:', error);
+      setError('Failed to load supervisors');
+    }
+  };
+
+  // Assign supervisor to a report
+  const assignSupervisor = async (reportId, supervisorId, supervisorName) => {
+    try {
+      const response = await axios.put(`${rootUrl}/api/land-reports/${reportId}/assign-public`, {
+        supervisor_id: supervisorId,
+        supervisor_name: supervisorName
+      });
+      
+      if (response.data.status === 'success') {
+        // Refresh assignment data
+        await fetchAssignmentReports();
+        alert('Supervisor assigned successfully!');
+      }
+    } catch (error) {
+      console.error('Error assigning supervisor:', error);
+      alert('Failed to assign supervisor');
+    }
+  };
+
+  // Load all data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchAssignmentReports(),
+        fetchReviewReports(),
+        fetchAvailableSupervisors()
+      ]);
+      setLoading(false);
+    };
+    
+    loadData();
+  }, []);
+
+  // Handle assignment action - go to supervisor selection page
+  const handleAssignmentAction = (report) => {
+    setSelectedReportForAssignment(report);
+    setShowAssignSupervisor(true);
+  };
+
+  // Handle view report action
+  const handleViewReport = (report) => {
+    setSelectedReport(report);
+    setShowReview(true);
+  };
+
+  if (showAssignSupervisor) {
+    return (
+      <AssignFieldSupervisor
+        onBack={() => setShowAssignSupervisor(false)}
+        report={selectedReportForAssignment}
+        onAssignmentComplete={async () => {
+          // Refresh assignment data after successful assignment
+          await fetchAssignmentReports();
+        }}
+      />
+    );
+  }
 
   if (showReview) {
-    return <LandReportReview onBack={() => setShowReview(false)} />;
+    return <LandReportReview 
+      onBack={() => setShowReview(false)} 
+      report={selectedReport}
+      onReviewSubmit={async (reportId, decision, feedback) => {
+        try {
+          const response = await axios.put(`${rootUrl}/api/land-reports/${reportId}/review-public`, {
+            decision,
+            feedback
+          });
+          
+          if (response.data.status === 'success') {
+            alert('Review submitted successfully!');
+            await fetchReviewReports(); // Refresh data
+            setShowReview(false);
+          }
+        } catch (error) {
+          console.error('Error submitting review:', error);
+          alert('Failed to submit review');
+        }
+      }}
+    />;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg text-gray-600">Loading land reports...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg text-red-600">{error}</div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -111,7 +176,7 @@ export default function LandReportManagement() {
           Land Report Assignments
         </h2>
         <p className="text-green-600 mb-6 text-sm sm:text-base">
-          Manage and assign field supervisors to land report requests.
+          Manage and assign Field Supervisors to land report requests.
         </p>
         <div className="overflow-x-auto shadow-sm border border-gray-200 rounded-lg">
           <table className="min-w-full text-sm">
@@ -121,7 +186,7 @@ export default function LandReportManagement() {
                 <th className="py-3 px-4 text-left">Location</th>
                 <th className="py-3 px-4 text-left">Landowner Name</th>
                 <th className="py-3 px-4 text-left">Requested Date</th>
-                <th className="py-3 px-4 text-left">Supervisor Name</th>
+                <th className="py-3 px-4 text-left">Field Supervisor Name</th>
                 <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-left text-green-700">Actions</th>
               </tr>
@@ -144,8 +209,9 @@ export default function LandReportManagement() {
                       {item.status}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600">
-                    {item.status === "Unassigned" ? "Assign" : "Reassign"}
+                  <td className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
+                      onClick={() => handleAssignmentAction(item)}>
+                    Assign
                   </td>
                 </tr>
               ))}
@@ -168,8 +234,8 @@ export default function LandReportManagement() {
                 <th className="py-3 px-4 text-left">Report ID</th>
                 <th className="py-3 px-4 text-left">Location</th>
                 <th className="py-3 px-4 text-left">Landowner Name</th>
-                <th className="py-3 px-4 text-left">Supervisor ID</th>
-                <th className="py-3 px-4 text-left">Supervisor Name</th>
+                <th className="py-3 px-4 text-left">Field Supervisor ID</th>
+                <th className="py-3 px-4 text-left">Field Supervisor Name</th>
                 <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-left text-green-700">Actions</th>
               </tr>
@@ -194,7 +260,7 @@ export default function LandReportManagement() {
                   </td>
                   <td
                     className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
-                    onClick={() => setShowReview(true)}
+                    onClick={() => handleViewReport(item)}
                   >
                     View Report
                   </td>
