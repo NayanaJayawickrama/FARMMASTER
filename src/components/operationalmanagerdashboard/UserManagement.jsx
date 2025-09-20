@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FiSearch } from "react-icons/fi";
+import PopupMessage from "../alerts/PopupMessage";
 
 const rootUrl = import.meta.env.VITE_API_URL;
 
@@ -12,6 +13,27 @@ export default function UserManagementPage() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+
+  // Popup message state
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: ''
+  });
+
+  const showPopup = (type, title, message) => {
+    setPopup({
+      isOpen: true,
+      type,
+      title,
+      message
+    });
+  };
+
+  const closePopup = () => {
+    setPopup(prev => ({ ...prev, isOpen: false }));
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -63,11 +85,11 @@ export default function UserManagementPage() {
           withCredentials: true
         });
         if (res.data.status === 'success') {
-          alert("User updated successfully");
+          showPopup('success', 'Success', 'User updated successfully');
           setShowForm(false);
           fetchUsers();
         } else {
-          alert(res.data.message || "Failed to update user");
+          showPopup('error', 'Update Failed', res.data.message || 'Failed to update user');
         }
       } else {
         const res = await axios.post(`${rootUrl}/api/users`, formData, {
@@ -75,11 +97,11 @@ export default function UserManagementPage() {
           withCredentials: true
         });
         if (res.data.status === 'success') {
-          alert("User added successfully");
+          showPopup('success', 'Success', 'User added successfully');
           setShowForm(false);
           fetchUsers();
         } else {
-          alert(res.data.message || "Failed to add user");
+          showPopup('error', 'Add Failed', res.data.message || 'Failed to add user');
         }
       }
     } catch (err) {
@@ -103,7 +125,7 @@ export default function UserManagementPage() {
         errorMessage = err.message || "Unknown error occurred.";
       }
       
-      alert(errorMessage);
+      showPopup('error', 'Error', errorMessage);
     }
   };
 
@@ -117,10 +139,10 @@ export default function UserManagementPage() {
         withCredentials: true
       });
       if (res.data.status === 'success') {
-        alert("User status updated successfully");
+        showPopup('success', 'Success', 'User status updated successfully');
         fetchUsers();
       } else {
-        alert(res.data.message || "Failed to update user status");
+        showPopup('error', 'Update Failed', res.data.message || 'Failed to update user status');
       }
     } catch (err) {
       console.error("Status toggle error:", err);
@@ -143,7 +165,7 @@ export default function UserManagementPage() {
         errorMessage = err.message || "Unknown error occurred.";
       }
       
-      alert(errorMessage);
+      showPopup('error', 'Error', errorMessage);
     }
   };
 
@@ -156,7 +178,7 @@ export default function UserManagementPage() {
     return matchesRole && matchesSearch;
   });
 
-  const UserForm = ({ initialData, onCancel, onSubmit }) => {
+  const UserForm = ({ initialData, onCancel, onSubmit, showPopup }) => {
     const [firstName, setFirstName] = useState(initialData?.first_name || "");
     const [lastName, setLastName] = useState(initialData?.last_name || "");
     const [email, setEmail] = useState(initialData?.email || "");
@@ -167,7 +189,7 @@ export default function UserManagementPage() {
     const handleSubmit = (e) => {
       e.preventDefault();
       if (!firstName || !lastName || !email || !userRole) {
-        alert("Please fill in all required fields.");
+        showPopup('warning', 'Missing Information', 'Please fill in all required fields.');
         return;
       }
       const data = {
@@ -179,7 +201,7 @@ export default function UserManagementPage() {
       };
       if (!initialData) {
         if (!password) {
-          alert("Password is required for new users.");
+          showPopup('warning', 'Password Required', 'Password is required for new users.');
           return;
         }
         data.password = password;
@@ -254,7 +276,7 @@ export default function UserManagementPage() {
               required
             >
               <option value="">Select Role</option>
-              <option value="Supervisor">Supervisor</option>
+              <option value="Field Supervisor">Field Supervisor</option>
               <option value="Financial_Manager">Financial Manager</option>
             </select>
           </div>
@@ -285,6 +307,7 @@ export default function UserManagementPage() {
           initialData={editUser}
           onCancel={() => setShowForm(false)}
           onSubmit={handleFormSubmit}
+          showPopup={showPopup}
         />
       ) : (
         <>
@@ -313,7 +336,7 @@ export default function UserManagementPage() {
             >
               <option value="">All Roles</option>
               <option value="Landowner">Landowner</option>
-              <option value="Supervisor">Supervisor</option>
+              <option value="Field Supervisor">Field Supervisor</option>
               <option value="Buyer">Buyer</option>
               <option value="Operational_Manager">Operational Manager</option>
               <option value="Financial_Manager">Financial Manager</option>
@@ -406,11 +429,63 @@ export default function UserManagementPage() {
             </div>
           )}
 
+          {/* User Summary */}
+          <div className="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">User Summary</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-lg shadow-sm border">
+                <h3 className="text-sm font-medium text-gray-600">Total Users</h3>
+                <p className="text-2xl font-bold text-blue-600">{userList.length}</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm border">
+                <h3 className="text-sm font-medium text-gray-600">Active Users</h3>
+                <p className="text-2xl font-bold text-green-600">
+                  {userList.filter(user => user.status === 'Active').length}
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow-sm border">
+                <h3 className="text-sm font-medium text-gray-600">Inactive Users</h3>
+                <p className="text-2xl font-bold text-red-600">
+                  {userList.filter(user => user.status === 'Inactive').length}
+                </p>
+              </div>
+            </div>
+            
+            {/* Role Breakdown */}
+            <div className="mt-6">
+              <h3 className="text-lg font-medium text-gray-700 mb-3">Role Distribution</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {['Landowner', 'Field Supervisor', 'Buyer', 'Financial_Manager'].map(role => {
+                  const count = userList.filter(user => user.role === role).length;
+                  return (
+                    <div key={role} className="bg-white p-3 rounded-lg shadow-sm border text-center">
+                      <h4 className="text-xs font-medium text-gray-600 mb-1">
+                        {role.replace('_', ' ')}
+                      </h4>
+                      <p className="text-lg font-bold text-gray-800">{count}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
           <p className="text-center mt-8 text-sm text-gray-400">
             © 2025 Farm Master. All rights reserved.
           </p>
         </>
       )}
+      
+      {/* Popup Message */}
+      <PopupMessage
+        isOpen={popup.isOpen}
+        onClose={closePopup}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        autoClose={popup.type === 'success'}
+        autoCloseDelay={2000}
+      />
     </div>
   );
 }

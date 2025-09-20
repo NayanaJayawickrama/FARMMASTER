@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/images/logo.png';
+import PopupMessage from '../components/alerts/PopupMessage';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,9 +13,26 @@ const Login = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Custom popup states
-  const [showErrorPopup, setShowErrorPopup] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  // Popup message state
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: ''
+  });
+
+  const showPopup = (type, title, message) => {
+    setPopup({
+      isOpen: true,
+      type,
+      title,
+      message
+    });
+  };
+
+  const closePopup = () => {
+    setPopup(prev => ({ ...prev, isOpen: false }));
+  };
 
   const rootUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
@@ -40,29 +58,23 @@ const Login = () => {
     'Financial Manager': '/financialmanagerdashboard'
   };
 
-  // Helper function to show custom error popup
-  const showCustomError = (message) => {
-    setErrorMessage(message);
-    setShowErrorPopup(true);
-  };
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage('');
 
     // Frontend validation
     if (!email || !password) {
-      showCustomError('Please fill in all fields.');
+      showPopup('warning', 'Missing Information', 'Please fill in all fields.');
       return;
     }
 
     if (!email.includes('@')) {
-      showCustomError('Please enter a valid email address.');
+      showPopup('warning', 'Invalid Email', 'Please enter a valid email address.');
       return;
     }
 
     if (password.length < 6) {
-      showCustomError('Password must be at least 6 characters long.');
+      showPopup('warning', 'Password Too Short', 'Password must be at least 6 characters long.');
       return;
     }
 
@@ -100,9 +112,9 @@ const Login = () => {
         if (response.data.message.toLowerCase().includes('invalid') || 
             response.data.message.toLowerCase().includes('incorrect') ||
             response.data.message.toLowerCase().includes('wrong')) {
-          showCustomError('Invalid credentials. Please check your email and password.');
+          showPopup('error', 'Login Failed', 'Invalid credentials. Please check your email and password.');
         } else {
-          showCustomError(response.data.message);
+          showPopup('error', 'Login Failed', response.data.message);
         }
       }
     } catch (error) {
@@ -115,47 +127,20 @@ const Login = () => {
             error.response.data.message.toLowerCase().includes('incorrect') ||
             error.response.data.message.toLowerCase().includes('wrong') ||
             error.response.data.message.toLowerCase().includes('not found')) {
-          showCustomError('Invalid credentials. Please check your email and password.');
+          showPopup('error', 'Login Failed', 'Invalid credentials. Please check your email and password.');
         } else {
-          showCustomError(error.response.data.message);
+          showPopup('error', 'Login Failed', error.response.data.message);
         }
       } else if (error.response && error.response.status === 401) {
-        showCustomError('Invalid credentials. Please check your email and password.');
+        showPopup('error', 'Login Failed', 'Invalid credentials. Please check your email and password.');
       } else {
-        showCustomError('Server error. Please try again.');
+        showPopup('error', 'Server Error', 'Server error. Please try again.');
       }
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      {/* Custom Error Popup */}
-      {showErrorPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm mx-4 border-l-4 border-red-500">
-            <div className="flex items-center mb-4">
-              <div className="flex-shrink-0">
-                <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-lg font-semibold text-gray-900">Error</h3>
-              </div>
-            </div>
-            <p className="text-gray-700 mb-6">{errorMessage}</p>
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowErrorPopup(false)}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-md transition duration-200"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="mt-10 mb-6 text-center">
         <img src={logo} alt="FarmMaster" className="w-32 h-auto mx-auto mb-1" />
         <p className="text-xl text-gray-600">Welcome back to your farming journey</p>
@@ -224,6 +209,15 @@ const Login = () => {
       </div>
 
       <p className="mt-8 text-sm text-gray-400 text-center">© 2025 Farm Master. All rights reserved.</p>
+
+      {/* Popup Message */}
+      <PopupMessage
+        isOpen={popup.isOpen}
+        onClose={closePopup}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+      />
     </div>
   );
 };

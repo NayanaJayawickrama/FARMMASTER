@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import axios from "axios";
 import logo from "../assets/images/logo.png";
+import PopupMessage from "../components/alerts/PopupMessage";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +20,27 @@ const Register = () => {
 
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Popup message state
+  const [popup, setPopup] = useState({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: ''
+  });
+
+  const showPopup = (type, title, message) => {
+    setPopup({
+      isOpen: true,
+      type,
+      title,
+      message
+    });
+  };
+
+  const closePopup = () => {
+    setPopup(prev => ({ ...prev, isOpen: false }));
+  };
 
   // Validation functions
   const validateName = (name, fieldName) => {
@@ -96,47 +118,47 @@ const Register = () => {
     const firstNameError = validateName(firstName, "First name");
     if (firstNameError) {
       setMessage("⚠️ " + firstNameError);
-      alert("⚠️ " + firstNameError);
+      showPopup('warning', 'Validation Error', firstNameError);
       return;
     }
 
     const lastNameError = validateName(lastName, "Last name");
     if (lastNameError) {
       setMessage("⚠️ " + lastNameError);
-      alert("⚠️ " + lastNameError);
+      showPopup('warning', 'Validation Error', lastNameError);
       return;
     }
 
     const emailError = validateEmail(email);
     if (emailError) {
       setMessage("⚠️ " + emailError);
-      alert("⚠️ " + emailError);
+      showPopup('warning', 'Validation Error', emailError);
       return;
     }
 
     const phoneError = validatePhone(phone);
     if (phoneError) {
       setMessage("⚠️ " + phoneError);
-      alert("⚠️ " + phoneError);
+      showPopup('warning', 'Validation Error', phoneError);
       return;
     }
 
     const passwordError = validatePassword(password);
     if (passwordError) {
       setMessage("⚠️ " + passwordError);
-      alert("⚠️ " + passwordError);
+      showPopup('warning', 'Validation Error', passwordError);
       return;
     }
 
     if (!accountType) {
       setMessage("⚠️ Please select an account type.");
-      alert("⚠️ Please select an account type.");
+      showPopup('warning', 'Missing Information', 'Please select an account type.');
       return;
     }
 
     if (password !== confirmPassword) {
       setMessage("❌ Passwords do not match.");
-      alert("❌ Passwords do not match.");
+      showPopup('error', 'Password Mismatch', 'Passwords do not match.');
       return;
     }
 
@@ -159,6 +181,7 @@ const Register = () => {
 
       if (response.data.status === "success") {
         setMessage("✅ Registration successful! You can now login.");
+        showPopup('success', 'Registration Successful', 'You can now login with your credentials.');
         // Clear form
         setFirstName("");
         setLastName("");
@@ -169,13 +192,13 @@ const Register = () => {
         setAccountType("");
       } else {
         setMessage("❌ " + response.data.message);
-        alert("❌ " + response.data.message);
+        showPopup('error', 'Registration Failed', response.data.message);
       }
     } catch (error) {
       setLoading(false);
       console.error("Registration failed:", error);
       setMessage("❌ Server error. Please try again.");
-      alert("❌ Server error. Please try again.");
+      showPopup('error', 'Server Error', 'Server error. Please try again.');
     }
   };
 
@@ -338,6 +361,17 @@ const Register = () => {
       <p className="mt-8 text-sm text-gray-400 text-center">
         © 2025 Farm Master. All rights reserved.
       </p>
+
+      {/* Popup Message */}
+      <PopupMessage
+        isOpen={popup.isOpen}
+        onClose={closePopup}
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        autoClose={popup.type === 'success'}
+        autoCloseDelay={3000}
+      />
     </div>
   );
 };
