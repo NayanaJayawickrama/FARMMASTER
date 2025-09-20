@@ -12,6 +12,7 @@ export default function LandReportBody() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all"); // "all", "pending", "completed"
+  const [existingRequests, setExistingRequests] = useState({}); // Track existing interest requests
   const { user } = useAuth();
 
   // Test user ID - replace with actual user from auth context
@@ -21,6 +22,26 @@ export default function LandReportBody() {
     fetchAssessmentRequests();
   }, []);
 
+  // Check if interest request already exists for a report
+  const checkExistingInterestRequest = async (reportId) => {
+    try {
+      const response = await axios.get(`${rootUrl}/api/land-reports/${reportId}/interest-request-check`, {
+        withCredentials: true
+      });
+      
+      if (response.data.status === 'success') {
+        setExistingRequests(prev => ({
+          ...prev,
+          [reportId]: response.data.data.has_request
+        }));
+        return response.data.data.has_request;
+      }
+    } catch (err) {
+      console.warn("Failed to check existing interest request:", err);
+    }
+    return false;
+  };
+
   const fetchAssessmentRequests = async () => {
     setLoading(true);
     setError("");
@@ -29,9 +50,18 @@ export default function LandReportBody() {
         withCredentials: true
       });
       if (response.data.status === 'success') {
-        setAssessmentRequests(response.data.data || []);
-        if (response.data.data && response.data.data.length > 0) {
-          setSelectedItem(response.data.data[0]);
+        const reports = response.data.data || [];
+        setAssessmentRequests(reports);
+        
+        // Check existing interest requests for each report
+        for (const report of reports) {
+          if (report.report_id) {
+            await checkExistingInterestRequest(report.report_id);
+          }
+        }
+        
+        if (reports.length > 0) {
+          setSelectedItem(reports[0]);
         }
       } else {
         setError(response.data.message || "Failed to fetch assessment requests");
@@ -58,6 +88,108 @@ export default function LandReportBody() {
       }
     } catch (err) {
       alert("Failed to open report: " + err.message);
+    }
+  };
+
+  const generateConclusion = async (reportId) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${rootUrl}/api/land-reports/${reportId}/conclusion`, {
+        withCredentials: true
+      });
+      
+      if (response.data.status === 'success') {
+        // Update the selected item with conclusion data
+        setSelectedItem(prev => ({
+          ...prev,
+          conclusion: response.data.data
+        }));
+        alert("Land suitability analysis completed!");
+      } else {
+        setError("Failed to generate conclusion: " + (response.data.message || "Unknown error"));
+      }
+    } catch (err) {
+      setError("Failed to generate conclusion: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Simple version of conclusion generation
+  const generateSimpleConclusion = async (reportId) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${rootUrl}/api/land-reports/${reportId}/conclusion`, {
+        withCredentials: true
+      });
+      
+      if (response.data.status === 'success') {
+        // Update the selected item with conclusion data
+        setSelectedItem(prev => ({
+          ...prev,
+          conclusion: response.data.data
+        }));
+        alert("Assessment completed!");
+      } else {
+        setError("Failed to generate assessment: " + (response.data.message || "Unknown error"));
+      }
+    } catch (err) {
+      setError("Failed to generate assessment: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Send interest request to financial manager
+  const sendInterestRequest = async (reportId) => {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${rootUrl}/api/land-reports/${reportId}/interest-request`, {}, {
+        withCredentials: true
+      });
+      
+      if (response.data.status === 'success') {
+        alert("🎉 Your interest has been sent to our Financial Manager! They will review your land and create a leasing proposal for you.");
+        // Update the existing requests state
+        setExistingRequests(prev => ({
+          ...prev,
+          [reportId]: true
+        }));
+        // Refresh the reports
+        fetchAssessmentRequests();
+      } else {
+        alert("Failed to send interest: " + (response.data.message || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Failed to send interest: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle decline interest
+  const declineInterest = () => {
+    alert("No problem! Feel free to reach out anytime when you're ready to partner with FarmMaster. 🌱");
+  };
+
+  const requestProposal = async (reportId) => {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${rootUrl}/api/land-reports/${reportId}/proposal-request`, {}, {
+        withCredentials: true
+      });
+      
+      if (response.data.status === 'success') {
+        alert("Proposal request submitted successfully! Our financial team will review and create a proposal for you.");
+        // Refresh the reports to show updated status
+        fetchAssessmentRequests();
+      } else {
+        setError("Failed to request proposal: " + (response.data.message || "Unknown error"));
+      }
+    } catch (err) {
+      setError("Failed to request proposal: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -450,6 +582,124 @@ export default function LandReportBody() {
                       ) : (
                         <div className="bg-yellow-50 p-4 rounded-lg">
                           <p className="text-sm text-yellow-700">Soil analysis data is being processed by our field supervisors.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Simple Land Suitability Conclusion */}
+                  {selectedItem.has_report && selectedItem.report_status === 'Approved' && (
+                    <div className="mb-8">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-base font-semibold text-gray-800">
+                          🌱 Organic Farming Assessment
+                        </h2>
+                        {!selectedItem.conclusion && (
+                          <button
+                            onClick={() => generateSimpleConclusion(selectedItem.report_id)}
+                            disabled={loading}
+                            className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
+                          >
+                            {loading ? 'Analyzing...' : 'Get Assessment'}
+                          </button>
+                        )}
+                      </div>
+                      
+                      {selectedItem.conclusion ? (
+                        <div>
+                          {/* Simple Conclusion */}
+                          <div className={`mb-6 p-4 rounded-lg border-2 ${
+                            selectedItem.conclusion.is_good_for_organic 
+                              ? 'bg-green-50 border-green-200' 
+                              : 'bg-yellow-50 border-yellow-200'
+                          }`}>
+                            <div className="text-center">
+                              <div className="text-2xl mb-2">
+                                {selectedItem.conclusion.is_good_for_organic ? '🌱✅' : '🌱⚠️'}
+                              </div>
+                              <h3 className={`font-semibold text-lg mb-2 ${
+                                selectedItem.conclusion.is_good_for_organic 
+                                  ? 'text-green-800' 
+                                  : 'text-yellow-800'
+                              }`}>
+                                {selectedItem.conclusion.is_good_for_organic 
+                                  ? 'Good for Organic Farming!' 
+                                  : 'Needs Improvement for Organic Farming'}
+                              </h3>
+                              <p className="text-sm text-gray-700 mb-4">
+                                {selectedItem.conclusion.conclusion_text}
+                              </p>
+                            </div>
+
+                            {/* Recommended Crops */}
+                            {selectedItem.conclusion.recommended_crops && selectedItem.conclusion.recommended_crops.length > 0 && (
+                              <div className="mt-4">
+                                <h4 className="font-medium text-gray-800 mb-2">Recommended Crops:</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {selectedItem.conclusion.recommended_crops.map((crop, index) => (
+                                    <span key={index} className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+                                      {crop}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Two Simple Buttons - Only for Good Land */}
+                            {selectedItem.conclusion.is_good_for_organic && (
+                              <div className="mt-6 pt-4 border-t border-green-200">
+                                <h4 className="font-medium text-gray-800 mb-3 text-center">
+                                  Interested in partnering with FarmMaster for organic farming?
+                                </h4>
+                                
+                                {/* Show different content based on whether request exists */}
+                                {existingRequests[selectedItem.report_id] ? (
+                                  <div className="text-center">
+                                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                      <div className="text-blue-600 text-lg mb-2">✅ Interest Submitted!</div>
+                                      <p className="text-sm text-blue-800">
+                                        Your interest request has been sent to our Financial Manager. 
+                                        They will review your land and create a leasing proposal for you soon.
+                                      </p>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                    <button
+                                      onClick={() => sendInterestRequest(selectedItem.report_id)}
+                                      className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
+                                    >
+                                      🤝 Interested to join FarmMaster
+                                    </button>
+                                    <button
+                                      onClick={() => declineInterest()}
+                                      className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
+                                    >
+                                      🕒 Maybe next time
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Message for Not Good Land */}
+                            {!selectedItem.conclusion.is_good_for_organic && (
+                              <div className="mt-6 pt-4 border-t border-yellow-200 text-center">
+                                <p className="text-sm text-yellow-800 mb-2">
+                                  Don't worry! We'll work with you to improve your land for next time.
+                                </p>
+                                <p className="text-xs text-yellow-700">
+                                  Contact our agricultural experts for guidance on soil improvement.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <p className="text-sm text-blue-700">
+                            Click "Get Assessment" to see if your land is suitable for organic farming.
+                          </p>
                         </div>
                       )}
                     </div>

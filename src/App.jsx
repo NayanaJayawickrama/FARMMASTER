@@ -42,6 +42,7 @@ import FinancialMProfitRentCalculation from "./pages/financialmanagerpages/Finan
 import FinancialMMarketplaceFinance from "./pages/financialmanagerpages/FinancialMMarketplaceFinance";
 import FinancialMMarketplaceProducts from "./pages/financialmanagerpages/FinancialMMarketplaceProducts";
 import FinancialMFinancialReportManagement from "./pages/financialmanagerpages/FinancialMFinancialReportManagement";
+import FinancialMProposalManagement from "./pages/financialmanagerpages/FinancialMProposalManagement";
 
 function App() {
   // Auto-logout after 60 minutes of inactivity (with 2-minute warning)
@@ -179,6 +180,11 @@ function App() {
         <Route path="/financialmanagerpaymentmanagement" element={
           <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
             <FinancialMPaymentManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/financialmanagerproposals" element={
+          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
+            <FinancialMProposalManagement />
           </ProtectedRoute>
         } />
         <Route path="/financialmanagerprofitrentcalculation" element={

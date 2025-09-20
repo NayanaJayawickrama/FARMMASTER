@@ -11,6 +11,7 @@ import {
   Calculator,
   Package,
   CreditCard,
+  ClipboardList,
 } from "lucide-react";
 
 import logo from "../../assets/images/logo.png";
@@ -106,6 +107,17 @@ export default function FinancialManagerSidebar() {
           >
             <CreditCard size={16} />
             Payment Management
+          </NavLink>
+
+          <NavLink
+            to="/financialmanagerproposals"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? activeLink : normalLink}`
+            }
+            onClick={() => setIsOpen(false)}
+          >
+            <ClipboardList size={16} />
+            Proposal Management
           </NavLink>
 
           <NavLink

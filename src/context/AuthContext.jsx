@@ -27,10 +27,22 @@ export const AuthProvider = ({ children }) => {
             if (response.data.status === 'success') {
               // Session is valid, use the server's user data which might be more up-to-date
               const serverUserData = response.data.data.user_data;
-              setUser(serverUserData);
+              
+              // Create the full user object with name property for frontend compatibility
+              const fullUserData = {
+                id: serverUserData.id,
+                role: serverUserData.role,
+                name: serverUserData.first_name + ' ' + serverUserData.last_name,
+                first_name: serverUserData.first_name,
+                last_name: serverUserData.last_name,
+                email: serverUserData.email,
+                phone: serverUserData.phone
+              };
+              
+              setUser(fullUserData);
               
               // Update localStorage with the fresh data
-              localStorage.setItem("user", JSON.stringify(serverUserData));
+              localStorage.setItem("user", JSON.stringify(fullUserData));
             } else {
               // Session invalid, clear storage including cart
               console.log("Session verification failed:", response.data.message || "Unknown error");
@@ -116,9 +128,17 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData) => {
+    // Ensure userData has both name and individual name fields for compatibility
+    const fullUserData = {
+      ...userData,
+      first_name: userData.first_name || userData.name?.split(' ')[0] || '',
+      last_name: userData.last_name || userData.name?.split(' ').slice(1).join(' ') || '',
+      name: userData.name || (userData.first_name && userData.last_name ? userData.first_name + ' ' + userData.last_name : '')
+    };
+    
     // Use localStorage to persist across page refreshes
-    localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(fullUserData));
+    setUser(fullUserData);
   };
 
   const logout = async () => {
