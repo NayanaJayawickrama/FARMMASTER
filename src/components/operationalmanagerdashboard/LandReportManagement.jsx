@@ -176,7 +176,7 @@ export default function LandReportManagement() {
           Land Report Assignments
         </h2>
         <p className="text-green-600 mb-6 text-sm sm:text-base">
-          Manage and assign Field Supervisors to land report requests.
+          Manage and assign Supervisors to land report requests.
         </p>
         <div className="overflow-x-auto shadow-sm border border-gray-200 rounded-lg">
           <table className="min-w-full text-sm">
@@ -186,7 +186,7 @@ export default function LandReportManagement() {
                 <th className="py-3 px-4 text-left">Location</th>
                 <th className="py-3 px-4 text-left">Landowner Name</th>
                 <th className="py-3 px-4 text-left">Requested Date</th>
-                <th className="py-3 px-4 text-left">Field Supervisor Name</th>
+                <th className="py-3 px-4 text-left">Supervisor Name</th>
                 <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-left text-green-700">Actions</th>
               </tr>
@@ -234,8 +234,8 @@ export default function LandReportManagement() {
                 <th className="py-3 px-4 text-left">Report ID</th>
                 <th className="py-3 px-4 text-left">Location</th>
                 <th className="py-3 px-4 text-left">Landowner Name</th>
-                <th className="py-3 px-4 text-left">Field Supervisor ID</th>
-                <th className="py-3 px-4 text-left">Field Supervisor Name</th>
+                <th className="py-3 px-4 text-left">Supervisor ID</th>
+                <th className="py-3 px-4 text-left">Supervisor Name</th>
                 <th className="py-3 px-4 text-left">Status</th>
                 <th className="py-3 px-4 text-left text-green-700">Actions</th>
               </tr>
