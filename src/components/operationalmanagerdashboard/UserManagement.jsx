@@ -51,6 +51,10 @@ export default function UserManagementPage() {
           status: user.is_active ? "Active" : "Inactive"
         }));
         setUserList(transformedUsers);
+        // Debug: Log all unique roles in the userList
+        const uniqueRoles = [...new Set(transformedUsers.map(user => user.role))];
+        console.log('All unique roles in userList:', uniqueRoles);
+        console.log('All users with their roles:', transformedUsers.map(u => ({name: u.name, role: u.role})));
       } else {
         setError(response.data.message || "Failed to load users.");
       }
@@ -456,7 +460,16 @@ export default function UserManagementPage() {
               <h3 className="text-lg font-medium text-gray-700 mb-3">Role Distribution</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {['Landowner', 'Field Supervisor', 'Buyer', 'Financial_Manager'].map(role => {
-                  const count = userList.filter(user => user.role === role).length;
+                  // Handle both underscore and space variations for Financial Manager
+                  let count;
+                  if (role === 'Financial_Manager') {
+                    count = userList.filter(user => 
+                      user.role === 'Financial_Manager' || user.role === 'Financial Manager'
+                    ).length;
+                  } else {
+                    count = userList.filter(user => user.role === role).length;
+                  }
+                  console.log(`Role: ${role}, Count: ${count}, Users:`, userList.filter(user => user.role === role));
                   return (
                     <div key={role} className="bg-white p-3 rounded-lg shadow-sm border text-center">
                       <h4 className="text-xs font-medium text-gray-600 mb-1">
