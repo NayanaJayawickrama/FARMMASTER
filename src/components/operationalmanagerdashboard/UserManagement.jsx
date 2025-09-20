@@ -456,7 +456,16 @@ export default function UserManagementPage() {
               <h3 className="text-lg font-medium text-gray-700 mb-3">Role Distribution</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {['Landowner', 'Field Supervisor', 'Buyer', 'Financial_Manager'].map(role => {
-                  const count = userList.filter(user => user.role === role).length;
+                  // Handle Financial Manager role with both underscore and space variants
+                  let count = 0;
+                  if (role === 'Financial_Manager') {
+                    count = userList.filter(user => 
+                      user.role === 'Financial_Manager' || user.role === 'Financial Manager'
+                    ).length;
+                  } else {
+                    count = userList.filter(user => user.role === role).length;
+                  }
+                  
                   return (
                     <div key={role} className="bg-white p-3 rounded-lg shadow-sm border text-center">
                       <h4 className="text-xs font-medium text-gray-600 mb-1">
