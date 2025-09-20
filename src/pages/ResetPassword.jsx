@@ -35,8 +35,8 @@ const ResetPassword = () => {
         }, 1500); 
       }
     } catch {
-      setMsg('❌ Server error. Please try again.');
-      alert('❌ Server error. Please try again.');
+      setMsg('ERROR: Server error. Please try again.');
+      alert('ERROR: Server error. Please try again.');
     }
     setLoading(false);
   };

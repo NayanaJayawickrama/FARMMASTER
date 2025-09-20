@@ -39,7 +39,6 @@ import BuyerCheckout from "./pages/buyerpages/BuyerCheckout";
 import FinancialMDashboard from "./pages/financialmanagerpages/FinancialMDashboard";
 import FinancialMPaymentManagement from "./pages/financialmanagerpages/FinancialMPaymentManagement";
 import FinancialMProfitRentCalculation from "./pages/financialmanagerpages/FinancialMProfitRentCalculation";
-import FinancialMMarketplaceFinance from "./pages/financialmanagerpages/FinancialMMarketplaceFinance";
 import FinancialMMarketplaceProducts from "./pages/financialmanagerpages/FinancialMMarketplaceProducts";
 import FinancialMFinancialReportManagement from "./pages/financialmanagerpages/FinancialMFinancialReportManagement";
 import FinancialMProposalManagement from "./pages/financialmanagerpages/FinancialMProposalManagement";
@@ -190,11 +189,6 @@ function App() {
         <Route path="/financialmanagerprofitrentcalculation" element={
           <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
             <FinancialMProfitRentCalculation />
-          </ProtectedRoute>
-        } />
-        <Route path="/financialmanagermarketplacefinance" element={
-          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
-            <FinancialMMarketplaceFinance />
           </ProtectedRoute>
         } />
         <Route path="/financialmanagermarketplaceproducts" element={

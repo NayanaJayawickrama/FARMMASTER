@@ -143,17 +143,6 @@ export default function FinancialManagerSidebar() {
           </NavLink>
 
           <NavLink
-            to="/financialmanagermarketplacefinance"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? activeLink : normalLink}`
-            }
-            onClick={() => setIsOpen(false)}
-          >
-            <DollarSign size={16} />
-            Marketplace Finance
-          </NavLink>
-
-          <NavLink
             to="/financialmanagermarketplaceproducts"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? activeLink : normalLink}`

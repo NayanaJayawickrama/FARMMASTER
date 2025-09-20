@@ -274,7 +274,7 @@ const Register = () => {
             setFieldError("email", "This email address is already registered.");
             setFieldError("phone", "This phone number is already registered.");
           } else {
-            setMessage("❌ " + response.data.message);
+            setMessage("ERROR: " + response.data.message);
           }
         }
       }
@@ -309,7 +309,7 @@ const Register = () => {
             setFieldError("email", "This email address is already registered.");
             setFieldError("phone", "This phone number is already registered.");
           } else {
-            setMessage("❌ " + errorMessage);
+            setMessage("ERROR: " + errorMessage);
           }
         }
       } else {

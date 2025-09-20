@@ -62,7 +62,7 @@ export default function ProposalManagement() {
       // Here you would typically send the proposal data to create a formal proposal
       // For now, we'll just update the request status and show a success message
       await updateRequestStatus(request.request_id, 'approved', 'Proposal generated and sent to landowner');
-      alert(`✅ Leasing proposal generated and sent to ${request.first_name} ${request.last_name}!`);
+      alert(`SUCCESS! Leasing proposal generated and sent to ${request.first_name} ${request.last_name}!`);
       setShowProposalForm(false);
       setSelectedRequest(null);
     } catch (err) {
@@ -108,7 +108,11 @@ export default function ProposalManagement() {
 
       {interestRequests.length === 0 ? (
         <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <div className="text-4xl mb-4">🌱</div>
+          <div className="text-4xl mb-4 text-green-500">
+            <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
           <h3 className="text-lg font-medium text-gray-700 mb-2">No Interest Requests Yet</h3>
           <p className="text-gray-500">
             When landowners express interest in organic farming partnerships, they'll appear here.
@@ -152,19 +156,19 @@ export default function ProposalManagement() {
                     </div>
                     <div className="text-xs text-gray-500 space-y-1">
                       <div className="flex items-center gap-1">
-                        <span>📧</span>
+                        <span className="text-gray-600">@</span>
                         <span className="truncate">{request.email}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span>📍</span>
+                        <span className="text-gray-600">Location:</span>
                         <span className="truncate">{request.location}</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span>📏</span>
+                        <span className="text-gray-600">Size:</span>
                         <span>Size: {request.size}</span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-400">
-                        <span>📅</span>
+                        <span className="text-gray-600">Date:</span>
                         <span>{new Date(request.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -198,7 +202,7 @@ export default function ProposalManagement() {
 
                 {/* Landowner Information */}
                 <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-3">👤 Landowner Information</h3>
+                  <h3 className="font-semibold text-gray-800 mb-3">Landowner Information</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm"><strong>Name:</strong> {selectedRequest.first_name} {selectedRequest.last_name}</p>
@@ -213,7 +217,7 @@ export default function ProposalManagement() {
 
                 {/* Land Information */}
                 <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-3">🏞️ Land Information</h3>
+                  <h3 className="font-semibold text-gray-800 mb-3">Land Information</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm"><strong>Location:</strong> {selectedRequest.location}</p>
@@ -233,7 +237,7 @@ export default function ProposalManagement() {
 
                 {/* Soil Analysis */}
                 <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <h3 className="font-semibold text-gray-800 mb-3">🌱 Soil Analysis</h3>
+                  <h3 className="font-semibold text-gray-800 mb-3">Soil Analysis</h3>
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <p className="text-sm font-medium text-gray-700">pH Level</p>
@@ -263,12 +267,14 @@ export default function ProposalManagement() {
                 {/* Land Assessment */}
                 {selectedRequest.conclusion && (
                   <div className="mb-6 p-4 bg-teal-50 border border-teal-200 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-3">📊 Land Assessment</h3>
+                    <h3 className="font-semibold text-gray-800 mb-3">Land Assessment</h3>
                     <div className={`p-4 rounded-lg ${
                       selectedRequest.conclusion.is_good_for_organic ? 'bg-green-100 border-l-4 border-green-500' : 'bg-yellow-100 border-l-4 border-yellow-500'
                     }`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl">{selectedRequest.conclusion.is_good_for_organic ? '✅' : '⚠️'}</span>
+                        <span className={`text-2xl ${selectedRequest.conclusion.is_good_for_organic ? 'text-green-600' : 'text-yellow-600'}`}>
+                          {selectedRequest.conclusion.is_good_for_organic ? 'SUITABLE' : 'NEEDS IMPROVEMENT'}
+                        </span>
                         <h4 className={`font-semibold ${
                           selectedRequest.conclusion.is_good_for_organic ? 'text-green-800' : 'text-yellow-800'
                         }`}>
@@ -295,7 +301,7 @@ export default function ProposalManagement() {
                 {/* Financial Manager Notes */}
                 {selectedRequest.financial_manager_notes && (
                   <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 mb-2">📝 Financial Manager Notes</h3>
+                    <h3 className="font-semibold text-gray-800 mb-2">Financial Manager Notes</h3>
                     <p className="text-sm text-gray-700">{selectedRequest.financial_manager_notes}</p>
                   </div>
                 )}
@@ -308,13 +314,13 @@ export default function ProposalManagement() {
                         onClick={() => updateRequestStatus(selectedRequest.request_id, 'under_review', 'Request is under review by the Financial Manager')}
                         className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
                       >
-                        🔄 Mark Under Review
+                        Mark Under Review
                       </button>
                       <button
                         onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Request rejected after review')}
                         className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
                       >
-                        ❌ Reject Request
+                        Reject Request
                       </button>
                       <button
                         onClick={() => {
@@ -337,7 +343,7 @@ export default function ProposalManagement() {
                         onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Request rejected after detailed review')}
                         className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
                       >
-                        ❌ Reject Request
+                        Reject Request
                       </button>
                       <button
                         onClick={() => {
@@ -349,21 +355,21 @@ export default function ProposalManagement() {
                         }}
                         className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
                       >
-                        ✅ Generate Proposal
+                        Generate Proposal
                       </button>
                     </>
                   )}
                   
                   {selectedRequest.status === 'approved' && (
                     <div className="flex items-center gap-2 text-green-600">
-                      <span>✅</span>
+                      <span className="text-green-600">●</span>
                       <span className="font-medium">Proposal Generated and Sent</span>
                     </div>
                   )}
                   
                   {selectedRequest.status === 'rejected' && (
                     <div className="flex items-center gap-2 text-red-600">
-                      <span>❌</span>
+                      <span className="text-red-600">●</span>
                       <span className="font-medium">Request Rejected</span>
                     </div>
                   )}
@@ -371,7 +377,11 @@ export default function ProposalManagement() {
               </div>
             ) : (
               <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                <div className="text-4xl mb-4">👈</div>
+                <div className="text-4xl mb-4 text-gray-400">
+                  <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
                 <h3 className="text-lg font-medium text-gray-700 mb-2">Select a Request</h3>
                 <p className="text-gray-500">
                   Choose an interest request from the list to view details and take actions.

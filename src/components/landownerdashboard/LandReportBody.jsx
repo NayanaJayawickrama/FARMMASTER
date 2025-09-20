@@ -149,7 +149,7 @@ export default function LandReportBody() {
       });
       
       if (response.data.status === 'success') {
-        alert("🎉 Your interest has been sent to our Financial Manager! They will review your land and create a leasing proposal for you.");
+        alert("SUCCESS! Your interest has been sent to our Financial Manager! They will review your land and create a leasing proposal for you.");
         // Update the existing requests state
         setExistingRequests(prev => ({
           ...prev,
@@ -169,7 +169,7 @@ export default function LandReportBody() {
 
   // Handle decline interest
   const declineInterest = () => {
-    alert("No problem! Feel free to reach out anytime when you're ready to partner with FarmMaster. 🌱");
+    alert("No problem! Feel free to reach out anytime when you're ready to partner with FarmMaster.");
   };
 
   const requestProposal = async (reportId) => {
@@ -592,7 +592,7 @@ export default function LandReportBody() {
                     <div className="mb-8">
                       <div className="flex items-center justify-between mb-4">
                         <h2 className="text-base font-semibold text-gray-800">
-                          🌱 Organic Farming Assessment
+                          Organic Farming Assessment
                         </h2>
                         {!selectedItem.conclusion && (
                           <button
@@ -615,7 +615,9 @@ export default function LandReportBody() {
                           }`}>
                             <div className="text-center">
                               <div className="text-2xl mb-2">
-                                {selectedItem.conclusion.is_good_for_organic ? '🌱✅' : '🌱⚠️'}
+                                <span className={`text-lg font-bold ${selectedItem.conclusion.is_good_for_organic ? 'text-green-600' : 'text-yellow-600'}`}>
+                                  {selectedItem.conclusion.is_good_for_organic ? 'SUITABLE' : 'NEEDS IMPROVEMENT'}
+                                </span>
                               </div>
                               <h3 className={`font-semibold text-lg mb-2 ${
                                 selectedItem.conclusion.is_good_for_organic 
@@ -656,7 +658,7 @@ export default function LandReportBody() {
                                 {existingRequests[selectedItem.report_id] ? (
                                   <div className="text-center">
                                     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                      <div className="text-blue-600 text-lg mb-2">✅ Interest Submitted!</div>
+                                      <div className="text-blue-600 text-lg mb-2">Interest Submitted!</div>
                                       <p className="text-sm text-blue-800">
                                         Your interest request has been sent to our Financial Manager. 
                                         They will review your land and create a leasing proposal for you soon.
@@ -675,7 +677,7 @@ export default function LandReportBody() {
                                       onClick={() => declineInterest()}
                                       className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
                                     >
-                                      🕒 Maybe next time
+                                      Maybe next time
                                     </button>
                                   </div>
                                 )}
@@ -734,7 +736,7 @@ export default function LandReportBody() {
                               )}
                               {selectedItem.payment_status === 'paid' && (
                                 <>
-                                  <li>1. ✅ Payment completed successfully</li>
+                                  <li>1. Payment completed successfully</li>
                                   <li>2. Field supervisor will visit your land (within 3-5 working days)</li>
                                   <li>3. Soil and environmental assessment will be conducted</li>
                                   <li>4. Assessment report will be generated</li>
