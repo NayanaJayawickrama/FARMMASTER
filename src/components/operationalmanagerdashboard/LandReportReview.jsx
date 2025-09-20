@@ -1,9 +1,34 @@
 import React, { useState } from "react";
 import { Leaf, CheckCircle, Circle, ArrowLeft } from "lucide-react";
 
-export default function LandReportReview({ onBack }) {
+export default function LandReportReview({ onBack, report, onReviewSubmit }) {
   const [decision, setDecision] = useState("Approve");
   const [feedback, setFeedback] = useState("");
+
+  const handleSubmit = async () => {
+    if (!report || !report.report_id) {
+      alert('No report selected for review');
+      return;
+    }
+
+    if (onReviewSubmit) {
+      await onReviewSubmit(report.report_id, decision, feedback);
+    }
+  };
+
+  // Default report data if none provided
+  const reportData = report || {
+    id: "#2025-LR-002",
+    name: "Mr. Ruwan Perera",
+    location: "Badulla",
+    date: "2025-10-19",
+    supervisor: "Mr. Silva",
+    supervisorId: "SR0023",
+    report_details: {
+      land_description: "Sample land description",
+      crop_recommendation: "Sample crop recommendations"
+    }
+  };
 
   return (
     <div className="flex bg-white min-h-screen">
@@ -18,12 +43,12 @@ export default function LandReportReview({ onBack }) {
          
           <div className="flex flex-col text-sm mt-6 mb-8 divide-y divide-green-200 border border-green-300 rounded-md">
             {[
-              ["Land Report ID", "#2025-LR-002"],
-              ["Landowner Name", "Mr. Ruwan Perera"],
-              ["Location", "Badulla"],
-              ["Requested Date", "2025-10-19"],
-              ["Supervisor Name", "Mr. Silva"],
-              ["Supervisor ID", "SR0023"],
+              ["Land Report ID", reportData.id],
+              ["Landowner Name", reportData.name],
+              ["Location", reportData.location],
+              ["Requested Date", reportData.date],
+              ["Field Supervisor Name", reportData.supervisor],
+              ["Field Supervisor ID", reportData.supervisorId],
               ["Submitted Date", "2025-10-30"],
             ].map(([label, value], idx) => (
               <div key={idx} className="flex justify-between px-4 py-3">
@@ -147,7 +172,9 @@ export default function LandReportReview({ onBack }) {
               Back
             </button>
 
-            <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md text-sm font-semibold transition">
+            <button 
+              onClick={handleSubmit}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md text-sm font-semibold transition">
               Submit Decision
             </button>
           </div>

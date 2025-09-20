@@ -10,7 +10,6 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Register from "./pages/Register";
 import Login from "./pages/Login"; 
-import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 import Profile from './pages/Profile';
 
@@ -57,7 +56,6 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} /> 
-        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Profile Route - Protected */}
         <Route path="/profile" element={
