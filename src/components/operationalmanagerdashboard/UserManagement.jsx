@@ -276,7 +276,7 @@ export default function UserManagementPage() {
               required
             >
               <option value="">Select Role</option>
-              <option value="Field Supervisor">Supervisor</option>
+              <option value="Field Supervisor">Field Supervisor</option>
               <option value="Financial_Manager">Financial Manager</option>
             </select>
           </div>
@@ -336,7 +336,7 @@ export default function UserManagementPage() {
             >
               <option value="">All Roles</option>
               <option value="Landowner">Landowner</option>
-              <option value="Field Supervisor">Supervisor</option>
+              <option value="Field Supervisor">Field Supervisor</option>
               <option value="Buyer">Buyer</option>
               <option value="Operational_Manager">Operational Manager</option>
               <option value="Financial_Manager">Financial Manager</option>
@@ -455,24 +455,8 @@ export default function UserManagementPage() {
             <div className="mt-6">
               <h3 className="text-lg font-medium text-gray-700 mb-3">Role Distribution</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['Landowner', 'Supervisor', 'Buyer', 'Financial_Manager'].map(role => {
-                  // Handle Financial Manager role with both underscore and space variants
-                  let count = 0;
-                  if (role === 'Financial_Manager') {
-                    count = userList.filter(user => 
-                      user.role === 'Financial_Manager' || user.role === 'Financial Manager'
-                    ).length;
-                  } else if (role === 'Supervisor') {
-                    // Handle Field Supervisor role variants
-                    console.log('All user roles:', userList.map(user => user.role));
-                    count = userList.filter(user => 
-                      user.role === 'Field Supervisor' || user.role === 'Field_Supervisor' || user.role === 'Supervisor'
-                    ).length;
-                    console.log('Supervisor count:', count);
-                  } else {
-                    count = userList.filter(user => user.role === role).length;
-                  }
-                  
+                {['Landowner', 'Field Supervisor', 'Buyer', 'Financial_Manager'].map(role => {
+                  const count = userList.filter(user => user.role === role).length;
                   return (
                     <div key={role} className="bg-white p-3 rounded-lg shadow-sm border text-center">
                       <h4 className="text-xs font-medium text-gray-600 mb-1">
