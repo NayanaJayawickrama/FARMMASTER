@@ -9,7 +9,7 @@ export const ProductProvider = ({ children }) => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${rootUrl}/api/products`, {
+      const res = await axios.get(`${rootUrl}/api.php/products`, {
         withCredentials: true
       });
 
