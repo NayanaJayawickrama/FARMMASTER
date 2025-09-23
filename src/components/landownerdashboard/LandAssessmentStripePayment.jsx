@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import MapLocationPicker from "./MapLocationPicker";
 import PaymentSuccessPopup from "../alerts/PaymentSuccessPopup";
 import PaymentErrorPopup from "../alerts/PaymentErrorPopup";
+import MockLandAssessmentPayment from "./MockLandAssessmentPayment";
 
 // Initialize Stripe with your actual publishable key
 const stripePromise = loadStripe("pk_test_51Rnk1kC523WS3olJgTHr67VfyR8w8fRy0kyoeoV257f1zaGdO7Egl1kXOtll5zbMnF1IgV0iRmWPkNlYiDvdesAP00teJxyQKk");
@@ -286,12 +287,32 @@ export default function LandAssessmentStripePayment() {
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [paymentResult, setPaymentResult] = useState(null);
   const [paymentError, setPaymentError] = useState("");
+  const [stripeAvailable, setStripeAvailable] = useState(true);
   
   // Land details
   const [landData, setLandData] = useState({
     size: "",
     location: ""
   });
+
+  // Check Stripe connectivity
+  React.useEffect(() => {
+    const checkStripeConnectivity = async () => {
+      try {
+        const response = await fetch('https://js.stripe.com/v3/', { 
+          mode: 'no-cors', 
+          method: 'HEAD',
+          cache: 'no-cache'
+        });
+        setStripeAvailable(true);
+      } catch (error) {
+        console.log('Stripe not accessible, using mock payment system');
+        setStripeAvailable(false);
+      }
+    };
+    
+    checkStripeConnectivity();
+  }, []);
 
   const handleLandInputChange = (e) => {
     const { name, value } = e.target;
@@ -494,27 +515,35 @@ export default function LandAssessmentStripePayment() {
             </div>
           )}
 
-          {/* Step 2: Stripe Payment */}
+          {/* Step 2: Payment Form */}
           {currentStep === 2 && (
-            <Elements stripe={stripePromise}>
-              <div className="space-y-6">
-                <div className="flex gap-4 mb-6">
-                  <button
-                    type="button"
-                    onClick={goBackToLandDetails}
-                    className="flex-1 border border-gray-300 text-gray-700 font-semibold py-3 rounded-lg hover:bg-gray-50 transition duration-200"
-                  >
-                    Back to Land Details
-                  </button>
-                </div>
-                
-                <StripePaymentForm
+            <div className="space-y-6">
+              <div className="flex gap-4 mb-6">
+                <button
+                  type="button"
+                  onClick={goBackToLandDetails}
+                  className="flex-1 border border-gray-300 text-gray-700 font-semibold py-3 rounded-lg hover:bg-gray-50 transition duration-200"
+                >
+                  Back to Land Details
+                </button>
+              </div>
+              
+              {stripeAvailable ? (
+                <Elements stripe={stripePromise}>
+                  <StripePaymentForm
+                    landData={landData}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                  />
+                </Elements>
+              ) : (
+                <MockLandAssessmentPayment
                   landData={landData}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                 />
-              </div>
-            </Elements>
+              )}
+            </div>
           )}
         </div>
       </div>

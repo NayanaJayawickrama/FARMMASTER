@@ -43,8 +43,8 @@ import FinancialMFinancialReportManagement from "./pages/financialmanagerpages/F
 import FinancialMProposalManagement from "./pages/financialmanagerpages/FinancialMProposalManagement";
 
 function App() {
-  // Auto-logout after 60 minutes of inactivity (with 2-minute warning)
-  const { showWarning, onStayLoggedIn, onLogout } = useAutoLogout(60, 2);
+  // Auto-logout after 5 minutes of inactivity (with 30-second warning) to match backend session timeout
+  const { showWarning, onStayLoggedIn, onLogout } = useAutoLogout(5, 0.5);
 
   return (
     <main>

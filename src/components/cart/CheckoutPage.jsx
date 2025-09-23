@@ -16,6 +16,7 @@ import axios from "axios";
 import placeholderImg from "../../assets/images/marketplaceimages/vegetables.jpg";
 import CartPaymentSuccessPopup from "../alerts/CartPaymentSuccessPopup";
 import CartPaymentErrorPopup from "../alerts/CartPaymentErrorPopup";
+import MockStripePayment from "./MockStripePayment";
 
 // Initialize Stripe
 const stripePromise = loadStripe("pk_test_51Rnk1kC523WS3olJgTHr67VfyR8w8fRy0kyoeoV257f1zaGdO7Egl1kXOtll5zbMnF1IgV0iRmWPkNlYiDvdesAP00teJxyQKk");
@@ -364,6 +365,26 @@ export default function CheckoutPage() {
   const [paymentError, setPaymentError] = useState("");
   const [sessionValid, setSessionValid] = useState(true);
   const [sessionChecking, setSessionChecking] = useState(true);
+  const [stripeAvailable, setStripeAvailable] = useState(true);
+
+  // Check Stripe connectivity
+  useEffect(() => {
+    const checkStripeConnectivity = async () => {
+      try {
+        const response = await fetch('https://js.stripe.com/v3/', { 
+          mode: 'no-cors', 
+          method: 'HEAD',
+          cache: 'no-cache'
+        });
+        setStripeAvailable(true);
+      } catch (error) {
+        console.log('Stripe not accessible, using mock payment system');
+        setStripeAvailable(false);
+      }
+    };
+    
+    checkStripeConnectivity();
+  }, []);
 
   // Check session validity when component mounts
   useEffect(() => {
@@ -583,7 +604,7 @@ export default function CheckoutPage() {
             <div className="text-center py-8 text-gray-500">
               Add items to your cart to proceed with payment.
             </div>
-          ) : (
+          ) : stripeAvailable ? (
             <Elements stripe={stripePromise}>
               <PaymentForm
                 cartItems={cartItems}
@@ -592,18 +613,40 @@ export default function CheckoutPage() {
                 onError={handlePaymentError}
               />
             </Elements>
+          ) : (
+            <MockStripePayment
+              orderData={{
+                orderId: Date.now(), // Temporary order ID for mock
+                orderNumber: `ORD${Date.now()}`,
+                totalAmount: total
+              }}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+            />
           )}
 
           {/* Test Card Information */}
           <div className="mt-8 bg-blue-50 p-4 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold text-blue-800">Test Card Details:</span>
+              <span className="font-semibold text-blue-800">
+                {stripeAvailable ? "🌐 Live Stripe Payment" : "🧪 Mock Payment Mode"}
+              </span>
             </div>
             <div className="text-sm text-blue-700 space-y-1">
-              <p><strong>Card Number:</strong> 4242 4242 4242 4242 (Success)</p>
-              <p><strong>Card Number:</strong> 4000 0000 0000 0002 (Decline)</p>
-              <p><strong>Expiry Date:</strong> Any future date (e.g., 12/25)</p>
-              <p><strong>CVV:</strong> Any 3 digits (e.g., 123)</p>
+              {stripeAvailable ? (
+                <>
+                  <p><strong>Card Number:</strong> 4242 4242 4242 4242 (Success)</p>
+                  <p><strong>Card Number:</strong> 4000 0000 0000 0002 (Decline)</p>
+                  <p><strong>Expiry Date:</strong> Any future date (e.g., 12/25)</p>
+                  <p><strong>CVV:</strong> Any 3 digits (e.g., 123)</p>
+                </>
+              ) : (
+                <>
+                  <p><strong>Network Issue:</strong> Cannot reach Stripe servers</p>
+                  <p><strong>Solution:</strong> Using mock payment for development</p>
+                  <p><strong>Note:</strong> No real payment will be processed</p>
+                </>
+              )}
             </div>
           </div>
         </div>

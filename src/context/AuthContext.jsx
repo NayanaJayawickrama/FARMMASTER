@@ -30,8 +30,8 @@ export const AuthProvider = ({ children }) => {
               
               // Create the full user object with name property for frontend compatibility
               const fullUserData = {
-                id: serverUserData.id,
-                role: serverUserData.role,
+                id: serverUserData.user_id,
+                role: serverUserData.user_role,
                 name: serverUserData.first_name + ' ' + serverUserData.last_name,
                 first_name: serverUserData.first_name,
                 last_name: serverUserData.last_name,
@@ -55,8 +55,13 @@ export const AuthProvider = ({ children }) => {
           } catch (error) {
             // Handle different types of errors appropriately
             if (error.response?.status === 401) {
-              // 401 is expected when no valid session exists - don't log as error
-              console.log("No active session found - this is normal on first visit");
+              // 401 means session expired or unauthorized - clear user data
+              console.log("Session expired or unauthorized - clearing user data");
+              if (userData?.id) {
+                localStorage.removeItem(`cartItems_${userData.id}`);
+              }
+              localStorage.removeItem("user");
+              setUser(null);
             } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
               // Network/server connection issues - keep user logged in locally
               console.warn("Cannot connect to server for session verification, keeping user logged in locally");
@@ -88,6 +93,41 @@ export const AuthProvider = ({ children }) => {
     };
 
     verifySession();
+
+    // Set up periodic session validation every 2 minutes when user is logged in
+    let sessionCheckInterval;
+    if (user) {
+      sessionCheckInterval = setInterval(async () => {
+        try {
+          const rootUrl = import.meta.env.VITE_API_URL;
+          const response = await axios.get(`${rootUrl}/api/users/session`, {
+            withCredentials: true,
+            timeout: 5000
+          });
+          
+          if (response.data.status !== 'success') {
+            // Session expired, clear user data
+            console.log("Periodic session check failed - logging out user");
+            if (user?.id) {
+              localStorage.removeItem(`cartItems_${user.id}`);
+            }
+            localStorage.removeItem("user");
+            setUser(null);
+          }
+        } catch (error) {
+          if (error.response?.status === 401) {
+            // Session expired
+            console.log("Session expired during periodic check - logging out user");
+            if (user?.id) {
+              localStorage.removeItem(`cartItems_${user.id}`);
+            }
+            localStorage.removeItem("user");
+            setUser(null);
+          }
+          // For network errors, we don't logout automatically
+        }
+      }, 120000); // Check every 2 minutes
+    }
 
     // Handle browser close (but not page refresh)
     const handleBeforeUnload = (e) => {
@@ -122,10 +162,13 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener('load', handleLoad);
 
     return () => {
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+      }
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('load', handleLoad);
     };
-  }, []);
+  }, [user]);
 
   const login = (userData) => {
     // Ensure userData has both name and individual name fields for compatibility

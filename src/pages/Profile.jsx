@@ -5,27 +5,37 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
 
-  // If user is logged in, redirect them to their appropriate dashboard
-  if (user) {
-    const dashboardRoutes = {
-      'Landowner': '/landownerdashboard',
-      'Supervisor': '/fieldsupervisordashboard', 
-      'Buyer': '/buyerdashboard',
-      'Operational Manager': '/operationalmanagerdashboard',
-      'Financial Manager': '/financialmanagerdashboard'
-    };
-
-    const redirectTo = dashboardRoutes[user.role];
-    if (redirectTo) {
-      return <Navigate to={redirectTo} replace />;
-    }
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  // If not logged in, redirect to login
-  if (!user) {
+  // If not authenticated, redirect to login
+  if (!isAuthenticated() || !user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // If user is logged in, redirect them to their appropriate dashboard
+  const dashboardRoutes = {
+    'Landowner': '/landownerdashboard',
+    'Supervisor': '/fieldsupervisordashboard', 
+    'Buyer': '/buyerdashboard',
+    'Operational Manager': '/operationalmanagerdashboard',
+    'Financial Manager': '/financialmanagerdashboard'
+  };
+
+  const redirectTo = dashboardRoutes[user.role];
+  if (redirectTo) {
+    return <Navigate to={redirectTo} replace />;
   }
 
   // Fallback profile page (should rarely be reached)
