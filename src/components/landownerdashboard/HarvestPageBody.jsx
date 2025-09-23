@@ -24,7 +24,7 @@ const HarvestPage = () => {
         
         console.log('Fetching harvest data for user_id:', userId);
 
-        const response = await axios.get(`${rootUrl}/api/harvest?user_id=${userId}`, {
+        const response = await axios.get(`${rootUrl}/api.php/harvest?user_id=${userId}`, {
           withCredentials: true
         });
         

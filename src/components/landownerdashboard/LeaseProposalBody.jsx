@@ -26,7 +26,7 @@ export default function LeaseProposalBody() {
       console.log('Fetching proposals for user_id:', userId);
       console.log('API URL:', `${rootUrl}/proposals?user_id=${userId}`);
       
-      const response = await axios.get(`${rootUrl}/api/proposals?user_id=${userId}`, {
+      const response = await axios.get(`${rootUrl}/api.php/proposals?user_id=${userId}`, {
         withCredentials: true
       });
       
@@ -56,7 +56,7 @@ export default function LeaseProposalBody() {
 
   const handleProposalAction = async (proposalId, action) => {
     try {
-      const response = await axios.put(`${rootUrl}/api/proposals/${proposalId}/status`, {
+      const response = await axios.put(`${rootUrl}/api.php/proposals/${proposalId}/status`, {
         action: action
       }, {
         headers: { 'Content-Type': 'application/json' },
