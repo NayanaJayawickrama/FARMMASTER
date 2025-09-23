@@ -6,6 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionCheckInterval, setSessionCheckInterval] = useState(null);
 
   // Verify session with backend on app initialization
   useEffect(() => {
@@ -94,10 +95,13 @@ export const AuthProvider = ({ children }) => {
 
     verifySession();
 
-    // Set up periodic session validation every 2 minutes when user is logged in
-    let sessionCheckInterval;
-    if (user) {
-      sessionCheckInterval = setInterval(async () => {
+    // Set up periodic session validation every 30 seconds when user is logged in
+    const setupPeriodicCheck = () => {
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+      }
+      
+      const intervalId = setInterval(async () => {
         try {
           const rootUrl = import.meta.env.VITE_API_URL;
           const response = await axios.get(`${rootUrl}/api/users/session`, {
@@ -126,7 +130,13 @@ export const AuthProvider = ({ children }) => {
           }
           // For network errors, we don't logout automatically
         }
-      }, 120000); // Check every 2 minutes
+      }, 30000); // Check every 30 seconds instead of 2 minutes
+      
+      setSessionCheckInterval(intervalId);
+    };
+
+    if (user) {
+      setupPeriodicCheck();
     }
 
     // Handle browser close (but not page refresh)
@@ -186,28 +196,80 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      // Clear intervals first
+      if (sessionCheckInterval) {
+        clearInterval(sessionCheckInterval);
+      }
+      
+      console.log("Starting logout process...");
+      
       // Call backend logout endpoint to invalidate session
       const rootUrl = import.meta.env.VITE_API_URL;
-      await axios.post(`${rootUrl}/api/auth/logout`, {}, {
+      console.log("Calling logout API:", `${rootUrl}/api/auth/logout`);
+      
+      const response = await axios.post(`${rootUrl}/api/auth/logout`, {}, {
         withCredentials: true,
-        timeout: 3000
+        timeout: 5000
       });
+      
+      console.log("Logout API response:", response.data);
+      
     } catch (error) {
-      console.warn("Backend logout failed:", error.message);
+      console.error("Backend logout failed:");
+      console.error("- Status:", error.response?.status);
+      console.error("- Status Text:", error.response?.statusText);
+      console.error("- Response Data:", error.response?.data);
+      console.error("- Error Message:", error.message);
+      console.error("- Error Code:", error.code);
+      
+      // Don't throw the error, continue with local cleanup
+      console.warn("Continuing with local logout despite backend error");
     }
     
     // Clear user-specific cart data
     if (user?.id) {
       localStorage.removeItem(`cartItems_${user.id}`);
+      console.log("Cleared cart data for user:", user.id);
     }
     
     // Clear localStorage and state
     localStorage.removeItem("user");
     setUser(null);
+    console.log("Local logout completed successfully");
   };
 
   const isAuthenticated = () => {
     return user !== null;
+  };
+
+  // Function to verify session immediately (for route protection)
+  const verifySession = async () => {
+    try {
+      const rootUrl = import.meta.env.VITE_API_URL;
+      const response = await axios.get(`${rootUrl}/api/users/session`, {
+        withCredentials: true,
+        timeout: 5000
+      });
+      
+      if (response.data.status === 'success' && response.data.data?.user_data) {
+        return true;
+      } else {
+        // Session invalid, logout user
+        console.log("Session verification failed - logging out user");
+        logout();
+        return false;
+      }
+    } catch (error) {
+      console.error("Session verification error:", error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        // Session expired or unauthorized
+        console.log("Session expired during verification - logging out user");
+        logout();
+        return false;
+      }
+      // For network errors, assume session is valid to avoid false logouts
+      return true;
+    }
   };
 
   const hasRole = (requiredRoles) => {
@@ -320,6 +382,7 @@ export const AuthProvider = ({ children }) => {
       resetRole,
       canSwitchRole,
       getAvailableRole,
+      verifySession,
       loading 
     }}>
       {children}

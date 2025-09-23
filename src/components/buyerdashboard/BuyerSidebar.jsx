@@ -11,14 +11,18 @@ import {
   ArrowLeftCircle,
 } from "lucide-react";
 import logo from "../../assets/images/logo.png";
-import profilePic from "../../assets/images/profile_Buyer.png";
+import profilePic from "../../assets/images/userProfile.png";
 import { useCart } from "../cart/CartContext";
+import { useAuth } from "../../context/AuthContext";
+import ConfirmationModal from "../ConfirmationModal";
 
 export default function BuyerSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { cartItems } = useCart();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // Fetch user info from localStorage on mount
   useEffect(() => {
@@ -34,15 +38,23 @@ export default function BuyerSidebar() {
   const normalLink = "text-black hover:bg-green-50";
   const totalItems = cartItems.length;
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    // Remove other session data if needed
-    // localStorage.removeItem("cart");
+  const handleLogout = async () => {
+    try {
+      console.log("Buyer logout initiated...");
+      await logout();
+      console.log("Logout successful, navigating to home...");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still navigate to home even if logout fails to avoid user getting stuck
+      navigate("/", { replace: true });
+    } finally {
+      setShowLogoutModal(false);
+    }
+  };
 
-    navigate("/", { replace: true });
-
-    // Optional: force reload to fix image issues
-    window.location.reload();
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
   return (
@@ -157,13 +169,25 @@ export default function BuyerSidebar() {
 
           <button
             className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer`}
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
           >
             <LogOut size={16} />
             Log out
           </button>
         </div>
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to logout from your Buyer account? Your cart will be saved for when you log back in."
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        type="warning"
+      />
     </>
   );
 }

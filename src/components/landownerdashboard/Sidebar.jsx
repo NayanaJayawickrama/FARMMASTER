@@ -11,12 +11,17 @@ import {
   LogOut,
 } from "lucide-react";
 import logo from "../../assets/images/logo.png";
-import defaultProfilePic from "../../assets/images/profile.png";
+import profilePic from "../../assets/images/userProfile.png";
+
+import { useAuth } from "../../context/AuthContext";
+import ConfirmationModal from "../ConfirmationModal";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -30,10 +35,23 @@ export default function Sidebar() {
   const activeLink = "bg-green-100 text-green-700 font-semibold";
   const normalLink = "text-black hover:bg-green-50";
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/", { replace: true });
-    window.location.reload(); // refresh sidebar 
+  const handleLogout = async () => {
+    try {
+      console.log("Landowner logout initiated...");
+      await logout();
+      console.log("Logout successful, navigating to home...");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still navigate to home even if logout fails to avoid user getting stuck
+      navigate("/", { replace: true });
+    } finally {
+      setShowLogoutModal(false);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
   return (
@@ -67,7 +85,7 @@ export default function Sidebar() {
         {/* Profile Info */}
         <div className="flex items-center mb-8">
           <img
-            src={defaultProfilePic}
+            src={profilePic}
             alt="Profile"
             className="w-14 h-14 rounded-full object-cover mr-4"
           />
@@ -140,13 +158,25 @@ export default function Sidebar() {
 
           <button
             className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer`}
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
           >
             <LogOut size={16} />
             Log out
           </button>
         </div>
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to logout from your Landowner account? You will be redirected to the home page."
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        type="warning"
+      />
     </>
   );
 }

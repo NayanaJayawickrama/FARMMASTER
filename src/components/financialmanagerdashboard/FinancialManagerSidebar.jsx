@@ -15,12 +15,16 @@ import {
 } from "lucide-react";
 
 import logo from "../../assets/images/logo.png";
-import profilePic from "../../assets/images/profile_FM.png";
+import profilePic from "../../assets/images/userProfile.png";
+import { useAuth } from "../../context/AuthContext";
+import ConfirmationModal from "../ConfirmationModal";
 
 export default function FinancialManagerSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   // Load user data from localStorage
   useEffect(() => {
@@ -36,10 +40,23 @@ export default function FinancialManagerSidebar() {
   const normalLink = "text-black hover:bg-green-50";
 
   // Logout 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/", { replace: true });
-    window.location.reload();
+  const handleLogout = async () => {
+    try {
+      console.log("Financial Manager logout initiated...");
+      await logout();
+      console.log("Logout successful, navigating to home...");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still navigate to home even if logout fails to avoid user getting stuck
+      navigate("/", { replace: true });
+    } finally {
+      setShowLogoutModal(false);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
   return (
@@ -169,13 +186,25 @@ export default function FinancialManagerSidebar() {
 
           <button
             className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer`}
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
           >
             <LogOut size={16} />
             Log out
           </button>
         </div>
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to logout from your Financial Manager account? You will be redirected to the home page."
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        type="warning"
+      />
     </>
   );
 }

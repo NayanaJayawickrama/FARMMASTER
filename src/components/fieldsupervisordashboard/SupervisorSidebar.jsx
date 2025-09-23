@@ -2,12 +2,16 @@ import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Home, Calendar, FileText, LogOut, Menu, X, ArrowLeftCircle } from "lucide-react";
 import logo from "../../assets/images/logo.png";
-import profilePic from "../../assets/images/profile_FS.png";
+import profilePic from "../../assets/images/userProfile.png";
+import { useAuth } from "../../context/AuthContext";
+import ConfirmationModal from "../ConfirmationModal";
 
 export default function SupervisorSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -16,10 +20,23 @@ export default function SupervisorSidebar() {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/", { replace: true });
-    window.location.reload();
+  const handleLogout = async () => {
+    try {
+      console.log("Field Supervisor logout initiated...");
+      await logout();
+      console.log("Logout successful, navigating to home...");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still navigate to home even if logout fails to avoid user getting stuck
+      navigate("/", { replace: true });
+    } finally {
+      setShowLogoutModal(false);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
   const linkBase =
@@ -123,13 +140,25 @@ export default function SupervisorSidebar() {
         
                   <button
                     className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer`}
-                    onClick={handleLogout}
+                    onClick={handleLogoutClick}
                   >
                     <LogOut size={16} />
                     Log out
                   </button>
                 </div>
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to logout from your Field Supervisor account? You will be redirected to the home page."
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        type="warning"
+      />
     </>
   );
 }

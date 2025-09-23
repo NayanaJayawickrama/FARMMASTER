@@ -1,26 +1,41 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Navigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 export default function Profile() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading, verifySession } = useAuth();
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [sessionValid, setSessionValid] = useState(true);
 
-  // Show loading state
-  if (loading) {
+  // Immediately verify session when component loads
+  useEffect(() => {
+    const checkSession = async () => {
+      if (user) {
+        const isValid = await verifySession();
+        setSessionValid(isValid);
+      }
+      setSessionChecked(true);
+    };
+    
+    checkSession();
+  }, [user, verifySession]);
+
+  // Show loading state while checking session or if AuthContext is loading
+  if (loading || !sessionChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">Verifying session...</p>
         </div>
       </div>
     );
   }
 
-  // If not authenticated, redirect to login
-  if (!isAuthenticated() || !user) {
+  // If session is invalid or not authenticated, redirect to login
+  if (!sessionValid || !isAuthenticated() || !user) {
     return <Navigate to="/login" replace />;
   }
 

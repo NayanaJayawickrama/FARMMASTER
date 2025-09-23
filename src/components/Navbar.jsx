@@ -4,11 +4,13 @@ import logo from "../assets/images/logo.png";
 import { Menu, X, Search, ShoppingCart, User } from "lucide-react";
 import { useCart } from "./cart/CartContext";
 import { useAuth } from "../context/AuthContext";
+import ConfirmationModal from "./ConfirmationModal";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -41,6 +43,25 @@ export default function Navbar() {
     } else {
       navigate("/buyercart");
     }
+  };
+
+  const handleLogout = async () => {
+    try {
+      console.log("Navbar logout initiated...");
+      await logout();
+      console.log("Navbar logout successful, navigating to home...");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Navbar logout failed:", error);
+      // Still navigate to home even if logout fails
+      navigate("/", { replace: true });
+    } finally {
+      setShowLogoutModal(false);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
   return (
@@ -107,7 +128,7 @@ export default function Navbar() {
               <User />
             </NavLink>
             <button
-              onClick={logout}
+              onClick={handleLogoutClick}
               className="bg-white text-black font-bold border border-gray-300 px-4 py-2 rounded-full hover:bg-gray-100 transition cursor-pointer"
             >
               Logout
@@ -185,7 +206,7 @@ export default function Navbar() {
           {user ? (
             <button
               onClick={() => {
-                logout();
+                handleLogoutClick();
                 setIsOpen(false);
               }}
               className="bg-white text-black font-bold border border-gray-300 px-4 py-2 rounded-full hover:bg-gray-100 transition cursor-pointer"
@@ -249,6 +270,18 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to logout? You will be redirected to the home page and will need to login again to access your dashboard."
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        type="warning"
+      />
     </nav>
   );
 }

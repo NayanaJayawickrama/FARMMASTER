@@ -12,12 +12,17 @@ import {
   ArrowLeftCircle,
 } from "lucide-react";
 import logo from "../../assets/images/logo.png";
-import profilePic from "../../assets/images/profile.png";
+import profilePic from "../../assets/images/userProfile.png";
+import { useAuth } from "../../context/AuthContext";
+import ConfirmationModal from "../ConfirmationModal";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -31,10 +36,27 @@ export default function Sidebar() {
   const activeLink = "bg-green-100 text-green-700 font-semibold";
   const normalLink = "text-black hover:bg-green-50";
 
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    navigate("/", { replace: true });
-    window.location.reload(); // fixes image and state not resetting
+  const handleLogout = async () => {
+    if (isLoggingOut) return; // Prevent double-clicking
+    
+    try {
+      setIsLoggingOut(true);
+      console.log("Operational Manager logout initiated...");
+      await logout();
+      console.log("Logout successful, navigating to home...");
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still navigate to home even if logout fails to avoid user getting stuck
+      navigate("/", { replace: true });
+    } finally {
+      setIsLoggingOut(false);
+      setShowLogoutModal(false);
+    }
+  };
+
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
   return (
@@ -150,14 +172,27 @@ export default function Sidebar() {
           </NavLink>
 
           <button
-            className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer`}
-            onClick={handleLogout}
+            className={`${linkBase} text-red-600 hover:bg-red-50 mt-2 cursor-pointer ${isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={handleLogoutClick}
+            disabled={isLoggingOut}
           >
             <LogOut size={16} />
-            Log out
+            {isLoggingOut ? 'Logging out...' : 'Log out'}
           </button>
         </div>
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to logout from your Operational Manager account? You will be redirected to the home page."
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        type="warning"
+      />
     </>
   );
 }

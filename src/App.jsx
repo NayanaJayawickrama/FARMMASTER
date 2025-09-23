@@ -1,7 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
-import LogoutWarningModal from "./components/LogoutWarningModal";
 import useAutoLogout from "./hooks/useAutoLogout";
 
 import HomePage from "./pages/HomePage";
@@ -43,8 +42,8 @@ import FinancialMFinancialReportManagement from "./pages/financialmanagerpages/F
 import FinancialMProposalManagement from "./pages/financialmanagerpages/FinancialMProposalManagement";
 
 function App() {
-  // Auto-logout after 5 minutes of inactivity (with 30-second warning) to match backend session timeout
-  const { showWarning, onStayLoggedIn, onLogout } = useAutoLogout(5, 0.5);
+  // Auto-logout after 5 minutes of inactivity (no warning modal - immediate logout)
+  const { showWarning, onStayLoggedIn, onLogout } = useAutoLogout(5, 0);
 
   return (
     <main>
@@ -204,14 +203,6 @@ function App() {
         <Route path="*" element={<NotFound />} />
 
       </Routes>
-
-      {/* Auto-logout warning modal */}
-      <LogoutWarningModal
-        isVisible={showWarning}
-        onStayLoggedIn={onStayLoggedIn}
-        onLogout={onLogout}
-        countdownSeconds={30}
-      />
     </main>
   );
 }
