@@ -11,11 +11,22 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
   const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch available (free) Field Supervisors
+  // Helper function to get auth headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  };
+
+  // Fetch available (free) Supervisors
   const fetchAvailableSupervisors = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${rootUrl}/api/land-reports/supervisors-public`);
+      const response = await axios.get(`${rootUrl}/api/land-reports/supervisors`, {
+        headers: getAuthHeaders()
+      });
       if (response.data.status === 'success') {
         // Filter only available supervisors (not currently assigned)
         const freeSupervisors = response.data.data.filter(supervisor => 
@@ -23,11 +34,11 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
         );
         setAvailableSupervisors(freeSupervisors);
       } else {
-        setError('Failed to load available Field Supervisors');
+        setError('Failed to load available Supervisors');
       }
     } catch (error) {
       console.error('Error fetching supervisors:', error);
-      setError('Failed to load Field Supervisors');
+      setError('Failed to load Supervisors');
     } finally {
       setLoading(false);
     }
@@ -36,29 +47,31 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
   // Assign selected supervisor
   const handleAssignment = async () => {
     if (!selectedSupervisor) {
-      alert('Please select a Field Supervisor');
+      alert('Please select a Supervisor');
       return;
     }
 
     try {
       setAssigning(true);
-      const response = await axios.put(`${rootUrl}/api/land-reports/${report.report_id}/assign-public`, {
+      const response = await axios.put(`${rootUrl}/api/land-reports/${report.report_id}/assign`, {
         supervisor_id: selectedSupervisor.user_id,
         supervisor_name: selectedSupervisor.full_name
+      }, {
+        headers: getAuthHeaders()
       });
       
       if (response.data.status === 'success') {
-        alert('Field Supervisor assigned successfully!');
+        alert('Supervisor assigned successfully!');
         if (onAssignmentComplete) {
           onAssignmentComplete();
         }
         onBack();
       } else {
-        alert('Failed to assign Field Supervisor');
+        alert('Failed to assign Supervisor');
       }
     } catch (error) {
       console.error('Error assigning supervisor:', error);
-      alert('Failed to assign Field Supervisor');
+      alert('Failed to assign Supervisor');
     } finally {
       setAssigning(false);
     }
@@ -72,7 +85,7 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
     return (
       <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
         <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-gray-600">Loading available Field Supervisors...</div>
+          <div className="text-lg text-gray-600">Loading available Supervisors...</div>
         </div>
       </div>
     );
@@ -92,10 +105,10 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
           </button>
           
           <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">
-            Assign Field Supervisor
+            Assign Supervisor
           </h1>
           <p className="text-green-600 text-sm sm:text-base">
-            Select an available Field Supervisor to assign to this land report assessment.
+            Select an available Supervisor to assign to this land report assessment.
           </p>
         </div>
 
@@ -122,10 +135,10 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
           </div>
         </div>
 
-        {/* Available Field Supervisors */}
+        {/* Available Supervisors */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Available Field Supervisors ({availableSupervisors.length})
+            Available Supervisors ({availableSupervisors.length})
           </h2>
           
           {error && (
@@ -137,9 +150,9 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
           {availableSupervisors.length === 0 ? (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
               <Clock className="mx-auto mb-3 text-yellow-500" size={48} />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Available Field Supervisors</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Available Supervisors</h3>
               <p className="text-gray-600">
-                All Field Supervisors are currently assigned to other reports. Please try again later.
+                All Supervisors are currently assigned to other reports. Please try again later.
               </p>
             </div>
           ) : (
@@ -210,7 +223,7 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
                 : 'bg-green-600 hover:bg-green-700 text-white'
             }`}
           >
-            {assigning ? 'Assigning...' : 'Assign Field Supervisor'}
+            {assigning ? 'Assigning...' : 'Assign Supervisor'}
           </button>
         </div>
       </div>
