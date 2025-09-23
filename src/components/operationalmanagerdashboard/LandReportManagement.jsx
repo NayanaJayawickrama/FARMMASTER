@@ -26,22 +26,12 @@ export default function LandReportManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Helper function to get auth headers
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-    console.log('Auth token:', token ? 'Present' : 'Missing');
-    return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
-  };
-
   // Fetch assignment reports
   const fetchAssignmentReports = async () => {
     try {
       console.log('Fetching assignment reports from:', `${rootUrl}/api/land-reports/assignments`);
       const response = await axios.get(`${rootUrl}/api/land-reports/assignments`, {
-        headers: getAuthHeaders()
+        withCredentials: true
       });
       console.log('Assignment reports response:', response.data);
       if (response.data.status === 'success') {
@@ -59,11 +49,13 @@ export default function LandReportManagement() {
     try {
       console.log('Fetching review reports from:', `${rootUrl}/api/land-reports/reviews`);
       const response = await axios.get(`${rootUrl}/api/land-reports/reviews`, {
-        headers: getAuthHeaders()
+        withCredentials: true
       });
       console.log('Review reports response:', response.data);
       if (response.data.status === 'success') {
         setReviewData(response.data.data || []);
+        console.log('Review data set to:', response.data.data);
+        console.log('reviewData length:', response.data.data?.length || 0);
       }
     } catch (error) {
       console.error('Error fetching review reports:', error);
@@ -77,7 +69,7 @@ export default function LandReportManagement() {
     try {
       console.log('Fetching supervisors from:', `${rootUrl}/api/land-reports/supervisors`);
       const response = await axios.get(`${rootUrl}/api/land-reports/supervisors`, {
-        headers: getAuthHeaders()
+        withCredentials: true
       });
       console.log('Supervisors response:', response.data);
       if (response.data.status === 'success') {
@@ -97,7 +89,8 @@ export default function LandReportManagement() {
         supervisor_id: supervisorId,
         supervisor_name: supervisorName
       }, {
-        headers: getAuthHeaders()
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
       });
       
       if (response.data.status === 'success') {
@@ -161,7 +154,8 @@ export default function LandReportManagement() {
             decision,
             feedback
           }, {
-            headers: getAuthHeaders()
+            headers: { 'Content-Type': 'application/json' },
+            withCredentials: true
           });
           
           if (response.data.status === 'success') {
@@ -202,6 +196,12 @@ export default function LandReportManagement() {
       </div>
     );
   }
+
+  // Debug log for review data
+  console.log('Current reviewData state:', reviewData);
+  console.log('Current assignmentData state:', assignmentData);
+  console.log('Loading state:', loading);
+  console.log('Error state:', error);
 
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
@@ -276,31 +276,39 @@ export default function LandReportManagement() {
               </tr>
             </thead>
             <tbody>
-              {reviewData.map((item, idx) => (
-                <tr
-                  key={idx}
-                  className="border-t border-gray-200 hover:bg-green-50"
-                >
-                  <td className="py-3 px-4">{item.id}</td>
-                  <td className="py-3 px-4">{item.location}</td>
-                  <td className="py-3 px-4 text-green-700">{item.name}</td>
-                  <td className="py-3 px-4">{item.supervisorId}</td>
-                  <td className="py-3 px-4">{item.supervisor}</td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-3 py-1 rounded-full inline-block ${statusColors[item.status]}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td
-                    className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
-                    onClick={() => handleViewReport(item)}
-                  >
-                    View Report
+              {reviewData.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="py-8 px-4 text-center text-gray-500">
+                    {loading ? 'Loading review data...' : 'No reports available for review'}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                reviewData.map((item, idx) => (
+                  <tr
+                    key={idx}
+                    className="border-t border-gray-200 hover:bg-green-50"
+                  >
+                    <td className="py-3 px-4">{item.id}</td>
+                    <td className="py-3 px-4">{item.location}</td>
+                    <td className="py-3 px-4 text-green-700">{item.name}</td>
+                    <td className="py-3 px-4">{item.supervisorId}</td>
+                    <td className="py-3 px-4">{item.supervisor}</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-3 py-1 rounded-full inline-block ${statusColors[item.status]}`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td
+                      className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
+                      onClick={() => handleViewReport(item)}
+                    >
+                      View Report
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
