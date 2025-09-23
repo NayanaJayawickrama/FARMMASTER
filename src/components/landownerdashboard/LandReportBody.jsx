@@ -13,6 +13,7 @@ export default function LandReportBody() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all"); // "all", "pending", "completed"
   const [existingRequests, setExistingRequests] = useState({}); // Track existing interest requests
+  const [showDecisionUI, setShowDecisionUI] = useState({}); // Track which reports are showing decision UI
   const { user } = useAuth();
 
   // Test user ID - replace with actual user from auth context
@@ -22,22 +23,29 @@ export default function LandReportBody() {
     fetchAssessmentRequests();
   }, []);
 
+  // Check interest request when selected item changes
+  useEffect(() => {
+    if (selectedItem && selectedItem.report_id) {
+      checkExistingInterestRequest(selectedItem.report_id);
+    }
+  }, [selectedItem]);
+
   // Check if interest request already exists for a report
   const checkExistingInterestRequest = async (reportId) => {
     try {
-      const response = await axios.get(`${rootUrl}/api/land-reports/${reportId}/interest-request-check`, {
-        withCredentials: true
-      });
+      const response = await axios.get(`${rootUrl}/api.php/land-reports/${reportId}/interest-request-check`);
       
       if (response.data.status === 'success') {
+        const hasRequest = response.data.data.has_request;
         setExistingRequests(prev => ({
           ...prev,
-          [reportId]: response.data.data.has_request
+          [reportId]: hasRequest
         }));
-        return response.data.data.has_request;
+        return hasRequest;
       }
     } catch (err) {
       console.warn("Failed to check existing interest request:", err);
+      // Don't set to false on error, just leave it unchecked
     }
     return false;
   };
@@ -54,11 +62,15 @@ export default function LandReportBody() {
         setAssessmentRequests(reports);
         
         // Check existing interest requests for each report
+        const existingRequestsChecks = [];
         for (const report of reports) {
           if (report.report_id) {
-            await checkExistingInterestRequest(report.report_id);
+            existingRequestsChecks.push(checkExistingInterestRequest(report.report_id));
           }
         }
+        
+        // Wait for all checks to complete
+        await Promise.all(existingRequestsChecks);
         
         if (reports.length > 0) {
           setSelectedItem(reports[0]);
@@ -129,7 +141,12 @@ export default function LandReportBody() {
           ...prev,
           conclusion: response.data.data
         }));
-        alert("Assessment completed!");
+        
+        // Show decision UI directly after assessment completion
+        setShowDecisionUI(prev => ({
+          ...prev,
+          [reportId]: true
+        }));
       } else {
         setError("Failed to generate assessment: " + (response.data.message || "Unknown error"));
       }
@@ -144,38 +161,64 @@ export default function LandReportBody() {
   const sendInterestRequest = async (reportId) => {
     try {
       setLoading(true);
-      const response = await axios.post(`${rootUrl}/api/land-reports/${reportId}/interest-request`, {}, {
+      setError(""); // Clear any previous errors
+      
+      const response = await axios.post(`${rootUrl}/api.php/land-reports/${reportId}/interest-request`, {}, {
         withCredentials: true
       });
       
       if (response.data.status === 'success') {
-        alert("SUCCESS! Your interest has been sent to our Financial Manager! They will review your land and create a leasing proposal for you.");
         // Update the existing requests state
         setExistingRequests(prev => ({
           ...prev,
           [reportId]: true
         }));
-        // Refresh the reports
-        fetchAssessmentRequests();
+        
+        // Hide decision UI
+        setShowDecisionUI(prev => ({
+          ...prev,
+          [reportId]: false
+        }));
+        
+        // Show success message
+        setError(""); // Clear any errors
+        
+        // Refresh the reports to get updated state
+        await fetchAssessmentRequests();
       } else {
-        alert("Failed to send interest: " + (response.data.message || "Unknown error"));
+        setError("Failed to send request: " + (response.data.message || "Unknown error"));
       }
     } catch (err) {
-      alert("Failed to send interest: " + (err.response?.data?.message || err.message));
+      const errorMessage = err.response?.data?.message || err.message;
+      
+      // If the error is about existing request, update our state to reflect this
+      if (errorMessage.includes("already exists")) {
+        setExistingRequests(prev => ({
+          ...prev,
+          [reportId]: true
+        }));
+        setError(""); // Don't show error, just update the UI to show submitted state
+      } else {
+        setError("Failed to send request: " + errorMessage);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   // Handle decline interest
-  const declineInterest = () => {
-    alert("No problem! Feel free to reach out anytime when you're ready to partner with FarmMaster.");
+  const declineInterest = (reportId) => {
+    // Hide decision UI
+    setShowDecisionUI(prev => ({
+      ...prev,
+      [reportId]: false
+    }));
   };
 
   const requestProposal = async (reportId) => {
     try {
       setLoading(true);
-      const response = await axios.post(`${rootUrl}/api/land-reports/${reportId}/proposal-request`, {}, {
+      const response = await axios.post(`${rootUrl}/api/land-reports/${reportId}/interest-request`, {}, {
         withCredentials: true
       });
       
@@ -647,8 +690,36 @@ export default function LandReportBody() {
                               </div>
                             )}
 
-                            {/* Two Simple Buttons - Only for Good Land */}
-                            {selectedItem.conclusion.is_good_for_organic && (
+                            {/* Show decision UI immediately when showDecisionUI is true */}
+                            {showDecisionUI[selectedItem.report_id] && selectedItem.conclusion?.is_good_for_organic && (
+                              <div className="mt-6 pt-4 border-t border-green-200">
+                                <h4 className="font-medium text-gray-800 mb-3 text-center">
+                                  Great! Your land is suitable for organic farming.
+                                </h4>
+                                <h4 className="font-medium text-gray-800 mb-3 text-center">
+                                  Would you like to partner with FarmMaster?
+                                </h4>
+                                
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                  <button
+                                    onClick={() => sendInterestRequest(selectedItem.report_id)}
+                                    disabled={loading}
+                                    className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
+                                  >
+                                    🤝 Yes, I'm interested!
+                                  </button>
+                                  <button
+                                    onClick={() => declineInterest(selectedItem.report_id)}
+                                    className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
+                                  >
+                                    Maybe later
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Show full assessment result when decision UI is not active */}
+                            {!showDecisionUI[selectedItem.report_id] && selectedItem.conclusion?.is_good_for_organic && (
                               <div className="mt-6 pt-4 border-t border-green-200">
                                 <h4 className="font-medium text-gray-800 mb-3 text-center">
                                   Interested in partnering with FarmMaster for organic farming?
@@ -668,13 +739,19 @@ export default function LandReportBody() {
                                 ) : (
                                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                     <button
+                                      onClick={() => setShowDecisionUI(prev => ({ ...prev, [selectedItem.report_id]: true }))}
+                                      className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+                                    >
+                                      🤔 Test Interest
+                                    </button>
+                                    <button
                                       onClick={() => sendInterestRequest(selectedItem.report_id)}
                                       className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
                                     >
                                       🤝 Interested to join FarmMaster
                                     </button>
                                     <button
-                                      onClick={() => declineInterest()}
+                                      onClick={() => declineInterest(selectedItem.report_id)}
                                       className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
                                     >
                                       Maybe next time
@@ -685,7 +762,7 @@ export default function LandReportBody() {
                             )}
 
                             {/* Message for Not Good Land */}
-                            {!selectedItem.conclusion.is_good_for_organic && (
+                            {selectedItem.conclusion && !selectedItem.conclusion.is_good_for_organic && (
                               <div className="mt-6 pt-4 border-t border-yellow-200 text-center">
                                 <p className="text-sm text-yellow-800 mb-2">
                                   Don't worry! We'll work with you to improve your land for next time.
