@@ -7,7 +7,8 @@ export default function DashboardContent() {
   const [dashboardData, setDashboardData] = useState({
     totalUsers: 0,
     pendingReports: 0,
-    assignedSupervisors: 0
+    assignedSupervisors: 0,
+    activeCultivations: 0
   });
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +33,6 @@ export default function DashboardContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include'
       });
 
       if (!statsResponse.ok) {
@@ -45,7 +45,8 @@ export default function DashboardContent() {
         setDashboardData({
           totalUsers: statsData.data.total_users || 0,
           pendingReports: statsData.data.pending_reports || 0,
-          assignedSupervisors: statsData.data.assigned_supervisors || 0
+          assignedSupervisors: statsData.data.assigned_supervisors || 0,
+          activeCultivations: statsData.data.active_cultivations || 0
         });
       }
 
@@ -55,7 +56,6 @@ export default function DashboardContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include'
       });
 
       if (!activityResponse.ok) {
@@ -137,7 +137,7 @@ export default function DashboardContent() {
       
       <div className="mb-10">
         <h2 className="text-2xl md:text-3xl font-bold mb-6">Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="border rounded-md p-6 shadow-sm text-center">
             <p className="text-sm text-gray-600">Total Users</p>
             <p className="text-2xl font-bold mt-1">
@@ -154,6 +154,12 @@ export default function DashboardContent() {
             <p className="text-sm text-gray-600">Assigned Supervisors</p>
             <p className="text-2xl font-bold mt-1">
               {loading ? "..." : error ? "N/A" : dashboardData.assignedSupervisors}
+            </p>
+          </div>
+          <div className="border rounded-md p-6 shadow-sm text-center">
+            <p className="text-sm text-gray-600">Active Cultivations</p>
+            <p className="text-2xl font-bold mt-1">
+              {loading ? "..." : error ? "N/A" : dashboardData.activeCultivations}
             </p>
           </div>
         </div>
@@ -191,6 +197,33 @@ export default function DashboardContent() {
             <p className="text-center text-gray-500">No recent activity found</p>
           </div>
         )}
+      </div>
+
+     
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
+        <div className="flex flex-wrap gap-5">
+          <NavLink to="/operationalmanagerusermanagement">
+            <button className="bg-green-100 text-black px-4 py-2 rounded-md font-semibold hover:bg-green-600 hover:text-white transition">
+              Manage Users
+            </button>
+          </NavLink>
+          <NavLink to="/operationalmanagerproposalmanagement">
+            <button className="bg-green-100 text-black px-4 py-2 rounded-md font-semibold hover:bg-green-600 hover:text-white transition">
+              View Proposals
+            </button>
+          </NavLink>
+          <NavLink to="/operationalmanagercropinventorymanagement">
+            <button className="bg-green-100 text-black px-4 py-2 rounded-md font-semibold hover:bg-green-600 hover:text-white transition">
+              Crop Inventory
+            </button>
+          </NavLink>
+          <NavLink to="/operationalmanagerlandreportmanagement">
+            <button className="bg-green-100 text-black px-4 py-2 rounded-md font-semibold hover:bg-green-600 hover:text-white transition">
+              Assign Land Reports
+            </button>
+          </NavLink>
+        </div>
       </div>
     </div>
   );

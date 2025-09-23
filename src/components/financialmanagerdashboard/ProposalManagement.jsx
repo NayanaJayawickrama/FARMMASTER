@@ -9,6 +9,16 @@ export default function ProposalManagement() {
   const [error, setError] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showProposalForm, setShowProposalForm] = useState(false);
+  const [proposalData, setProposalData] = useState({
+    lease_duration_months: 12,
+    profit_sharing_percentage: 60,
+    farmmaster_investment: 50000,
+    expected_revenue: 100000,
+    monthly_payment: 5000,
+    responsibilities: 'FarmMaster provides seeds, fertilizers, technical support, and marketing assistance',
+    additional_terms: 'Land must be maintained according to organic farming standards'
+  });
+  const [submittingProposal, setSubmittingProposal] = useState(false);
 
   useEffect(() => {
     fetchInterestRequests();
@@ -37,37 +47,73 @@ export default function ProposalManagement() {
     }
   };
 
-  const updateRequestStatus = async (requestId, status, notes = '') => {
+  const generateProposal = async (request) => {
     try {
-      const response = await axios.put(`${rootUrl}/api/land-reports/interest-requests/${requestId}/status`, {
-        status,
-        notes
-      }, {
+      setSubmittingProposal(true);
+      
+      // Create proposal object mapping new fields to existing schema
+      const proposalPayload = {
+        land_id: request.land_id,
+        user_id: request.user_id,
+        crop_type: 'Organic Farming Partnership', // Default crop type for partnership proposals
+        estimated_yield: Math.round(proposalData.expected_revenue * 0.8), // 80% of expected revenue as yield estimate
+        lease_duration_years: Math.round(proposalData.lease_duration_months / 12), // Convert months to years
+        rental_value: proposalData.monthly_payment * 12, // Annual rental value
+        profit_sharing_farmmaster: proposalData.profit_sharing_percentage,
+        profit_sharing_landowner: 100 - proposalData.profit_sharing_percentage,
+        estimated_profit_landowner: Math.round(proposalData.expected_revenue * (100 - proposalData.profit_sharing_percentage) / 100),
+        status: 'Pending',
+        proposal_date: new Date().toISOString().split('T')[0]
+      };
+
+      // Send proposal data to backend
+      const response = await axios.post(`${rootUrl}/api/proposals`, proposalPayload, {
         withCredentials: true
       });
-      
+
       if (response.data.status === 'success') {
-        alert('Request status updated successfully!');
-        fetchInterestRequests(); // Refresh the list
+        // Update the interest request status directly via API
+        try {
+          await axios.put(`${rootUrl}/api/land-reports/interest-requests/${request.request_id}/status`, {
+            status: 'approved',
+            notes: `Proposal generated with terms: ${proposalData.lease_duration_months} months lease, ${proposalData.profit_sharing_percentage}% FarmMaster share, $${proposalData.monthly_payment}/month payment`
+          }, {
+            withCredentials: true
+          });
+        } catch (updateErr) {
+          console.log('Note: Could not update request status, but proposal was created successfully');
+        }
+        
+        alert(`✅ SUCCESS! Leasing proposal generated and sent to ${request.first_name} ${request.last_name}!`);
+        setShowProposalForm(false);
+        setSelectedRequest(null);
+        // Reset form data
+        setProposalData({
+          lease_duration_months: 12,
+          profit_sharing_percentage: 60,
+          farmmaster_investment: 50000,
+          expected_revenue: 100000,
+          monthly_payment: 5000,
+          responsibilities: 'FarmMaster provides seeds, fertilizers, technical support, and marketing assistance',
+          additional_terms: 'Land must be maintained according to organic farming standards'
+        });
+        // Refresh the requests list
+        fetchInterestRequests();
       } else {
-        alert('Failed to update status: ' + response.data.message);
+        alert('Failed to generate proposal: ' + response.data.message);
       }
     } catch (err) {
-      alert('Failed to update status: ' + (err.response?.data?.message || err.message));
+      alert('Failed to generate proposal: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setSubmittingProposal(false);
     }
   };
 
-  const generateProposal = async (request, proposalData) => {
-    try {
-      // Here you would typically send the proposal data to create a formal proposal
-      // For now, we'll just update the request status and show a success message
-      await updateRequestStatus(request.request_id, 'approved', 'Proposal generated and sent to landowner');
-      alert(`SUCCESS! Leasing proposal generated and sent to ${request.first_name} ${request.last_name}!`);
-      setShowProposalForm(false);
-      setSelectedRequest(null);
-    } catch (err) {
-      alert('Failed to generate proposal: ' + err.message);
-    }
+  const handleProposalInputChange = (field, value) => {
+    setProposalData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   if (loading) {
@@ -306,71 +352,39 @@ export default function ProposalManagement() {
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                {/* Action Buttons - Simplified to only Generate Proposal */}
+                <div className="flex justify-end mt-6">
                   {selectedRequest.status === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => updateRequestStatus(selectedRequest.request_id, 'under_review', 'Request is under review by the Financial Manager')}
-                        className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
-                      >
-                        Mark Under Review
-                      </button>
-                      <button
-                        onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Request rejected after review')}
-                        className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
-                      >
-                        Reject Request
-                      </button>
-                      <button
-                        onClick={() => {
-                          generateProposal(selectedRequest, {
-                            lease_duration: '12 months',
-                            profit_sharing: '60/40',
-                            responsibilities: 'FarmMaster provides seeds, fertilizers, and technical support'
-                          });
-                        }}
-                        className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
-                      >
-                        ✅ Generate Proposal
-                      </button>
-                    </>
+                    <button
+                      onClick={() => setShowProposalForm(true)}
+                      className="px-8 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+                    >
+                      <span>💰</span>
+                      Generate Proposal
+                    </button>
                   )}
                   
                   {selectedRequest.status === 'under_review' && (
-                    <>
-                      <button
-                        onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Request rejected after detailed review')}
-                        className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
-                      >
-                        Reject Request
-                      </button>
-                      <button
-                        onClick={() => {
-                          generateProposal(selectedRequest, {
-                            lease_duration: '12 months',
-                            profit_sharing: '60/40',
-                            responsibilities: 'FarmMaster provides seeds, fertilizers, and technical support'
-                          });
-                        }}
-                        className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
-                      >
-                        Generate Proposal
-                      </button>
-                    </>
+                    <button
+                      onClick={() => setShowProposalForm(true)}
+                      className="px-8 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+                    >
+                      <span>💰</span>
+                      Generate Proposal
+                    </button>
                   )}
                   
                   {selectedRequest.status === 'approved' && (
                     <div className="flex items-center gap-2 text-green-600">
-                      <span className="text-green-600">●</span>
-                      <span className="font-medium">Proposal Generated and Sent</span>
+                      <span className="text-2xl">✅</span>
+                      <span className="font-medium text-lg">Proposal Generated and Sent</span>
                     </div>
                   )}
                   
                   {selectedRequest.status === 'rejected' && (
                     <div className="flex items-center gap-2 text-red-600">
-                      <span className="text-red-600">●</span>
-                      <span className="font-medium">Request Rejected</span>
+                      <span className="text-2xl">❌</span>
+                      <span className="font-medium text-lg">Request Rejected</span>
                     </div>
                   )}
                 </div>
@@ -388,6 +402,191 @@ export default function ProposalManagement() {
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Proposal Generation Form Modal */}
+      {showProposalForm && selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Generate Lease Proposal
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    For {selectedRequest.first_name} {selectedRequest.last_name} - {selectedRequest.location}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowProposalForm(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Financial Terms */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-800 border-b pb-2">Financial Terms</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Lease Duration (Months)
+                    </label>
+                    <input
+                      type="number"
+                      min="6"
+                      max="60"
+                      value={proposalData.lease_duration_months}
+                      onChange={(e) => handleProposalInputChange('lease_duration_months', parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Profit Sharing - FarmMaster (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="40"
+                      max="80"
+                      value={proposalData.profit_sharing_percentage}
+                      onChange={(e) => handleProposalInputChange('profit_sharing_percentage', parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Landowner gets {100 - proposalData.profit_sharing_percentage}%
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      FarmMaster Investment ($)
+                    </label>
+                    <input
+                      type="number"
+                      min="10000"
+                      step="5000"
+                      value={proposalData.farmmaster_investment}
+                      onChange={(e) => handleProposalInputChange('farmmaster_investment', parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Expected Annual Revenue ($)
+                    </label>
+                    <input
+                      type="number"
+                      min="20000"
+                      step="10000"
+                      value={proposalData.expected_revenue}
+                      onChange={(e) => handleProposalInputChange('expected_revenue', parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Monthly Payment to Landowner ($)
+                    </label>
+                    <input
+                      type="number"
+                      min="1000"
+                      step="500"
+                      value={proposalData.monthly_payment}
+                      onChange={(e) => handleProposalInputChange('monthly_payment', parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Terms and Conditions */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-gray-800 border-b pb-2">Terms & Conditions</h4>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      FarmMaster Responsibilities
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={proposalData.responsibilities}
+                      onChange={(e) => handleProposalInputChange('responsibilities', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="List what FarmMaster will provide..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Additional Terms
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={proposalData.additional_terms}
+                      onChange={(e) => handleProposalInputChange('additional_terms', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      placeholder="Any additional conditions or requirements..."
+                    />
+                  </div>
+
+                  {/* Profit Calculation Preview */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h5 className="font-medium text-green-800 mb-2">💰 Profit Distribution Preview</h5>
+                    <div className="space-y-1 text-sm">
+                      <div className="flex justify-between">
+                        <span>Expected Annual Revenue:</span>
+                        <span className="font-medium">${proposalData.expected_revenue.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>FarmMaster Share ({proposalData.profit_sharing_percentage}%):</span>
+                        <span className="font-medium text-green-600">
+                          ${Math.round(proposalData.expected_revenue * proposalData.profit_sharing_percentage / 100).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Landowner Share ({100 - proposalData.profit_sharing_percentage}%):</span>
+                        <span className="font-medium text-blue-600">
+                          ${Math.round(proposalData.expected_revenue * (100 - proposalData.profit_sharing_percentage) / 100).toLocaleString()}
+                        </span>
+                      </div>
+                      <hr className="my-2" />
+                      <div className="flex justify-between">
+                        <span>Monthly Payment Guarantee:</span>
+                        <span className="font-medium">${proposalData.monthly_payment.toLocaleString()}/month</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Annual Guaranteed:</span>
+                        <span className="font-medium">${(proposalData.monthly_payment * 12).toLocaleString()}/year</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-8 pt-6 border-t">
+                <button
+                  onClick={() => setShowProposalForm(false)}
+                  className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => generateProposal(selectedRequest)}
+                  disabled={submittingProposal}
+                  className="px-8 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                >
+                  {submittingProposal ? '⏳ Generating...' : '🚀 Generate & Send Proposal'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

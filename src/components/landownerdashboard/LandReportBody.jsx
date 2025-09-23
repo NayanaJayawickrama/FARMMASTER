@@ -13,6 +13,8 @@ export default function LandReportBody() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all"); // "all", "pending", "completed"
   const [existingRequests, setExistingRequests] = useState({}); // Track existing interest requests
+  const [showProposalDecisionModal, setShowProposalDecisionModal] = useState(false);
+  const [selectedReportForProposal, setSelectedReportForProposal] = useState(null);
   const { user } = useAuth();
 
   // Test user ID - replace with actual user from auth context
@@ -129,7 +131,7 @@ export default function LandReportBody() {
           ...prev,
           conclusion: response.data.data
         }));
-        alert("Assessment completed!");
+        // Removed the alert - assessment completion is now silent
       } else {
         setError("Failed to generate assessment: " + (response.data.message || "Unknown error"));
       }
@@ -149,7 +151,6 @@ export default function LandReportBody() {
       });
       
       if (response.data.status === 'success') {
-        alert("SUCCESS! Your interest has been sent to our Financial Manager! They will review your land and create a leasing proposal for you.");
         // Update the existing requests state
         setExistingRequests(prev => ({
           ...prev,
@@ -157,11 +158,18 @@ export default function LandReportBody() {
         }));
         // Refresh the reports
         fetchAssessmentRequests();
+        
+        // Close the modal
+        setShowProposalDecisionModal(false);
+        setSelectedReportForProposal(null);
+        
+        // Success notification (you can replace this with a proper notification system)
+        alert("SUCCESS! Your proposal request has been sent to our Financial Manager for review.");
       } else {
-        alert("Failed to send interest: " + (response.data.message || "Unknown error"));
+        alert("Failed to send request: " + (response.data.message || "Unknown error"));
       }
     } catch (err) {
-      alert("Failed to send interest: " + (err.response?.data?.message || err.message));
+      alert("Failed to send request: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -169,7 +177,15 @@ export default function LandReportBody() {
 
   // Handle decline interest
   const declineInterest = () => {
+    setShowProposalDecisionModal(false);
+    setSelectedReportForProposal(null);
     alert("No problem! Feel free to reach out anytime when you're ready to partner with FarmMaster.");
+  };
+
+  // Open proposal decision modal instead of direct request
+  const openProposalDecisionModal = (reportId) => {
+    setSelectedReportForProposal(reportId);
+    setShowProposalDecisionModal(true);
   };
 
   const requestProposal = async (reportId) => {
@@ -668,7 +684,7 @@ export default function LandReportBody() {
                                 ) : (
                                   <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                     <button
-                                      onClick={() => sendInterestRequest(selectedItem.report_id)}
+                                      onClick={() => openProposalDecisionModal(selectedItem.report_id)}
                                       className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
                                     >
                                       🤝 Interested to join FarmMaster
@@ -755,6 +771,57 @@ export default function LandReportBody() {
           </div>
         </div>
       </div>
+
+      {/* Proposal Decision Modal */}
+      {showProposalDecisionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Join FarmMaster Partnership?
+              </h3>
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 mb-4">
+                  Your land assessment shows great potential for organic farming! 
+                </p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                  <h4 className="font-medium text-green-800 mb-2">🌱 Partnership Benefits:</h4>
+                  <ul className="text-sm text-green-700 space-y-1 text-left">
+                    <li>• Expert agricultural guidance</li>
+                    <li>• Guaranteed crop purchasing</li>
+                    <li>• Organic certification support</li>
+                    <li>• Revenue sharing opportunities</li>
+                    <li>• Modern farming techniques</li>
+                  </ul>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Would you like to proceed with a detailed proposal from our financial team?
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={() => sendInterestRequest(selectedReportForProposal)}
+                  disabled={loading}
+                  className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                >
+                  {loading ? '⏳ Submitting...' : '✅ Yes, I\'m Interested!'}
+                </button>
+                <button
+                  onClick={() => declineInterest()}
+                  className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
+                >
+                  🤔 Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -54,7 +54,10 @@ const CartPaymentSuccessPopup = ({ isVisible, onClose, orderData }) => {
             </div>
           )}
 
-          
+          <div className="text-center text-sm text-gray-500">
+            <p>You will receive an email confirmation shortly.</p>
+            <p>You can track your order in the Orders section.</p>
+          </div>
         </div>
 
         {/* Footer */}
