@@ -112,17 +112,6 @@ export default function SupervisorSidebar() {
             <Calendar size={16} />
             Assigned Tasks
           </NavLink>
-
-          <NavLink
-            to="/fieldsupervisorlanddatasubmission"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? activeLink : normalLink}`
-            }
-            onClick={() => setIsOpen(false)}
-          >
-            <FileText size={16} />
-            Data Submission
-          </NavLink>
         </nav>
 
         {/* Bottom Section */}
