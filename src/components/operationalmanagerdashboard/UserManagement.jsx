@@ -6,6 +6,16 @@ import PopupMessage from "../alerts/PopupMessage";
 const rootUrl = import.meta.env.VITE_API_URL;
 
 export default function UserManagementPage() {
+  // Helper function to map backend role names to frontend display names
+  const getRoleDisplayName = (role) => {
+    const roleMapping = {
+      'Supervisor': 'Field Supervisor',
+      'Financial_Manager': 'Financial Manager',
+      'Operational_Manager': 'Operational Manager'
+    };
+    return roleMapping[role] || role.replace('_', ' ');
+  };
+
   const [showForm, setShowForm] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [userList, setUserList] = useState([]);
@@ -276,7 +286,7 @@ export default function UserManagementPage() {
               required
             >
               <option value="">Select Role</option>
-              <option value="Field Supervisor">Field Supervisor</option>
+              <option value="Supervisor">Field Supervisor</option>
               <option value="Financial_Manager">Financial Manager</option>
             </select>
           </div>
@@ -336,7 +346,7 @@ export default function UserManagementPage() {
             >
               <option value="">All Roles</option>
               <option value="Landowner">Landowner</option>
-              <option value="Field Supervisor">Field Supervisor</option>
+              <option value="Supervisor">Field Supervisor</option>
               <option value="Buyer">Buyer</option>
               <option value="Operational_Manager">Operational Manager</option>
               <option value="Financial_Manager">Financial Manager</option>
@@ -376,7 +386,7 @@ export default function UserManagementPage() {
                       <td className="px-6 py-5 text-center font-medium text-gray-900">{user.email}</td>
                       <td className="px-6 py-5 text-center">
                         <span className="bg-green-100 text-black-800 font-semibold px-4 py-2 rounded-full inline-block">
-                          {(user.role || "").replace("_", " ")}
+                          {getRoleDisplayName(user.role || "")}
                         </span>
                       </td>
                       <td className="px-6 py-5 text-center">
@@ -455,12 +465,13 @@ export default function UserManagementPage() {
             <div className="mt-6">
               <h3 className="text-lg font-medium text-gray-700 mb-3">Role Distribution</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['Landowner', 'Field Supervisor', 'Buyer', 'Financial_Manager'].map(role => {
+                {['Landowner', 'Supervisor', 'Buyer', 'Financial_Manager'].map(role => {
                   const count = userList.filter(user => user.role === role).length;
+                  const displayName = getRoleDisplayName(role);
                   return (
                     <div key={role} className="bg-white p-3 rounded-lg shadow-sm border text-center">
                       <h4 className="text-xs font-medium text-gray-600 mb-1">
-                        {role.replace('_', ' ')}
+                        {displayName}
                       </h4>
                       <p className="text-lg font-bold text-gray-800">{count}</p>
                     </div>
