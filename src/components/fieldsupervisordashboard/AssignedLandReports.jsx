@@ -96,8 +96,11 @@ export default function AssignedLandReports() {
         withCredentials: true
       });
       
+      console.log('API Response:', response.data);
+      
       if (response.data.status === 'success') {
-        setReports(response.data.data || []);
+        const reportsData = response.data.data || [];
+        setReports(reportsData);
       } else {
         setError(response.data.message || "Failed to load assigned reports.");
       }
