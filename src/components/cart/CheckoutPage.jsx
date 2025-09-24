@@ -17,6 +17,7 @@ import placeholderImg from "../../assets/images/marketplaceimages/vegetables.jpg
 import CartPaymentSuccessPopup from "../alerts/CartPaymentSuccessPopup";
 import CartPaymentErrorPopup from "../alerts/CartPaymentErrorPopup";
 import MockStripePayment from "./MockStripePayment";
+import { useProducts } from "../financialmanagerdashboard/ProductContext";
 
 // Initialize Stripe
 const stripePromise = loadStripe("pk_test_51Rnk1kC523WS3olJgTHr67VfyR8w8fRy0kyoeoV257f1zaGdO7Egl1kXOtll5zbMnF1IgV0iRmWPkNlYiDvdesAP00teJxyQKk");
@@ -358,6 +359,7 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const { user, logout } = useAuth();
+  const { forceRefresh } = useProducts(); // Add this
   const navigate = useNavigate();
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
@@ -371,12 +373,29 @@ export default function CheckoutPage() {
   useEffect(() => {
     const checkStripeConnectivity = async () => {
       try {
-        const response = await fetch('https://js.stripe.com/v3/', { 
-          mode: 'no-cors', 
-          method: 'HEAD',
-          cache: 'no-cache'
-        });
-        setStripeAvailable(true);
+        // First check if we're online
+        if (!navigator.onLine) {
+          console.log('No internet connection, using mock payment system');
+          setStripeAvailable(false);
+          return;
+        }
+
+        // Try to load Stripe with a timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout')), 5000)
+        );
+        
+        const stripePromise = loadStripe("pk_test_51Rnk1kC523WS3olJgTHr67VfyR8w8fRy0kyoeoV257f1zaGdO7Egl1kXOtll5zbMnF1IgV0iRmWPkNlYiDvdesAP00teJxyQKk");
+        
+        const stripe = await Promise.race([stripePromise, timeoutPromise]);
+        
+        if (stripe) {
+          console.log('Stripe loaded successfully');
+          setStripeAvailable(true);
+        } else {
+          console.log('Stripe failed to load, using mock payment system');
+          setStripeAvailable(false);
+        }
       } catch (error) {
         console.log('Stripe not accessible, using mock payment system');
         setStripeAvailable(false);
@@ -428,6 +447,12 @@ export default function CheckoutPage() {
   const handlePaymentSuccess = (paymentResultData) => {
     setPaymentResult(paymentResultData);
     setShowSuccessPopup(true);
+    
+    // Refresh products after successful payment
+    setTimeout(() => {
+      console.log('Refreshing products after successful payment...');
+      forceRefresh();
+    }, 2000);
   };
 
   const handlePaymentError = (errorMessage) => {
@@ -438,6 +463,7 @@ export default function CheckoutPage() {
   const handleSuccessPopupClose = () => {
     setShowSuccessPopup(false);
     clearCart(); // Clear cart after successful payment
+    forceRefresh(); // Final refresh before navigation
     navigate("/buyerdashboard"); // Navigate to dashboard
   };
 
@@ -614,15 +640,25 @@ export default function CheckoutPage() {
               />
             </Elements>
           ) : (
-            <MockStripePayment
-              orderData={{
-                orderId: Date.now(), // Temporary order ID for mock
-                orderNumber: `ORD${Date.now()}`,
-                totalAmount: total
-              }}
-              onSuccess={handlePaymentSuccess}
-              onError={handlePaymentError}
-            />
+            <div>
+              <div className="mb-4 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded">
+                <div className="flex items-center">
+                  <span className="font-semibold">🧪 Development Mode</span>
+                </div>
+                <p className="text-sm mt-1">
+                  Using mock payment system. No real payment will be processed.
+                </p>
+              </div>
+              <MockStripePayment
+                orderData={{
+                  orderId: Date.now(), // Temporary order ID for mock
+                  orderNumber: `ORD${Date.now()}`,
+                  totalAmount: total
+                }}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+              />
+            </div>
           )}
 
           {/* Test Card Information */}

@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { FiSearch } from "react-icons/fi";
 
 export default function PaymentManagement() {
   const [activeTab, setActiveTab] = useState("land-reports");
   const [landReportPayments, setLandReportPayments] = useState([]);
   const [marketplacePayments, setMarketplacePayments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch land report payments
   useEffect(() => {
@@ -69,29 +67,6 @@ export default function PaymentManagement() {
     fetchMarketplacePayments();
   }, []);
 
-  // Filter payments based on search term
-  const filterPayments = (payments, type = 'land-report') => {
-    if (!searchTerm) return payments;
-    return payments.filter(payment => {
-      if (type === 'land-report') {
-        return payment.id?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-               payment.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               payment.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               payment.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               payment.amount?.toString().includes(searchTerm);
-      } else {
-        return payment.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               payment.transaction_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               payment.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               payment.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-               payment.amount?.toString().includes(searchTerm);
-      }
-    });
-  };
-
-  const filteredLandReportPayments = filterPayments(landReportPayments, 'land-report');
-  const filteredMarketplacePayments = filterPayments(marketplacePayments, 'marketplace');
-
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
       <h1 className="text-3xl md:text-4xl font-bold text-black mb-2 mt-4">
@@ -133,18 +108,6 @@ export default function PaymentManagement() {
             ].length}
           </p>
         </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="relative mb-6">
-        <FiSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-green-600" />
-        <input
-          type="text"
-          placeholder="Search by Transaction ID, Payer, or Amount"
-          className="w-full bg-green-50 rounded-md pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-green-400"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
       </div>
 
       {/* Tab Navigation */}
@@ -197,8 +160,8 @@ export default function PaymentManagement() {
               </tr>
             </thead>
             <tbody>
-              {filteredLandReportPayments.length > 0 ? (
-                filteredLandReportPayments.map((payment) => (
+              {landReportPayments.length > 0 ? (
+                landReportPayments.map((payment) => (
                   <tr key={payment.id} className="border-t hover:bg-green-50">
                     <td className="px-6 py-4">{payment.transaction_id || payment.id}</td>
                     <td className="px-6 py-4">
@@ -251,8 +214,8 @@ export default function PaymentManagement() {
               </tr>
             </thead>
             <tbody>
-              {filteredMarketplacePayments.length > 0 ? (
-                filteredMarketplacePayments.map((payment) => (
+              {marketplacePayments.length > 0 ? (
+                marketplacePayments.map((payment) => (
                   <tr key={payment.id} className="border-t hover:bg-green-50">
                     <td className="px-6 py-4">{payment.transaction_id || payment.id}</td>
                     <td className="px-6 py-4">
@@ -294,3 +257,4 @@ export default function PaymentManagement() {
     </div>
   );
 }
+                       

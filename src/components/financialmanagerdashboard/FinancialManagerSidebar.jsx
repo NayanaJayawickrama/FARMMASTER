@@ -145,20 +145,10 @@ export default function FinancialManagerSidebar() {
             onClick={() => setIsOpen(false)}
           >
             <Calculator size={16} />
-            Profit & Rent Calculation
+            Profit Calculation
           </NavLink>
 
-          <NavLink
-            to="/financialmanagermarfinancialreportmanagement"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? activeLink : normalLink}`
-            }
-            onClick={() => setIsOpen(false)}
-          >
-            <FileText size={16} />
-            Financial Report Management
-          </NavLink>
-
+        
           <NavLink
             to="/financialmanagermarketplaceproducts"
             className={({ isActive }) =>
@@ -168,6 +158,17 @@ export default function FinancialManagerSidebar() {
           >
             <Package size={16} />
             Marketplace Products
+          </NavLink>
+
+          <NavLink
+            to="/financialmanagerharvestincome"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? activeLink : normalLink}`
+            }
+            onClick={() => setIsOpen(false)}
+          >
+            <DollarSign size={16} />
+            Harvest Income Reports
           </NavLink>
         </nav>
 

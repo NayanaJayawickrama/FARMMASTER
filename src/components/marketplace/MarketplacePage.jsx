@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useProducts } from "./ProductContext";
-import { useNavigate } from "react-router-dom"; // Add this import
 import ProductForm from "./ProductForm";
 import AddProductForm from "./AddProductForm"; // <-- import the new form
 
 const MarketplaceProducts = () => {
   const { products, updateProduct, fetchProducts } = useProducts();
-  const navigate = useNavigate(); // Add this hook
   const [editingProduct, setEditingProduct] = useState(null);
   const [popup, setPopup] = useState({
     show: false,
@@ -20,6 +18,7 @@ const MarketplaceProducts = () => {
     show: false,
     message: "",
   });
+  const [showRefreshNotification, setShowRefreshNotification] = useState(false);
 
   useEffect(() => {
     const fetchNewCrops = async () => {
@@ -38,6 +37,25 @@ const MarketplaceProducts = () => {
       setLoadingNewCrops(false);
     };
     fetchNewCrops();
+  }, []);
+
+  // Show refresh notification
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const cartUpdated = localStorage.getItem('cart_updated');
+      if (cartUpdated) {
+        setShowRefreshNotification(true);
+        localStorage.removeItem('cart_updated');
+        
+        // Auto-hide notification after 5 seconds
+        setTimeout(() => {
+          setShowRefreshNotification(false);
+        }, 5000);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const saveProduct = async (updatedProduct) => {
@@ -98,67 +116,67 @@ const MarketplaceProducts = () => {
     window.location.href = "/marketplace";
   };
 
+  const handleRefresh = () => {
+    fetchProducts();
+    setShowRefreshNotification(false);
+  };
+
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
-      {/* Header Section with Title and Quick Actions */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-black mb-2 mt-4">
-            Marketplace Products
-          </h1>
-          
+      <h1 className="text-3xl md:text-4xl font-bold text-black mb-2 mt-4">
+        Marketplace Products
+      </h1>
+      <p className="text-green-700 text-sm mb-6">
+        You can only update existing product details in the online marketplace.
+      </p>
+
+      {/* Refresh Notification */}
+      {showRefreshNotification && (
+        <div className="fixed top-4 right-4 bg-green-100 border border-green-500 text-green-700 px-4 py-3 rounded-lg shadow-lg z-50">
+          <div className="flex items-center gap-2">
+            <span className="text-sm">📦 Product quantities updated!</span>
+            <button
+              onClick={handleRefresh}
+              className="text-green-600 hover:text-green-800 font-medium underline"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
-        
-        {/* Quick Actions Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            onClick={() => navigate('/marketplace')}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center justify-center gap-2"
-            title="Go to marketplace"
-          >
-            
-            Go to Marketplace
-          </button>
-          
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center justify-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Product
-          </button>
-        </div>
+      )}
+
+      {/* Manual Refresh Button */}
+      <div className="fixed bottom-4 right-4 z-40">
+        <button
+          onClick={handleRefresh}
+          className="bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-colors"
+          title="Refresh Products"
+        >
+          🔄
+        </button>
       </div>
 
       {/* Notification for new crops */}
       {!loadingNewCrops && newCrops.length > 0 && (
-        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded-r-lg">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-green-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium">
-                <strong>New crops added to inventory:</strong>
-              </p>
-              <div className="mt-2">
-                <ul className="list-disc ml-4 text-sm">
-                  {newCrops.map((crop) => (
-                    <li key={crop.crop_id}>{crop.crop_name}</li>
-                  ))}
-                </ul>
-                <p className="mt-2 text-sm">
-                  Please add these crops to the marketplace to make them available for buyers.
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-4 rounded">
+          <strong>New crops added to inventory:</strong>
+          <ul className="list-disc ml-6">
+            {newCrops.map((crop) => (
+              <li key={crop.crop_id}>{crop.crop_name}</li>
+            ))}
+          </ul>
+          <span className="block mt-2">
+            Please add these crops to the marketplace.
+          </span>
         </div>
       )}
+
+      <button
+        className="bg-green-600 text-white px-4 py-2 rounded mb-4"
+        onClick={() => setShowAddForm(true)}
+      >
+        Add Product
+      </button>
 
       {showAddForm && (
         <AddProductForm

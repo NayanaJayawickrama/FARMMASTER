@@ -5,7 +5,6 @@ export default function Orders({ user, rootUrl }) {
   // Use env variable if rootUrl is not passed as prop
   const apiRootUrl = rootUrl || import.meta.env.VITE_API_URL;
 
-  const [activeTab, setActiveTab] = useState("All");
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -69,60 +68,13 @@ export default function Orders({ user, rootUrl }) {
       });
   }, [user, rootUrl]);
 
-  const filterOrders = () => {
-    let filtered = orders;
-    if (activeTab === "Active")
-      filtered = orders.filter(
-        (order) =>
-          order.status !== "delivered" &&
-          order.status !== "cancelled" &&
-          order.status !== "Delivered" &&
-          order.status !== "Cancelled"
-      );
-    if (activeTab === "Completed")
-      filtered = orders.filter(
-        (order) =>
-          order.status === "delivered" ||
-          order.status === "cancelled" ||
-          order.status === "Delivered" ||
-          order.status === "Cancelled"
-      );
-    return filtered;
-  };
-
-  const tabClass = (tab) =>
-    `pb-2 border-b-2 text-sm sm:text-base ${
-      activeTab === tab
-        ? "border-green-600 text-green-700 font-semibold"
-        : "border-transparent text-gray-500 hover:text-green-600"
-    } cursor-pointer`;
-
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
       {/* Heading */}
       <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">Orders</h1>
       <p className="text-green-600 mb-6 text-sm sm:text-base">
-        View and manage your order history
+        View your recent order history (last 30 orders)
       </p>
-
-      {/* Tabs */}
-      <div className="flex gap-6 mb-6 border-b border-gray-200">
-        <button className={tabClass("All")} onClick={() => setActiveTab("All")}>
-          All Orders
-        </button>
-        <button
-          className={tabClass("Active")}
-          onClick={() => setActiveTab("Active")}
-        >
-          Active Orders
-        </button>
-        <button
-          className={tabClass("Completed")}
-          onClick={() => setActiveTab("Completed")}
-        >
-          Completed Orders
-        </button>
-      </div>
 
       {/* Table */}
       <div className="overflow-x-auto bg-white border rounded-xl shadow-sm">
@@ -138,38 +90,22 @@ export default function Orders({ user, rootUrl }) {
                 <th className="px-4 py-3">Payment Date</th>
                 <th className="px-4 py-3">Products</th>
                 <th className="px-4 py-3">Total Amount</th>
-                <th className="px-4 py-3">Order Status</th>
               </tr>
             </thead>
             <tbody>
-              {filterOrders().length === 0 ? (
+              {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
+                  <td colSpan={4} className="px-4 py-6 text-center text-gray-500">
                     No orders to display.
                   </td>
                 </tr>
               ) : (
-                filterOrders().map((order, idx) => (
+                orders.map((order, idx) => (
                   <tr key={order.id || idx} className="border-t hover:bg-green-50">
                     <td className="px-4 py-3">{order.order_number || order.id}</td>
                     <td className="px-4 py-3 text-green-600">{order.date}</td>
                     <td className="px-4 py-3">{order.product || "No products"}</td>
                     <td className="px-4 py-3">{order.total}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          order.status === "Delivered" || order.status === "delivered"
-                            ? "bg-green-100 text-green-700"
-                            : order.status === "Shipped" || order.status === "shipped"
-                            ? "bg-blue-100 text-blue-700"
-                            : order.status === "Processing" || order.status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : ""
-                        }`}
-                      >
-                        {order.status}
-                      </span>
-                    </td>
                   </tr>
                 ))
               )}
@@ -180,5 +116,6 @@ export default function Orders({ user, rootUrl }) {
     </div>
   );
 }
+        
 
 
