@@ -19,17 +19,41 @@ export default function MockStripePayment({ orderData, onSuccess, onError }) {
     setLoading(true);
     setMessage("");
 
+    // Validate form fields
+    if (!cardholderName.trim()) {
+      setMessage("❌ Please enter cardholder name");
+      setLoading(false);
+      return;
+    }
+
+    if (!cardNumber.trim() || !expiryDate.trim() || !cvc.trim()) {
+      setMessage("❌ Please fill in all card details");
+      setLoading(false);
+      return;
+    }
+
     const testUserId = user?.id || 33; // Buyer user ID
 
     try {
       console.log("=== MOCK PAYMENT PROCESS STARTED ===");
+      console.log("User:", user);
+      console.log("Order Data:", orderData);
+      
+      // Check if user is authenticated
+      if (!user || !user.id) {
+        throw new Error("Please log in to complete your purchase");
+      }
+
+      if (user.role !== 'Buyer') {
+        throw new Error("Only buyers can make purchases. Please log in with a buyer account.");
+      }
       
       // Step 1: Create payment intent (will use mock in backend)
       console.log("Creating payment intent...");
       const paymentIntentResponse = await axios.post(`${rootUrl}/api/payments/process`, {
         action: "create_payment_intent",
         user_id: testUserId,
-        payment_type: "cart_purchase",
+        payment_type: "cart_purchase", 
         cart_order_id: orderData.orderId,
         amount: orderData.totalAmount
       }, {
