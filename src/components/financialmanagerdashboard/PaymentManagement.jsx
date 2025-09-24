@@ -53,7 +53,13 @@ export default function PaymentManagement() {
         const result = await response.json();
         
         if (result.status === 'success') {
-          setMarketplacePayments(result.data.transactions || []);
+          const transactions = result.data.transactions || [];
+          setMarketplacePayments(transactions);
+          
+          // Calculate and log marketplace revenue for debugging
+          const calculatedRevenue = transactions.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+          console.log('PaymentManagement - Marketplace Revenue:', calculatedRevenue);
+          console.log('PaymentManagement - Transaction count:', transactions.length);
         } else {
           console.error('Failed to fetch marketplace payments:', result.message);
         }
@@ -83,12 +89,14 @@ export default function PaymentManagement() {
           <p className="text-2xl font-bold mt-1 text-green-600">
             LKR {landReportPayments.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
           </p>
+          <p className="text-xs text-gray-500 mt-1">{landReportPayments.length} transactions</p>
         </div>
         <div className="border rounded-md p-6 shadow-sm text-center">
           <p className="text-sm text-gray-600">Total Marketplace Revenue</p>
           <p className="text-2xl font-bold mt-1 text-blue-600">
             LKR {marketplacePayments.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0).toLocaleString()}
           </p>
+          <p className="text-xs text-gray-500 mt-1">{marketplacePayments.length} transactions</p>
         </div>
         <div className="border rounded-md p-6 shadow-sm text-center">
           <p className="text-sm text-gray-600">Completed Transactions</p>
@@ -257,4 +265,4 @@ export default function PaymentManagement() {
     </div>
   );
 }
-                       
+
