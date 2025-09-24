@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ArrowLeft, User, Clock, CheckCircle } from "lucide-react";
+import PopupMessage from "../alerts/PopupMessage";
 
 const rootUrl = import.meta.env.VITE_API_URL;
 
@@ -10,6 +11,29 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
   const [error, setError] = useState(null);
+
+  // Popup message state
+  const [popupMessage, setPopupMessage] = useState({
+    isOpen: false,
+    message: '',
+    type: 'success'
+  });
+
+  const showPopup = (message, type = 'success') => {
+    setPopupMessage({
+      isOpen: true,
+      message,
+      type
+    });
+  };
+
+  const closePopup = () => {
+    setPopupMessage({
+      isOpen: false,
+      message: '',
+      type: 'success'
+    });
+  };
 
   // Helper function to get auth headers
   const getAuthHeaders = () => {
@@ -28,10 +52,17 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
         headers: getAuthHeaders()
       });
       if (response.data.status === 'success') {
-        // Filter only available supervisors (not currently assigned)
-        const freeSupervisors = response.data.data.filter(supervisor => 
-          supervisor.assignment_status === 'Available'
-        );
+        // Filter only truly available supervisors (not currently assigned to any task)
+        const freeSupervisors = response.data.data.filter(supervisor => {
+          // Check multiple conditions to ensure supervisor is truly available
+          return supervisor.assignment_status === 'Available' && 
+                 (!supervisor.current_assignment || supervisor.current_assignment === null) &&
+                 (!supervisor.task_status || supervisor.task_status === 'Completed' || supervisor.task_status === null);
+        });
+        
+        console.log('All supervisors:', response.data.data);
+        console.log('Available supervisors after filtering:', freeSupervisors);
+        
         setAvailableSupervisors(freeSupervisors);
       } else {
         setError('Failed to load available Supervisors');
@@ -47,7 +78,13 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
   // Assign selected supervisor
   const handleAssignment = async () => {
     if (!selectedSupervisor) {
-      alert('Please select a Supervisor');
+      showPopup('Please select a Supervisor', 'error');
+      return;
+    }
+
+    // Double-check supervisor availability before assignment
+    if (selectedSupervisor.assignment_status !== 'Available') {
+      showPopup('Selected supervisor is no longer available. Please refresh and try again.', 'error');
       return;
     }
 
@@ -78,18 +115,21 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
       });
       
       if (response.data.status === 'success') {
-        alert('Supervisor assigned successfully!');
+        showPopup('Supervisor assigned successfully!', 'success');
         if (onAssignmentComplete) {
           onAssignmentComplete();
         }
-        onBack();
+        // Delay navigation to allow user to see the success message
+        setTimeout(() => {
+          onBack();
+        }, 2000);
       } else {
-        alert('Failed to assign Supervisor');
+        showPopup('Failed to assign Supervisor', 'error');
       }
     } catch (error) {
       console.error('Error assigning supervisor:', error);
       console.error('Error response:', error.response?.data);
-      alert('Failed to assign Supervisor: ' + (error.response?.data?.message || error.message));
+      showPopup('Failed to assign Supervisor: ' + (error.response?.data?.message || error.message), 'error');
     } finally {
       setAssigning(false);
     }
@@ -169,8 +209,11 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
               <Clock className="mx-auto mb-3 text-yellow-500" size={48} />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No Available Supervisors</h3>
-              <p className="text-gray-600">
-                All Supervisors are currently assigned to other reports. Please try again later.
+              <p className="text-gray-600 mb-2">
+                All Field Supervisors are currently assigned to ongoing tasks and are not available for new assignments.
+              </p>
+              <p className="text-gray-500 text-sm">
+                Supervisors will become available once they complete their current land assessment tasks.
               </p>
             </div>
           ) : (
@@ -212,9 +255,15 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
                     <div>
                       <span className="text-gray-600">Status:</span>
                       <span className="ml-2 inline-block px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                        {supervisor.assignment_status}
+                        Available
                       </span>
                     </div>
+                    {supervisor.current_assignment && (
+                      <div>
+                        <span className="text-gray-600">Current Task:</span>
+                        <span className="ml-2 text-gray-900 text-xs">None</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -245,6 +294,14 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
           </button>
         </div>
       </div>
+
+      {/* Popup Message */}
+      <PopupMessage
+        isOpen={popupMessage.isOpen}
+        message={popupMessage.message}
+        type={popupMessage.type}
+        onClose={closePopup}
+      />
     </div>
   );
 }

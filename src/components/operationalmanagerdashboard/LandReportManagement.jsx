@@ -145,6 +145,13 @@ export default function LandReportManagement() {
 
   // Handle assignment action - go to supervisor selection page
   const handleAssignmentAction = (report) => {
+    // Check if supervisor is already assigned
+    if (report.status === 'Assigned' || report.status === 'In Progress' || 
+        (report.supervisor && report.supervisor !== 'N/A' && report.supervisor !== 'Not Assigned')) {
+      showPopup('This report already has a supervisor assigned and cannot be reassigned.', 'error');
+      return;
+    }
+    
     setSelectedReportForAssignment(report);
     setShowAssignSupervisor(true);
   };
@@ -180,7 +187,7 @@ export default function LandReportManagement() {
           });
           
           if (response.data.status === 'success') {
-            showPopup(`✅ Report sent to land owner successfully!\n\n📋 Report ID: ${reportId}\n👤 Land Owner ID: ${response.data.data.land_owner_id}\n📅 Sent: ${new Date().toLocaleString()}\n\n🎯 The land owner can now access this report in their dashboard!`, 'success');
+            showPopup('Report sent to land owner successfully!', 'success');
             await fetchReviewReports(); // Refresh data
             setShowReview(false);
           }
@@ -272,9 +279,19 @@ export default function LandReportManagement() {
                         {item.status}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
-                        onClick={() => handleAssignmentAction(item)}>
-                      Assign
+                    <td className="py-3 px-4">
+                      {item.status === 'Assigned' || item.status === 'In Progress' || (item.supervisor && item.supervisor !== 'N/A' && item.supervisor !== 'Not Assigned') ? (
+                        <span className="text-gray-400 font-medium cursor-not-allowed">
+                          Already Assigned
+                        </span>
+                      ) : (
+                        <span 
+                          className="text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
+                          onClick={() => handleAssignmentAction(item)}
+                        >
+                          Assign
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))
