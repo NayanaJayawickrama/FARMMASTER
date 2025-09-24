@@ -28,41 +28,77 @@ export default function LandReportBody() {
   const fetchAssessmentRequests = async () => {
     setLoading(true);
     setError("");
-    console.log("🔍 Fetching assessment requests for user:", testUserId);
+    console.log("Fetching assessment requests for user:", testUserId);
+    console.log("User context:", user);
     try {
-      // Use the fixed main API endpoint
-      const url = `${rootUrl}/api/land-reports/land-owner-reports?user_id=${testUserId}`;
-      console.log("📡 API URL:", url);
+      // Use the same API endpoint as dashboard for consistency
+      const url = `${rootUrl}/assessments?user_id=${testUserId}`;
+      console.log("API URL:", url);
+      console.log("Sending request with credentials...");
       
       const response = await axios.get(url, {
         withCredentials: true
       });
       
-      console.log("✅ API Response:", response.data);
+      console.log("API Response:", response.data);
       
       if (response.data.status === 'success') {
-        const reports = response.data.data || [];
-        console.log("📊 Found reports:", reports.length, reports);
-        setAssessmentRequests(reports);
-        console.log("✅ Reports set in state");
+        const assessmentData = response.data.data || [];
+        console.log("Found assessments:", assessmentData.length, assessmentData);
+        setAssessmentRequests(assessmentData);
+        console.log("Assessment requests set in state");
         
 
         
-        if (reports.length > 0) {
-          setSelectedItem(reports[0]);
-          console.log("🎯 Selected first report:", reports[0].id);
+        if (assessmentData.length > 0) {
+          setSelectedItem(assessmentData[0]);
+          console.log("Selected first assessment:", assessmentData[0].id || assessmentData[0].land_id);
         }
       } else {
-        console.error("❌ API returned error:", response.data.message);
+        console.error("API returned error:", response.data.message);
         setError(response.data.message || "Failed to fetch assessment requests");
       }
     } catch (err) {
-      console.error("💥 Request failed:", err);
+      console.error("Request failed:", err);
+      console.error("Response status:", err.response?.status);
       console.error("Response data:", err.response?.data);
-      setError("Failed to fetch assessment requests: " + (err.response?.data?.message || err.message));
+      
+      if (err.response?.status === 401) {
+        console.log("Authentication failed, trying fallback endpoint...");
+        try {
+          // Try the original land-owner-reports endpoint as fallback
+          const fallbackUrl = `${rootUrl}/api/land-reports/land-owner-reports?user_id=${testUserId}`;
+          console.log("Fallback API URL:", fallbackUrl);
+          
+          const fallbackResponse = await axios.get(fallbackUrl, {
+            withCredentials: true
+          });
+          
+          console.log("Fallback API Response:", fallbackResponse.data);
+          
+          if (fallbackResponse.data.status === 'success') {
+            const reports = fallbackResponse.data.data || [];
+            console.log("Found reports from fallback:", reports.length, reports);
+            setAssessmentRequests(reports);
+            
+            if (reports.length > 0) {
+              setSelectedItem(reports[0]);
+            }
+            return; // Success, exit the catch block
+          }
+        } catch (fallbackErr) {
+          console.error("Fallback request also failed:", fallbackErr);
+        }
+        
+        setError("Authentication required. Please log in again.");
+      } else if (err.response?.status === 403) {
+        setError("Access denied. Please check your permissions.");
+      } else {
+        setError("Failed to fetch assessment requests: " + (err.response?.data?.message || err.message));
+      }
     } finally {
       setLoading(false);
-      console.log("🏁 Request completed");
+      console.log("Request completed");
     }
   };
 
@@ -508,14 +544,14 @@ export default function LandReportBody() {
                           </h2>
                           <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
                             <p className="text-sm text-emerald-700 mb-4 font-medium">
-                              🌱 Based on your land's soil analysis and environmental conditions:
+                              Based on your land's soil analysis and environmental conditions:
                             </p>
                             <div className="whitespace-pre-line text-sm text-gray-700 leading-relaxed">
                               {selectedItem.crop_recommendation}
                             </div>
                             <div className="mt-4 p-3 bg-green-100 rounded-md border-l-4 border-green-500">
                               <p className="text-xs text-green-800">
-                                💡 <strong>Tip:</strong> These recommendations are based on your soil pH, organic matter, and nutrient levels. 
+                                <strong>Tip:</strong> These recommendations are based on your soil pH, organic matter, and nutrient levels. 
                                 Contact our agricultural experts for personalized farming advice.
                               </p>
                             </div>
@@ -532,7 +568,7 @@ export default function LandReportBody() {
                           </h2>
                           <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                             <p className="text-sm text-yellow-700 mb-2">
-                              🔄 Crop recommendations are being generated based on your soil analysis...
+                              Crop recommendations are being generated based on your soil analysis...
                             </p>
                             <button
                               onClick={() => window.location.reload()}
