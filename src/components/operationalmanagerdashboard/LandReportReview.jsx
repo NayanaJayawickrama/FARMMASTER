@@ -22,19 +22,35 @@ export default function LandReportReview({ onBack, report, onSendToLandOwner }) 
     }
   };
 
-  // Default report data if none provided
-  const reportData = report || {
-    id: "#2025-LR-002",
-    name: "Mr. Ruwan Perera",
-    location: "Badulla",
-    date: "2025-10-19",
-    supervisor: "Mr. Silva",
-    supervisorId: "SR0023",
-    report_details: {
-      land_description: "Sample land description",
-      crop_recommendation: "Sample crop recommendations"
-    }
-  };
+  // Use the provided report data or show no data message
+  const reportData = report;
+
+  // If no report data is provided, show an error message
+  if (!reportData) {
+    return (
+      <div className="flex bg-white min-h-screen">
+        <div className="flex-1 p-4 md:p-10 font-poppins">
+          <div className="max-w-4xl mx-auto bg-white border border-gray-200 rounded-xl p-6 md:p-10 shadow-sm">
+            <button
+              onClick={onBack}
+              className="flex items-center text-sm text-green-600 hover:text-green-700 font-medium transition mb-6"
+            >
+              <ArrowLeft size={16} className="mr-2" />
+              Back
+            </button>
+            
+            <div className="text-center py-10">
+              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">No Report Data Available</h2>
+              <p className="text-gray-600 mb-4">
+                Unable to load report information. Please go back and try selecting a report again.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex bg-white min-h-screen">
@@ -93,9 +109,13 @@ export default function LandReportReview({ onBack, report, onSendToLandOwner }) 
             <h2 className="text-base font-semibold text-gray-800 mb-2">
               Crop Recommendations
             </h2>
-            <p className="text-sm text-gray-700 mb-4">
-              {reportData.report_details?.crop_recommendation || "Based on the land assessment, we recommend the following crops for optimal yield and profitability:"}
-            </p>
+            <div className="text-sm text-gray-700 mb-4">
+              {reportData.report_details?.crop_recommendation ? (
+                <p>{reportData.report_details.crop_recommendation}</p>
+              ) : (
+                <div className="text-gray-500 italic">No crop recommendations available</div>
+              )}
+            </div>
           </div>
 
           <div className="mb-8">
