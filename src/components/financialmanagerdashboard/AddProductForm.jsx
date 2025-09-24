@@ -3,7 +3,7 @@ import axios from "axios";
 
 const rootUrl = import.meta.env.VITE_API_URL;
 
-const AddProductForm = ({ onProductAdded }) => {
+const AddProductForm = ({ onProductAdded, onCancel }) => {
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
@@ -106,7 +106,7 @@ const AddProductForm = ({ onProductAdded }) => {
     });
     setImagePreview("");
     setMessage("");
-    if (onProductAdded) onProductAdded();
+    if (onCancel) onCancel();
   };
 
   if (loading) return <p>Loading...</p>;

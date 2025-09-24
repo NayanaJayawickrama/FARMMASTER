@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
-  CheckCircle,
-  Bell,
-  Repeat,
-  X
+  Package,
+  Calendar
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
@@ -13,6 +12,7 @@ import RoleSwitcher from "../RoleSwitcher";
 const rootUrl = import.meta.env.VITE_API_URL;
 
 export default function BuyerDashboardContent() {
+  const navigate = useNavigate();
   const [user, setUser] = useState({});
   const { user: authUser } = useAuth();
 
@@ -24,29 +24,20 @@ export default function BuyerDashboardContent() {
   }, []);
 
   const [dashboardData, setDashboardData] = useState({
-    recentOrders: [],
-    purchaseHistory: [],
+    allOrders: [],
     recentActivities: []
   });
+
   const calculateTotalSpending = (dashboardData) => {
-  let sum = 0;
-  if (!dashboardData) return sum;
+    let sum = 0;
+    if (!dashboardData || !dashboardData.allOrders) return sum;
 
-  if (dashboardData.purchaseHistory) {
-    dashboardData.purchaseHistory.forEach((purchase) => {
-      sum += parseFloat(purchase.total_amount || 0);
-    });
-  }
-
-  if (dashboardData.recentOrders) {
-    dashboardData.recentOrders.forEach((order) => {
+    dashboardData.allOrders.forEach((order) => {
       sum += parseFloat(order.total_amount || 0);
     });
-  }
 
-  return parseFloat(sum.toFixed(2));
-};
-
+    return parseFloat(sum.toFixed(2));
+  };
 
   // Fetch data from backend
   const fetchBuyerDashboardData = async () => {
@@ -58,9 +49,14 @@ export default function BuyerDashboardContent() {
       );
 
       if (res.data && res.data.data) {
+        // Combine recent orders and purchase history into one array
+        const allOrders = [
+          ...(res.data.data.recent_orders || []),
+          ...(res.data.data.purchase_history || [])
+        ];
+        
         setDashboardData({
-          recentOrders: res.data.data.recent_orders || [],
-          purchaseHistory: res.data.data.purchase_history || [],
+          allOrders: allOrders,
           recentActivities: res.data.data.recent_activities || []
         });
       }
@@ -74,8 +70,6 @@ export default function BuyerDashboardContent() {
       fetchBuyerDashboardData();
     }
   }, [user]);
-
-  console.log(dashboardData.recentActivities)
 
   return (
     <div className="p-4 md:p-10 font-poppins">
@@ -91,10 +85,10 @@ export default function BuyerDashboardContent() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div className="border rounded-md p-6 shadow-sm text-center">
-          <p className="text-sm text-gray-600">Recent Orders</p>
-          <p className="text-2xl font-bold mt-1">{dashboardData.recentOrders.length}</p>
+          <p className="text-sm text-gray-600">Total Orders</p>
+          <p className="text-2xl font-bold mt-1">{dashboardData.allOrders.length}</p>
         </div>
         <div className="border rounded-md p-6 shadow-sm text-center">
           <p className="text-sm text-gray-600">Total Spendings</p>
@@ -102,53 +96,69 @@ export default function BuyerDashboardContent() {
             {calculateTotalSpending(dashboardData)} LKR
           </p>
         </div>
-        <div className="border rounded-md p-6 shadow-sm text-center">
-          <p className="text-sm text-gray-600">Purchase History</p>
-          <p className="text-2xl font-bold mt-1">{dashboardData.purchaseHistory.length}</p>
-        </div>
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Purchases */}
       <div className="mb-6">
-        <h2 className="text-xl font-bold mb-4">Recent Activity</h2>
-        <ul className="space-y-4 bg-green-50/50 p-4 rounded-md">
+        <h2 className="text-xl font-bold mb-4">Recent Purchases</h2>
+        <div className="bg-white border rounded-xl shadow-sm">
           {dashboardData.recentActivities.length > 0 ? (
-            dashboardData.recentActivities.map((activity, index) => (
-              <li key={index} className="flex items-start gap-4">
-                <div className="bg-green-100 rounded-sm p-2">
-                  {activity.order_status === "pending" && (
-                    <Bell className="text-green-700" size={24} />
-                  )}
-                  {(activity.order_status === "completed" ||
-                    activity.order_status === "delivered") && (
-                    <CheckCircle className="text-green-700" size={24} />
-                  )}
-                  {activity.order_status === "processing" && (
-                    <Repeat className="text-green-700" size={24} />
-                  )}
-                  {activity.order_status === "shipped" && (
-                    <ShoppingCart className="text-green-700" size={24} />
-                  )}
-                  {activity.order_status === "cancelled" && (
-                    <X className="text-red-600" size={24} />
-                  )}
+            <div className="divide-y divide-gray-100">
+              {dashboardData.recentActivities.map((purchase, index) => (
+                <div key={index} className="flex items-center justify-between p-4 hover:bg-green-50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-green-100 rounded-full p-3">
+                      <Package className="text-green-700" size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        Order #{purchase.order_number}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {purchase.created_at
+                          ? new Date(purchase.created_at).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })
+                          : "No date"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-green-700">
+                      Rs. {parseFloat(purchase.total_amount || 0).toFixed(2)}
+                    </p>
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <Calendar size={12} />
+                      <span>
+                        {purchase.created_at
+                          ? new Date(purchase.created_at).toLocaleDateString()
+                          : "N/A"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium">
-                    Order #{activity.order_number} – {activity.order_status}
-                  </p>
-                  <p className="text-sm text-green-600">
-                    {activity.created_at
-                      ? new Date(activity.created_at).toLocaleDateString()
-                      : "No date"}
-                  </p>
-                </div>
-              </li>
-            ))
+              ))}
+            </div>
           ) : (
-            <li className="text-gray-600">No recent activities</li>
+            <div className="p-8 text-center text-gray-500">
+              <ShoppingCart size={48} className="mx-auto mb-4 text-gray-300" />
+              <p className="text-lg font-medium mb-2">No recent purchases</p>
+              <p className="text-sm">Your recent orders will appear here</p>
+            </div>
           )}
-        </ul>
+        </div>
+        {dashboardData.recentActivities.length > 0 && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => navigate('/buyerorders')}
+              className="text-green-600 hover:text-green-700 font-medium text-sm hover:underline"
+            >
+              View All Orders →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,138 +1,93 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 
 const CartContext = createContext();
 
 export const useCart = () => useContext(CartContext);
 
+// Cookie utilities
+const setCookie = (name, value, days = 30) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+};
+
+const getCookie = (name) => {
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) {
+      try {
+        return JSON.parse(decodeURIComponent(c.substring(nameEQ.length, c.length)));
+      } catch (e) {
+        return null;
+      }
+    }
+  }
+  return null;
+};
+
+const deleteCookie = (name) => {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+};
+
 export const CartProvider = ({ children }) => {
   const { user } = useAuth();
-  
-  // Get user-specific cart key
-  const getCartKey = (userId = null) => {
+  const [cartItems, setCartItems] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Get user-specific cart cookie name
+  const getCartCookieName = (userId = null) => {
     const targetUserId = userId || user?.id;
-    return targetUserId ? `cartItems_${targetUserId}` : "cartItems_guest";
+    return targetUserId ? `cart_${targetUserId}` : "cart_guest";
   };
 
-  // Initialize cart from localStorage (user-specific)
-  const getInitialCart = (userId = null) => {
+  // Load cart from cookies
+  const loadCartFromCookie = (userId = null) => {
     try {
-      const cartKey = getCartKey(userId);
-      const stored = localStorage.getItem(cartKey);
-      console.log(`Loading cart for key: ${cartKey}`, stored ? JSON.parse(stored) : []);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
+      const cookieName = getCartCookieName(userId);
+      const stored = getCookie(cookieName);
+      console.log(`Loading cart from cookie: ${cookieName}`, stored || []);
+      return stored || [];
+    } catch (error) {
+      console.error('Error loading cart from cookie:', error);
       return [];
     }
   };
 
-  const [cartItems, setCartItems] = useState([]);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const prevUserRef = useRef(null);
-
-  // Initialize cart when component mounts
-  useEffect(() => {
-    console.log('CartContext: Initial mount, loading cart...');
-    const initialUserId = user?.id || null;
-    setCurrentUserId(initialUserId);
-    const initialCart = getInitialCart(initialUserId);
-    setCartItems(initialCart);
-    setIsInitialized(true);
-    prevUserRef.current = user;
-    
-    console.log('CartContext: Initial cart loaded', { 
-      userId: initialUserId, 
-      cartItems: initialCart 
-    });
-  }, []); // Only run on mount
-
-  // Handle user changes (login/logout)
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    const newUserId = user?.id || null;
-    const prevUserId = prevUserRef.current?.id || null;
-    
-    console.log('CartContext: User state changed', { 
-      prevUserId, 
-      newUserId,
-      prevUser: prevUserRef.current,
-      newUser: user 
-    });
-
-    // Only reload cart if user actually changed
-    if (newUserId !== prevUserId) {
-      console.log('CartContext: User changed, switching cart data...');
-      
-      // Save current cart before switching (if we had a previous user)
-      if (prevUserId && cartItems.length > 0) {
-        const prevCartKey = `cartItems_${prevUserId}`;
-        localStorage.setItem(prevCartKey, JSON.stringify(cartItems));
-        console.log(`CartContext: Saved previous cart to ${prevCartKey}`, cartItems);
-      }
-      
-      // Update current user ID
-      setCurrentUserId(newUserId);
-      
-      // Load new user's cart
-      const newCart = getInitialCart(newUserId);
-      setCartItems(newCart);
-      
-      console.log('CartContext: Switched to new cart', { 
-        newUserId, 
-        newCart 
-      });
+  // Save cart to cookies
+  const saveCartToCookie = (items, userId = null) => {
+    try {
+      const cookieName = getCartCookieName(userId);
+      setCookie(cookieName, items, 30); // 30 days expiration
+      console.log(`Cart saved to cookie: ${cookieName}`, items);
+    } catch (error) {
+      console.error('Error saving cart to cookie:', error);
     }
-    
-    // Update previous user reference
-    prevUserRef.current = user;
-  }, [user, isInitialized, cartItems]); // Include cartItems to ensure we save before switching
+  };
 
-  // Persist cart to localStorage on change (user-specific)
+  // Initialize cart when user changes or component mounts
   useEffect(() => {
-    if (isInitialized && cartItems.length >= 0) { // Allow saving empty carts too
-      const cartKey = getCartKey();
-      localStorage.setItem(cartKey, JSON.stringify(cartItems));
-      console.log(`CartContext: Cart saved to ${cartKey}`, cartItems);
+    console.log('CartContext: User effect triggered', { 
+      userId: user?.id,
+      userExists: !!user
+    });
+
+    const userCart = loadCartFromCookie(user?.id);
+    setCartItems(userCart);
+    setIsInitialized(true);
+    
+    console.log('CartContext: Cart loaded from cookie', userCart);
+  }, [user?.id]); // Re-run whenever user ID changes (login/logout)
+
+  // Auto-save cart to cookies whenever it changes
+  useEffect(() => {
+    if (isInitialized) {
+      saveCartToCookie(cartItems, user?.id);
     }
   }, [cartItems, user?.id, isInitialized]);
-
-  // Save cart before user logs out (this will be called by AuthContext)
-  const saveCurrentCart = () => {
-    if (user?.id && cartItems.length > 0) {
-      const cartKey = getCartKey();
-      localStorage.setItem(cartKey, JSON.stringify(cartItems));
-      console.log(`CartContext: Cart saved before logout to ${cartKey}`, cartItems);
-    }
-  };
-
-  // Clear cart function (also removes from localStorage)
-  const clearCart = () => {
-    console.log('CartContext: Clearing cart');
-    setCartItems([]);
-    const cartKey = getCartKey();
-    localStorage.removeItem(cartKey);
-  };
-
-  // Clear cart when user logs out (called from AuthContext)
-  const clearUserCart = (userId) => {
-    console.log('CartContext: Clearing user cart', userId);
-    if (userId) {
-      localStorage.removeItem(`cartItems_${userId}`);
-      // If it's the current user, also clear the state
-      if (userId === user?.id) {
-        setCartItems([]);
-      }
-    }
-  };
-
-  // Force reload cart for current user
-  const reloadCart = () => {
-    console.log('CartContext: Force reloading cart');
-    const currentCart = getInitialCart();
-    setCartItems(currentCart);
-  };
 
   const addToCart = (product, quantity = 1) => {
     console.log('CartContext: Adding to cart', { product, quantity });
@@ -161,17 +116,63 @@ export const CartProvider = ({ children }) => {
     );
   };
 
+  const clearCart = () => {
+    console.log('CartContext: Clearing cart');
+    setCartItems([]);
+    const cookieName = getCartCookieName();
+    deleteCookie(cookieName);
+  };
+
+  const clearUserCart = (userId) => {
+    console.log('CartContext: Clearing user cart for:', userId);
+    if (userId) {
+      const userCartCookie = `cart_${userId}`;
+      deleteCookie(userCartCookie);
+      if (userId === user?.id) {
+        setCartItems([]);
+      }
+    }
+  };
+
+  const saveCurrentCart = () => {
+    saveCartToCookie(cartItems, user?.id);
+  };
+
+  const reloadCart = () => {
+    console.log('CartContext: Force reloading cart from cookie');
+    const currentCart = loadCartFromCookie(user?.id);
+    setCartItems(currentCart);
+    console.log('CartContext: Cart reloaded from cookie:', currentCart);
+  };
+
+  // Debug function to show all cart cookies
+  const debugCartCookies = () => {
+    const allCookies = document.cookie.split(';');
+    const cartCookies = allCookies.filter(cookie => cookie.trim().startsWith('cart_'));
+    console.log('All cart cookies:', cartCookies);
+    cartCookies.forEach(cookie => {
+      const [name, value] = cookie.split('=');
+      try {
+        const data = JSON.parse(decodeURIComponent(value));
+        console.log(`${name.trim()}:`, data);
+      } catch (e) {
+        console.log(`${name.trim()}:`, 'Invalid JSON');
+      }
+    });
+  };
+
   const value = {
     cartItems,
-    setCartItems, // Expose for external use (e.g., AddToCartPageContent)
+    setCartItems,
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
-    clearUserCart, // Expose for AuthContext to use
-    saveCurrentCart, // Expose for AuthContext to call before logout
-    reloadCart, // Expose for manual cart reload
-    isInitialized, // Expose initialization state
+    clearUserCart,
+    saveCurrentCart,
+    reloadCart,
+    debugCartCookies, // For debugging
+    isInitialized,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
