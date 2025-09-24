@@ -12,8 +12,6 @@ export default function LandReportBody() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all"); // "all", "pending", "completed"
-  const [existingRequests, setExistingRequests] = useState({}); // Track existing interest requests
-  const [showDecisionUI, setShowDecisionUI] = useState({}); // Track which reports are showing decision UI
   const { user } = useAuth();
 
   // Test user ID - replace with actual user from auth context
@@ -23,32 +21,9 @@ export default function LandReportBody() {
     fetchAssessmentRequests();
   }, []);
 
-  // Check interest request when selected item changes
-  useEffect(() => {
-    if (selectedItem && selectedItem.report_id) {
-      checkExistingInterestRequest(selectedItem.report_id);
-    }
-  }, [selectedItem]);
 
-  // Check if interest request already exists for a report
-  const checkExistingInterestRequest = async (reportId) => {
-    try {
-      const response = await axios.get(`${rootUrl}/api.php/land-reports/${reportId}/interest-request-check`);
-      
-      if (response.data.status === 'success') {
-        const hasRequest = response.data.data.has_request;
-        setExistingRequests(prev => ({
-          ...prev,
-          [reportId]: hasRequest
-        }));
-        return hasRequest;
-      }
-    } catch (err) {
-      console.warn("Failed to check existing interest request:", err);
-      // Don't set to false on error, just leave it unchecked
-    }
-    return false;
-  };
+
+
 
   const fetchAssessmentRequests = async () => {
     setLoading(true);
@@ -71,16 +46,7 @@ export default function LandReportBody() {
         setAssessmentRequests(reports);
         console.log("✅ Reports set in state");
         
-        // Check existing interest requests for each report
-        const existingRequestsChecks = [];
-        for (const report of reports) {
-          if (report.report_id) {
-            existingRequestsChecks.push(checkExistingInterestRequest(report.report_id));
-          }
-        }
-        
-        // Wait for all checks to complete
-        await Promise.all(existingRequestsChecks);
+
         
         if (reports.length > 0) {
           setSelectedItem(reports[0]);
@@ -157,11 +123,7 @@ export default function LandReportBody() {
           conclusion: response.data.data
         }));
         
-        // Show decision UI directly after assessment completion
-        setShowDecisionUI(prev => ({
-          ...prev,
-          [reportId]: true
-        }));
+
       } else {
         setError("Failed to generate assessment: " + (response.data.message || "Unknown error"));
       }
@@ -172,94 +134,7 @@ export default function LandReportBody() {
     }
   };
 
-  // Send interest request to financial manager
-  const sendInterestRequest = async (reportId) => {
-    try {
-      setLoading(true);
-      setError(""); // Clear any previous errors
-      
-      const response = await axios.post(`${rootUrl}/api.php/land-reports/${reportId}/interest-request`, {}, {
-        withCredentials: true
-      });
-      
-      if (response.data.status === 'success') {
-        // Update the existing requests state
-        setExistingRequests(prev => ({
-          ...prev,
-          [reportId]: true
-        }));
-        
-        // Hide decision UI
-        setShowDecisionUI(prev => ({
-          ...prev,
-          [reportId]: false
-        }));
-        
-        // Show success message
-        setError(""); // Clear any errors
-        
-        // Refresh the reports to get updated state
-        await fetchAssessmentRequests();
-      } else {
-        setError("Failed to send request: " + (response.data.message || "Unknown error"));
-      }
-    } catch (err) {
-      const errorMessage = err.response?.data?.message || err.message;
-      
-      // If the error is about existing request, update our state to reflect this
-      if (errorMessage.includes("already exists")) {
-        setExistingRequests(prev => ({
-          ...prev,
-          [reportId]: true
-        }));
-        setError(""); // Don't show error, just update the UI to show submitted state
-      } else {
-        setError("Failed to send request: " + errorMessage);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Handle decline interest - Save the decision
-  const declineInterest = async (reportId) => {
-    try {
-      setLoading(true);
-      
-      // Send decline decision to backend
-      const response = await axios.post(`${rootUrl}/api.php/land-reports/${reportId}/decline-interest`, {}, {
-        withCredentials: true
-      });
-      
-      if (response.data.status === 'success') {
-        // Update the existing requests state to show decision was made
-        setExistingRequests(prev => ({
-          ...prev,
-          [reportId]: 'declined'
-        }));
-        
-        // Hide decision UI
-        setShowDecisionUI(prev => ({
-          ...prev,
-          [reportId]: false
-        }));
-        
-        // Refresh the reports
-        await fetchAssessmentRequests();
-      } else {
-        setError("Failed to save decision: " + (response.data.message || "Unknown error"));
-      }
-    } catch (err) {
-      // If endpoint doesn't exist, just hide the UI for now
-      console.warn("Decline endpoint not available, hiding UI:", err);
-      setShowDecisionUI(prev => ({
-        ...prev,
-        [reportId]: false
-      }));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const requestProposal = async (reportId) => {
     try {
@@ -720,55 +595,6 @@ export default function LandReportBody() {
                     </div>
                   )}
 
-                  {/* Interest Selection for Completed Reports */}
-                  {selectedItem.has_report && (selectedItem.report_status === 'Completed' || selectedItem.overall_status === 'Completed') && (
-                    <div className="mb-8">
-                      <h2 className="text-base font-semibold text-gray-800 mb-4">
-                        Partnership Opportunity
-                      </h2>
-                      
-                      {/* Show different content based on whether request exists */}
-                      {existingRequests[selectedItem.report_id] ? (
-                        <div className="text-center">
-                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div className="text-blue-600 text-lg mb-2">✅ Interest Already Submitted!</div>
-                            <p className="text-sm text-blue-800">
-                              Your interest request has been sent to our Financial Manager. 
-                              They will review your land and create a leasing proposal for you soon.
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
-                          <div className="text-center mb-4">
-                            <h3 className="font-medium text-gray-800 mb-2">
-                              🌱 Would you like to partner with FarmMaster for organic farming?
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-4">
-                              Based on your land assessment, we can help you maximize your agricultural potential through our partnership program.
-                            </p>
-                          </div>
-                          
-                          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                            <button
-                              onClick={() => sendInterestRequest(selectedItem.report_id)}
-                              disabled={loading}
-                              className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
-                            >
-                              🤝 Yes, I'm interested!
-                            </button>
-                            <button
-                              onClick={() => declineInterest(selectedItem.report_id)}
-                              className="px-6 py-3 bg-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-400 transition"
-                            >
-                              Not now
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {/* Simple Land Suitability Conclusion */}
                   {selectedItem.has_report && (selectedItem.report_status === 'Approved' || selectedItem.report_status === 'Completed' || selectedItem.overall_status === 'Completed') && (
                     <div className="mb-8">
@@ -829,46 +655,9 @@ export default function LandReportBody() {
                               </div>
                             )}
 
-                            {/* Show decision UI only for SUITABLE land after assessment */}
-                            {showDecisionUI[selectedItem.report_id] && selectedItem.conclusion?.is_good_for_organic && (
-                              <div className="mt-6 pt-4 border-t border-green-200">
-                                <h4 className="font-medium text-gray-800 mb-3 text-center">
-                                  🌱 Great! Your land is suitable for organic farming.
-                                </h4>
-                                <h4 className="font-medium text-gray-800 mb-3 text-center">
-                                  Would you like to partner with FarmMaster?
-                                </h4>
-                                
-                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                                  <button
-                                    onClick={() => sendInterestRequest(selectedItem.report_id)}
-                                    disabled={loading}
-                                    className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
-                                  >
-                                    🤝 Yes, I am interested
-                                  </button>
-                                  <button
-                                    onClick={() => declineInterest(selectedItem.report_id)}
-                                    className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
-                                  >
-                                    Not now
-                                  </button>
-                                </div>
-                              </div>
-                            )}
 
-                            {/* Show completed interest request status */}
-                            {!showDecisionUI[selectedItem.report_id] && existingRequests[selectedItem.report_id] && (
-                              <div className="mt-6 pt-4 border-t border-blue-200 text-center">
-                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                  <div className="text-blue-600 text-lg mb-2">✅ Interest Submitted!</div>
-                                  <p className="text-sm text-blue-800">
-                                    Your interest request has been sent to our Financial Manager. 
-                                    They will review your land and create a leasing proposal for you soon.
-                                  </p>
-                                </div>
-                              </div>
-                            )}
+
+
 
                             {/* Message for Not Suitable Land */}
                             {selectedItem.conclusion && !selectedItem.conclusion.is_good_for_organic && (

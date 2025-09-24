@@ -5,9 +5,11 @@ const rootUrl = import.meta.env.VITE_API_URL;
 
 export default function ProposalManagement() {
   const [proposalRequests, setProposalRequests] = useState([]);
+  const [interestRequests, setInterestRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [activeTab, setActiveTab] = useState('interest');
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [proposalFormData, setProposalFormData] = useState({
     crop_type: '',
@@ -20,25 +22,34 @@ export default function ProposalManagement() {
   });
 
   useEffect(() => {
-    fetchProposalRequests();
+    fetchRequests();
   }, []);
 
-  const fetchProposalRequests = async () => {
+  const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${rootUrl}/api.php/land-reports/proposal-requests-public`, {
-        withCredentials: true
-      });
       
-      if (response.data.status === 'success') {
-        const requests = response.data.data || [];
-        setProposalRequests(requests);
-        if (requests.length > 0 && !selectedRequest) {
-          setSelectedRequest(requests[0]);
+      // Fetch both interest requests and proposal requests
+      const [interestResponse, proposalResponse] = await Promise.all([
+        axios.get(`${rootUrl}/api.php/land-reports/interest-requests-public`, { withCredentials: true }),
+        axios.get(`${rootUrl}/api.php/land-reports/proposal-requests-public`, { withCredentials: true })
+      ]);
+      
+      if (interestResponse.data.status === 'success') {
+        const interests = interestResponse.data.data || [];
+        setInterestRequests(interests);
+        
+        // Set the first interest request as selected if no request is selected yet
+        if (interests.length > 0 && !selectedRequest) {
+          setSelectedRequest(interests[0]);
         }
-      } else {
-        setError(response.data.message || 'Failed to fetch proposal requests');
       }
+      
+      if (proposalResponse.data.status === 'success') {
+        const proposals = proposalResponse.data.data || [];
+        setProposalRequests(proposals);
+      }
+      
     } catch (err) {
       setError('Failed to fetch requests: ' + (err.response?.data?.message || err.message));
     } finally {
@@ -48,7 +59,11 @@ export default function ProposalManagement() {
 
   const updateRequestStatus = async (requestId, status, notes = '') => {
     try {
-      const response = await axios.put(`${rootUrl}/api.php/land-reports/proposal-requests/${requestId}/status`, {
+      const endpoint = activeTab === 'interest' 
+        ? `${rootUrl}/api.php/land-reports/interest-requests/${requestId}/status`
+        : `${rootUrl}/api.php/land-reports/proposal-requests/${requestId}/status`;
+      
+      const response = await axios.put(endpoint, {
         status,
         notes
       }, {
@@ -56,7 +71,7 @@ export default function ProposalManagement() {
       });
       
       if (response.data.status === 'success') {
-        fetchProposalRequests(); // Refresh the list
+        fetchRequests(); // Refresh the list
       } else {
         setError('Failed to update status: ' + response.data.message);
       }
@@ -109,7 +124,7 @@ export default function ProposalManagement() {
         setSelectedRequest(null);
         
         // Refresh the requests
-        fetchProposalRequests();
+        fetchRequests();
       } else {
         setError('Failed to create proposal: ' + (response.data.message || 'Unknown error'));
       }
@@ -137,7 +152,7 @@ export default function ProposalManagement() {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-700">Error: {error}</p>
           <button 
-            onClick={fetchProposalRequests}
+            onClick={fetchRequests}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
             Retry
@@ -150,13 +165,53 @@ export default function ProposalManagement() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Proposal Requests</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Proposal Management</h1>
         <p className="text-gray-600">
-          Landowners requesting proposals for organic farming partnerships
+          Manage interest requests and generate proposals for organic farming partnerships
         </p>
       </div>
 
-      {proposalRequests.length === 0 ? (
+      {/* Tab Navigation */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('interest')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'interest'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Interest Requests ({interestRequests.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('proposals')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'proposals'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Generated Proposals ({proposalRequests.length})
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {activeTab === 'interest' && interestRequests.length === 0 ? (
+        <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+          <div className="text-4xl mb-4 text-green-500">
+            <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-700 mb-2">No Interest Requests Yet</h3>
+          <p className="text-gray-500">
+            When landowners express interest in organic farming partnerships, they'll appear here.
+          </p>
+        </div>
+      ) : activeTab === 'proposals' && proposalRequests.length === 0 ? (
         <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
           <div className="text-4xl mb-4 text-green-500">
             <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
@@ -175,11 +230,11 @@ export default function ProposalManagement() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="p-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-800">
-                  Proposal Requests ({proposalRequests.length})
+                  {activeTab === 'interest' ? `Interest Requests (${interestRequests.length})` : `Proposal Requests (${proposalRequests.length})`}
                 </h2>
               </div>
               <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-                {proposalRequests.map((request) => (
+                {(activeTab === 'interest' ? interestRequests : proposalRequests).map((request) => (
                   <div
                     key={request.request_id}
                     className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -358,58 +413,88 @@ export default function ProposalManagement() {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 justify-end">
-                  {selectedRequest.status === 'pending' && (
+                  {activeTab === 'interest' ? (
+                    /* Interest Request Actions */
                     <>
-                      <button
-                        onClick={() => updateRequestStatus(selectedRequest.request_id, 'under_review', 'Request is under review by the Financial Manager')}
-                        className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
-                      >
-                        Mark Under Review
-                      </button>
-                      <button
-                        onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Request rejected after review')}
-                        className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
-                      >
-                        Reject Request
-                      </button>
-                      <button
-                        onClick={() => generateProposal(selectedRequest)}
-                        className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
-                      >
-                        ✅ Generate Proposal
-                      </button>
+                      {selectedRequest.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => updateRequestStatus(selectedRequest.request_id, 'under_review', 'Interest request is under review by the Financial Manager')}
+                            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+                          >
+                            Mark Under Review
+                          </button>
+                          <button
+                            onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Interest request rejected after review')}
+                            className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
+                          >
+                            Reject Interest
+                          </button>
+                          {selectedRequest.conclusion?.is_good_for_organic && (
+                            <button
+                              onClick={() => generateProposal(selectedRequest)}
+                              className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
+                            >
+                              🌱 Generate Proposal
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {selectedRequest.status === 'under_review' && (
+                        <>
+                          <button
+                            onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Interest request rejected after detailed review')}
+                            className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
+                          >
+                            Reject Interest
+                          </button>
+                          {selectedRequest.conclusion?.is_good_for_organic && (
+                            <button
+                              onClick={() => generateProposal(selectedRequest)}
+                              className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
+                            >
+                              🌱 Generate Proposal
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {selectedRequest.status === 'approved' && (
+                        <div className="flex items-center gap-2 text-green-600">
+                          <span className="text-green-600">●</span>
+                          <span className="font-medium">Proposal Generated and Sent to Landowner</span>
+                        </div>
+                      )}
+                      {selectedRequest.status === 'rejected' && (
+                        <div className="flex items-center gap-2 text-red-600">
+                          <span className="text-red-600">●</span>
+                          <span className="font-medium">Interest Request Rejected</span>
+                        </div>
+                      )}
                     </>
-                  )}
-                  
-                  {selectedRequest.status === 'under_review' && (
-                    <>
-                      <button
-                        onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Request rejected after detailed review')}
-                        className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
-                      >
-                        Reject Request
-                      </button>
-                      <button
-                        onClick={() => generateProposal(selectedRequest)}
-                        className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
-                      >
-                        Generate Proposal
-                      </button>
-                    </>
-                  )}
-                  
-                  {selectedRequest.status === 'approved' && (
-                    <div className="flex items-center gap-2 text-green-600">
-                      <span className="text-green-600">●</span>
-                      <span className="font-medium">Proposal Generated and Sent</span>
-                    </div>
-                  )}
-                  
-                  {selectedRequest.status === 'rejected' && (
-                    <div className="flex items-center gap-2 text-red-600">
-                      <span className="text-red-600">●</span>
-                      <span className="font-medium">Request Rejected</span>
-                    </div>
+                  ) : (
+                    /* Proposal Request Actions */
+                    selectedRequest.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => updateRequestStatus(selectedRequest.request_id, 'under_review', 'Request is under review by the Financial Manager')}
+                          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+                        >
+                          Mark Under Review
+                        </button>
+                        <button
+                          onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Request rejected after review')}
+                          className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
+                        >
+                          Reject Request
+                        </button>
+                        <button
+                          onClick={() => generateProposal(selectedRequest)}
+                          className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
+                        >
+                          ✅ Generate Proposal
+                        </button>
+                      </>
+                    )
                   )}
                 </div>
               </div>
