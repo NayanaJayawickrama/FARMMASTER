@@ -6,19 +6,22 @@ import FeaturedProducts from "../components/marketplace/FeaturedProducts";
 import VegetableSection from "../components/marketplace/VegetableSection";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
+import { SearchProvider } from "../context/SearchContext";
 
 export default function MarketplacePage() {
 
   return (
-    <div className="pt-24">
-      <Navbar />
-      <MarketplaceHero />
-      <ProductCategories />
-      <FeaturedProducts />
-      <div id="vegetables">
-        <VegetableSection />
+    <SearchProvider>
+      <div className="pt-24">
+        <Navbar />
+        <MarketplaceHero />
+        <ProductCategories />
+        <FeaturedProducts />
+        <div id="vegetables">
+          <VegetableSection />
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </SearchProvider>
   );
 }

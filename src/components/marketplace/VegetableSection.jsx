@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useCart } from "../cart/CartContext";
 import { useProducts } from "../financialmanagerdashboard/ProductContext";
 import { useAuth } from "../../context/AuthContext";
+import { useSearch } from "../../context/SearchContext";
 import { useNavigate } from "react-router-dom";
 
 import rightImg from "../../assets/images/marketplaceimages/right-veg.png";
@@ -11,6 +12,7 @@ const VegetableSection = () => {
   const { products, forceRefresh } = useProducts(); // Add forceRefresh
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const { searchQuery } = useSearch();
   const navigate = useNavigate();
 
   const [quantities, setQuantities] = useState([]);
@@ -158,9 +160,25 @@ const VegetableSection = () => {
     }
   };
 
+  // Filter products based on search query
+  const filterProducts = (products, query) => {
+    if (!query || query.trim() === '') {
+      return products;
+    }
+    
+    const searchTerm = query.toLowerCase().trim();
+    return products.filter(product => 
+      product.name.toLowerCase().includes(searchTerm) ||
+      product.description.toLowerCase().includes(searchTerm) ||
+      product.category?.toLowerCase().includes(searchTerm)
+    );
+  };
+
   const availableProducts = products.filter(
     (item) => item.status === "available" || item.quantity === 0
   );
+
+  const filteredProducts = filterProducts(availableProducts, searchQuery);
 
   // Add refresh on component focus/mount
   useEffect(() => {
@@ -181,8 +199,13 @@ const VegetableSection = () => {
       <div className="bg-white rounded-2xl max-w-5xl w-full pt-0 pb-10 overflow-hidden relative shadow-2xl">
         <div className="bg-green-600 text-white text-center py-10 px-4 relative rounded-t-2xl">
           <h2 className="text-3xl md:text-5xl font-extrabold drop-shadow-lg">
-            All Organic Vegetables
+            {searchQuery ? `Search Results: "${searchQuery}"` : 'All Organic Vegetables'}
           </h2>
+          {searchQuery && (
+            <p className="text-green-100 mt-2">
+              Found {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+            </p>
+          )}
           <img
             src={leftImg}
             alt="Left Veg"
@@ -200,7 +223,7 @@ const VegetableSection = () => {
           className="grid gap-8 px-8 mt-10"
           style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}
         >
-          {availableProducts.map((item, index) => (
+          {filteredProducts.map((item, index) => (
             <div
               key={item.id}
               className="rounded-xl shadow-lg border border-gray-200 p-6 flex flex-col justify-between items-center text-center h-[420px] bg-white transition hover:scale-105 hover:shadow-xl"
@@ -273,7 +296,25 @@ const VegetableSection = () => {
             </div>
           ))}
 
-          {availableProducts.length === 0 && (
+          {filteredProducts.length === 0 && searchQuery && (
+            <div className="col-span-full text-center py-12">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                No products found for "{searchQuery}"
+              </h3>
+              <p className="text-gray-500 mb-4">
+                Try searching with different keywords or check the spelling
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+              >
+                Clear Search
+              </button>
+            </div>
+          )}
+
+          {filteredProducts.length === 0 && !searchQuery && (
             <p className="text-center col-span-full text-gray-600">
               No products to display at the moment.
             </p>
