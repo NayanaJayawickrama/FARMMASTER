@@ -1,18 +1,24 @@
 import React, { useState } from "react";
-import { Leaf, CheckCircle, Circle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
-export default function LandReportReview({ onBack, report, onReviewSubmit }) {
-  const [decision, setDecision] = useState("approved");
-  const [feedback, setFeedback] = useState("");
+export default function LandReportReview({ onBack, report, onSendToLandOwner }) {
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSendToLandOwner = async () => {
     if (!report || !report.report_id) {
-      alert('No report selected for review');
+      alert('No report selected');
       return;
     }
 
-    if (onReviewSubmit) {
-      await onReviewSubmit(report.report_id, decision, feedback);
+    setIsLoading(true);
+    try {
+      if (onSendToLandOwner) {
+        await onSendToLandOwner(report.report_id);
+      }
+    } catch (error) {
+      console.error('Error sending report to land owner:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -37,7 +43,7 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
 
          
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Land Report Review & Approve
+            Land Report Review & Forward
           </h1>
 
          
@@ -110,41 +116,15 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
             </div>
           </div>
 
-         
-          <div className="mb-10">
-            <h2 className="text-base font-semibold text-gray-800 mb-4">
-              Review Decision
+          {/* Report Summary Notice */}
+          <div className="mb-10 bg-green-50 border border-green-200 rounded-lg p-4">
+            <h2 className="text-base font-semibold text-green-800 mb-2">
+              Report Summary
             </h2>
-
-            <div className="space-y-3">
-              {[
-                { label: "Approve", value: "approved" },
-                { label: "Request Revisions", value: "rejected" }
-              ].map((opt) => (
-                <div
-                  key={opt.value}
-                  onClick={() => setDecision(opt.value)}
-                  className={`flex items-center border px-4 py-2 rounded-md cursor-pointer ${
-                    decision === opt.value
-                      ? "border-green-600 bg-green-50"
-                      : "border-gray-300"
-                  }`}
-                >
-                  <span className="mr-3 text-green-600">
-                    {decision === opt.value ? <CheckCircle size={18} /> : <Circle size={18} />}
-                  </span>
-                  <span className="text-sm">{opt.label}</span>
-                </div>
-              ))}
-            </div>
-
-            <textarea
-              rows="4"
-              placeholder="Enter feedback or revision requests"
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              className="mt-4 w-full border border-green-300 rounded-md p-3 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-            />
+            <p className="text-sm text-green-700">
+              This land report has been completed by the field supervisor and is ready to be sent to the land owner. 
+              Review the details above and click "Send to Land Owner" to forward this report.
+            </p>
           </div>
 
          
@@ -158,9 +138,25 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
             </button>
 
             <button 
-              onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md text-sm font-semibold transition">
-              Submit Decision
+              onClick={handleSendToLandOwner}
+              disabled={isLoading}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-2 rounded-md text-sm font-semibold transition flex items-center gap-2">
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Send to Land Owner
+                </>
+              )}
             </button>
           </div>
         </div>
