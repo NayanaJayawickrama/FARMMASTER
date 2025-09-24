@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FiSearch } from "react-icons/fi";
 
@@ -86,14 +86,18 @@ export default function CropInventoryManagement() {
 
       if (res.data.status === 'success') {
         alert(editCrop ? "Crop updated successfully" : "Crop added successfully");
+        // Reset form state
+        setEditCrop(null);
         setShowForm(false);
-        fetchCrops();
+        // Refresh crops list
+        await fetchCrops();
       } else {
         alert(res.data.message || (editCrop ? "Failed to update crop" : "Failed to add crop"));
       }
     } catch (error) {
       console.error('Error:', error);
-      alert("Server error. Please try again.");
+      console.error('Response:', error.response?.data);
+      alert(error.response?.data?.message || "Server error. Please try again.");
     }
   };
 
@@ -106,120 +110,14 @@ export default function CropInventoryManagement() {
     return matchesFilter && matchesSearch;
   });
 
-  // Crop form component (for both adding and editing)
-  const CropForm = ({ cropData, onCancel, onSubmit }) => {
-    const [cropName, setCropName] = useState(cropData?.crop_name || "");
-    const [quantity, setQuantity] = useState(cropData?.quantity || "");
-    const isEditing = !!cropData;
 
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      if (!cropName.trim()) {
-        alert("Please enter a crop name.");
-        return;
-      }
-      if (quantity === "" || quantity < 0) {
-        alert("Please enter a valid quantity.");
-        return;
-      }
-      onSubmit({
-        crop_name: cropName.trim(),
-        quantity: Number(quantity),
-      });
-    };
-
-    return (
-      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg border">
-        <h2 className="text-2xl font-bold mb-4">
-          {isEditing ? "Edit Crop Inventory" : "Add New Crop"}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block font-medium mb-2">Crop Name*</label>
-            {isEditing ? (
-              <>
-                <input
-                  type="text"
-                  value={cropName}
-                  className="w-full border px-3 py-2 rounded bg-gray-100"
-                  disabled
-                />
-                <p className="text-xs text-gray-500 mt-1">Crop name cannot be changed</p>
-              </>
-            ) : (
-              <input
-                type="text"
-                value={cropName}
-                onChange={(e) => setCropName(e.target.value)}
-                className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-                placeholder="Enter crop name (e.g., Tomato, Carrot, Rice, etc.)"
-                required
-              />
-            )}
-          </div>
-          
-          {isEditing && (
-            <div>
-              <label className="block font-medium mb-2">Current Quantity</label>
-              <input
-                type="text"
-                value={`${cropData.quantity} kg`}
-                className="w-full border px-3 py-2 rounded bg-gray-100"
-                disabled
-              />
-            </div>
-          )}
-
-          <div>
-            <label className="block font-medium mb-2">
-              {isEditing ? "New Quantity (kg)*" : "Quantity (kg)*"}
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="0.001"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              className="w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Enter quantity in kg (up to 3 decimal places)"
-              required
-            />
-          </div>
-
-          <div className="flex justify-between">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 border rounded hover:bg-gray-100"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              {isEditing ? "Update Quantity" : "Add Crop"}
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  };
 
   return (
     <div className="flex-1 bg-white min-h-screen p-4 md:p-10 font-poppins">
-      {showForm ? (
-        <CropForm
-          cropData={editCrop}
-          onCancel={() => setShowForm(false)}
-          onSubmit={handleFormSubmit}
-        />
-      ) : (
-        <>
-          <div className="mb-6">
-            <h1 className="text-3xl md:text-4xl font-bold text-black mt-4 mb-2">Crop Inventory Management</h1>
-            <p className="text-gray-600">Manage crops in inventory - add new crops or update existing ones</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-3xl md:text-4xl font-bold text-black mt-4 mb-2">Crop Inventory Management</h1>
+        <p className="text-gray-600">Manage crops in inventory - add new crops or update existing ones</p>
+      </div>
 
           {/* Search & Filter */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
@@ -380,8 +278,205 @@ export default function CropInventoryManagement() {
           <p className="text-center mt-8 text-sm text-gray-400">
             © 2025 Farm Master. All rights reserved.
           </p>
-        </>
+
+      {/* Add New Crop Form Modal */}
+      {showForm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            width: '100%',
+            maxWidth: '500px',
+            margin: '20px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            {/* Header */}
+            <div style={{ marginBottom: '24px' }}>
+              <h2 style={{ 
+                fontSize: '24px', 
+                fontWeight: 'bold', 
+                color: '#1f2937',
+                marginBottom: '8px',
+                textAlign: 'center'
+              }}>
+                Add New Crop to Inventory
+              </h2>
+              <p style={{ 
+                color: '#6b7280', 
+                textAlign: 'center',
+                fontSize: '14px'
+              }}>
+                Enter crop details to add to your inventory management system
+              </p>
+            </div>
+
+            {/* Form Fields */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>
+                Crop Name *
+              </label>
+              <input
+                id="crop-name-input"
+                type="text"
+                placeholder="Enter crop name "
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#10b981'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+              />
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ 
+                display: 'block', 
+                fontSize: '14px', 
+                fontWeight: '500',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>
+                Quantity (kg) *
+              </label>
+              <input
+                id="crop-quantity-input"
+                type="number"
+                min="0"
+                step="0.001"
+                placeholder="Enter quantity in kilograms"
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  fontSize: '16px',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  boxSizing: 'border-box',
+                  outline: 'none',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#10b981'}
+                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+              />
+              <p style={{ 
+                fontSize: '12px', 
+                color: '#6b7280', 
+                marginTop: '4px' 
+              }}>
+                Enter quantity up to 3 decimal places
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '12px', 
+              justifyContent: 'flex-end' 
+            }}>
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setEditCrop(null);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  backgroundColor: 'white',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.backgroundColor = '#f9fafb';
+                  e.target.style.borderColor = '#9ca3af';
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.backgroundColor = 'white';
+                  e.target.style.borderColor = '#d1d5db';
+                }}
+              >
+                Cancel
+              </button>
+              
+              <button
+                onClick={() => {
+                  const cropName = document.getElementById('crop-name-input').value.trim();
+                  const quantity = document.getElementById('crop-quantity-input').value.trim();
+                  
+                  // Validation
+                  if (!cropName) {
+                    alert('Please enter a crop name');
+                    document.getElementById('crop-name-input').focus();
+                    return;
+                  }
+                  
+                  if (!quantity) {
+                    alert('Please enter a quantity');
+                    document.getElementById('crop-quantity-input').focus();
+                    return;
+                  }
+                  
+                  const numQuantity = parseFloat(quantity);
+                  if (isNaN(numQuantity) || numQuantity < 0) {
+                    alert('Please enter a valid quantity (0 or greater)');
+                    document.getElementById('crop-quantity-input').focus();
+                    return;
+                  }
+                  
+                  // Submit the form
+                  handleFormSubmit({
+                    crop_name: cropName,
+                    quantity: numQuantity
+                  });
+                }}
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: 'white',
+                  backgroundColor: '#10b981',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.target.style.backgroundColor = '#059669'}
+                onMouseOut={(e) => e.target.style.backgroundColor = '#10b981'}
+              >
+                Add Crop to Inventory
+              </button>
+            </div>
+          </div>
+        </div>
       )}
+      
+
     </div>
   );
 }
