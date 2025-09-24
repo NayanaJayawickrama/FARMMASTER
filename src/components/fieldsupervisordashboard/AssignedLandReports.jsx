@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FiSearch, FiEye, FiRefreshCw, FiEdit, FiX, FiCheck, FiCheckCircle, FiAlertCircle } from "react-icons/fi";
+import { FiSearch, FiEye, FiRefreshCw, FiEdit, FiX, FiCheck, FiCheckCircle, FiAlertCircle, FiTrendingUp } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 
 const rootUrl = import.meta.env.VITE_API_URL;
 
 const statusStyles = {
-  "In Progress": "bg-blue-100 text-blue-800",
-  Completed: "bg-green-100 text-green-800",
-  Approved: "bg-green-100 text-green-800",
-  Rejected: "bg-red-100 text-red-800",
+  "In Progress": "bg-slate-100 text-slate-700 border border-slate-200",
+  Completed: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+  Approved: "bg-green-100 text-green-700 border border-green-200",
+  Rejected: "bg-rose-100 text-rose-700 border border-rose-200",
+  Pending: "bg-amber-100 text-amber-700 border border-amber-200"
 };
 
 export default function AssignedLandReports() {
@@ -39,6 +40,8 @@ export default function AssignedLandReports() {
     potassium: "",
     notes: "",
   });
+  const [generatingRecommendations, setGeneratingRecommendations] = useState(false);
+  const [recommendationsGenerated, setRecommendationsGenerated] = useState(false);
 
   // Popup utility functions
   const showPopup = (type, message) => {
@@ -206,9 +209,111 @@ export default function AssignedLandReports() {
     }
   };
 
+  // Generate crop recommendations
+  const handleGenerateRecommendations = async () => {
+    // First validate that we have enough data
+    if (!formData.phValue || !formData.organicMatter) {
+      showPopup('error', 'Please enter at least pH value and organic matter percentage before generating recommendations.');
+      return;
+    }
+
+    setGeneratingRecommendations(true);
+    
+    try {
+      // First submit the current data
+      console.log('Submitting data for report ID:', selectedReport.report_id);
+      const submitResponse = await axios.put(`${rootUrl}/api/land-reports/${selectedReport.report_id}/submit-data`, {
+        ph_value: formData.phValue,
+        organic_matter: formData.organicMatter,
+        nitrogen_level: formData.nitrogen,
+        phosphorus_level: formData.phosphorus,
+        potassium_level: formData.potassium,
+        environmental_notes: formData.notes,
+        status: 'Completed'
+      }, {
+        withCredentials: true
+      });
+
+      console.log('Submit response:', submitResponse.data);
+
+      if (submitResponse.data.status === 'success') {
+        // Now generate recommendations
+        console.log('Generating recommendations for report ID:', selectedReport.report_id);
+        const recommendResponse = await axios.post(`${rootUrl}/crop-recommendations.php?report_id=${selectedReport.report_id}`, {
+          action: 'generate'
+        }, {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('Recommendation response:', recommendResponse.data);
+
+        if (recommendResponse.data.status === 'success') {
+          setRecommendationsGenerated(true);
+          showPopup('success', 'Crop recommendations generated successfully! You can now submit the complete report.');
+          
+          // Trigger dashboard refresh
+          window.dispatchEvent(new Event('dashboard_update'));
+        } else {
+          showPopup('error', recommendResponse.data.message || 'Failed to generate crop recommendations');
+        }
+      } else {
+        showPopup('error', submitResponse.data.message || 'Failed to submit data');
+      }
+    } catch (err) {
+      console.error('Error generating recommendations:', err);
+      console.log('Error details:', err.response?.data);
+      showPopup('error', `Error: ${err.response?.data?.message || err.message}`);
+    } finally {
+      setGeneratingRecommendations(false);
+    }
+  };
+
+  // Final submission after recommendations are generated
+  const handleFinalSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    
+    try {
+      // Final submission to mark report as completed
+      const response = await axios.put(`${rootUrl}/api/land-reports/${selectedReport.report_id}/submit-data`, {
+        ph_value: formData.phValue,
+        organic_matter: formData.organicMatter,
+        nitrogen_level: formData.nitrogen,
+        phosphorus_level: formData.phosphorus,
+        potassium_level: formData.potassium,
+        environmental_notes: formData.notes,
+        status: 'Completed'
+      }, {
+        withCredentials: true
+      });
+
+      if (response.data.status === 'success') {
+        showPopup('success', 'Land report submitted successfully!');
+        setShowDataForm(false);
+        setSelectedReport(null);
+        setRecommendationsGenerated(false);
+        fetchAssignedReports(); // Refresh the list
+        
+        // Trigger dashboard refresh
+        window.dispatchEvent(new Event('dashboard_update'));
+      } else {
+        showPopup('error', response.data.message || 'Failed to submit report');
+      }
+    } catch (err) {
+      console.error('Error submitting final report:', err);
+      showPopup('error', 'Error submitting report. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleCancelForm = () => {
     setShowDataForm(false);
     setSelectedReport(null);
+    setRecommendationsGenerated(false);
     setFormData({
       phValue: "",
       organicMatter: "",
@@ -387,7 +492,7 @@ export default function AssignedLandReports() {
                       {(report.completion_status === 'Completed') ? (
                         <button
                           onClick={() => handleViewReport(report.formatted_report_id || report.report_id)}
-                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline text-sm transition-colors duration-200"
+                          className="flex items-center gap-1 text-green-600 hover:text-green-800 hover:underline text-sm transition-colors duration-200"
                         >
                           <FiEye size={14} />
                           View Details
@@ -420,7 +525,7 @@ export default function AssignedLandReports() {
               </div>
               <div>
                 <span className="text-gray-600">In Progress:</span>
-                <span className="ml-2 font-semibold text-blue-600">
+                <span className="ml-2 font-semibold text-green-600">
                   {reports.filter(r => (r.completion_status || 'In Progress') === 'In Progress').length}
                 </span>
               </div>
@@ -452,7 +557,7 @@ export default function AssignedLandReports() {
                 </button>
               </div>
 
-              <form onSubmit={handleFormSubmit} className="space-y-6">
+              <form onSubmit={handleFinalSubmit} className="space-y-6">
                 {/* Report Info */}
                 <div className="bg-gray-50 p-4 rounded-md">
                   <h4 className="font-semibold text-gray-800 mb-2">Report Information</h4>
@@ -566,32 +671,84 @@ export default function AssignedLandReports() {
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex justify-end gap-4 pt-4">
+                <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4">
                   <button
                     type="button"
                     onClick={handleCancelForm}
                     className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200"
-                    disabled={submitting}
+                    disabled={submitting || generatingRecommendations}
                   >
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    className="flex items-center gap-2 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={submitting}
-                  >
-                    {submitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Submitting...
-                      </>
-                    ) : (
-                      <>
-                        <FiCheck size={16} />
-                        Submit Report
-                      </>
-                    )}
-                  </button>
+                  
+                  {!recommendationsGenerated ? (
+                    /* Generate Crop Recommendations Button */
+                    <button
+                      type="button"
+                      onClick={handleGenerateRecommendations}
+                      className="flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={submitting || generatingRecommendations || !formData.phValue || !formData.organicMatter}
+                      title="Enter pH value and organic matter to enable crop recommendations"
+                    >
+                      {generatingRecommendations ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Generating Recommendations...
+                        </>
+                      ) : (
+                        <>
+                          <FiTrendingUp size={16} />
+                          Generate Crop Recommendations
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    /* Submit Report Button - Only shown after recommendations are generated */
+                    <button
+                      type="submit"
+                      className="flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={submitting}
+                    >
+                      {submitting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          Submitting Report...
+                        </>
+                      ) : (
+                        <>
+                          <FiCheck size={16} />
+                          Submit Land Report
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+                
+                {/* Status Messages */}
+                {recommendationsGenerated && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-md border border-green-200">
+                    <div className="flex items-center gap-2">
+                      <FiCheckCircle className="text-green-600" size={16} />
+                      <p className="text-sm text-green-700">
+                        <strong>✅ Crop recommendations generated successfully!</strong> 
+                        You can now submit the complete land report with soil analysis and crop recommendations.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Helper Text */}
+                <div className="mt-4 p-3 bg-green-50 rounded-md border border-green-200">
+                  <p className="text-sm text-green-700">
+                    <strong>💡 Tip:</strong> For best results, enter all soil analysis values (pH, organic matter, nitrogen, phosphorus, potassium) 
+                    before generating crop recommendations. The system will analyze your soil data and suggest the most suitable crops 
+                    with expected yields and market prices.
+                  </p>
+                  {(!formData.phValue || !formData.organicMatter) && (
+                    <p className="text-sm text-amber-600 mt-2">
+                      ⚠️ pH value and organic matter are required to generate crop recommendations.
+                    </p>
+                  )}
                 </div>
               </form>
             </div>
@@ -710,7 +867,7 @@ export default function AssignedLandReports() {
                 ? 'bg-green-50 border-green-500 text-green-800'
                 : popup.type === 'error'
                 ? 'bg-red-50 border-red-500 text-red-800'
-                : 'bg-blue-50 border-blue-500 text-blue-800'
+                : 'bg-slate-50 border-slate-400 text-slate-700'
             }`}
           >
             <div className="flex items-start justify-between">
@@ -727,7 +884,7 @@ export default function AssignedLandReports() {
                     ? 'text-green-600 hover:text-green-800'
                     : popup.type === 'error'
                     ? 'text-red-600 hover:text-red-800'
-                    : 'text-blue-600 hover:text-blue-800'
+                    : 'text-slate-600 hover:text-slate-800'
                 }`}
               >
                 <FiX size={16} />

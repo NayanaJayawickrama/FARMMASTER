@@ -53,13 +53,23 @@ export default function LandReportBody() {
   const fetchAssessmentRequests = async () => {
     setLoading(true);
     setError("");
+    console.log("🔍 Fetching assessment requests for user:", testUserId);
     try {
-      const response = await axios.get(`${rootUrl}/api/land-reports/land-owner-reports?user_id=${testUserId}`, {
+      // Use the fixed main API endpoint
+      const url = `${rootUrl}/api/land-reports/land-owner-reports?user_id=${testUserId}`;
+      console.log("📡 API URL:", url);
+      
+      const response = await axios.get(url, {
         withCredentials: true
       });
+      
+      console.log("✅ API Response:", response.data);
+      
       if (response.data.status === 'success') {
         const reports = response.data.data || [];
+        console.log("📊 Found reports:", reports.length, reports);
         setAssessmentRequests(reports);
+        console.log("✅ Reports set in state");
         
         // Check existing interest requests for each report
         const existingRequestsChecks = [];
@@ -74,14 +84,19 @@ export default function LandReportBody() {
         
         if (reports.length > 0) {
           setSelectedItem(reports[0]);
+          console.log("🎯 Selected first report:", reports[0].id);
         }
       } else {
+        console.error("❌ API returned error:", response.data.message);
         setError(response.data.message || "Failed to fetch assessment requests");
       }
     } catch (err) {
+      console.error("💥 Request failed:", err);
+      console.error("Response data:", err.response?.data);
       setError("Failed to fetch assessment requests: " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
+      console.log("🏁 Request completed");
     }
   };
 
@@ -206,13 +221,44 @@ export default function LandReportBody() {
     }
   };
 
-  // Handle decline interest
-  const declineInterest = (reportId) => {
-    // Hide decision UI
-    setShowDecisionUI(prev => ({
-      ...prev,
-      [reportId]: false
-    }));
+  // Handle decline interest - Save the decision
+  const declineInterest = async (reportId) => {
+    try {
+      setLoading(true);
+      
+      // Send decline decision to backend
+      const response = await axios.post(`${rootUrl}/api.php/land-reports/${reportId}/decline-interest`, {}, {
+        withCredentials: true
+      });
+      
+      if (response.data.status === 'success') {
+        // Update the existing requests state to show decision was made
+        setExistingRequests(prev => ({
+          ...prev,
+          [reportId]: 'declined'
+        }));
+        
+        // Hide decision UI
+        setShowDecisionUI(prev => ({
+          ...prev,
+          [reportId]: false
+        }));
+        
+        // Refresh the reports
+        await fetchAssessmentRequests();
+      } else {
+        setError("Failed to save decision: " + (response.data.message || "Unknown error"));
+      }
+    } catch (err) {
+      // If endpoint doesn't exist, just hide the UI for now
+      console.warn("Decline endpoint not available, hiding UI:", err);
+      setShowDecisionUI(prev => ({
+        ...prev,
+        [reportId]: false
+      }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const requestProposal = async (reportId) => {
@@ -240,6 +286,7 @@ export default function LandReportBody() {
     switch (status?.toLowerCase()) {
       case 'approved': return 'text-green-600 bg-green-100';
       case 'rejected': return 'text-red-600 bg-red-100';
+      case 'completed': return 'text-green-600 bg-green-100';
       case 'payment pending': return 'text-yellow-600 bg-yellow-100';
       case 'payment failed': return 'text-red-600 bg-red-100';
       case 'assessment pending': return 'text-blue-600 bg-blue-100';
@@ -252,6 +299,7 @@ export default function LandReportBody() {
     switch (status?.toLowerCase()) {
       case 'approved': return <CheckCircle size={16} className="text-green-600" />;
       case 'rejected': return <XCircle size={16} className="text-red-600" />;
+      case 'completed': return <CheckCircle size={16} className="text-green-600" />;
       case 'payment pending': return <Clock size={16} className="text-yellow-600" />;
       case 'payment failed': return <XCircle size={16} className="text-red-600" />;
       case 'assessment pending': return <AlertCircle size={16} className="text-blue-600" />;
@@ -265,7 +313,7 @@ export default function LandReportBody() {
       case "pending":
         return !request.has_report || request.overall_status === 'Assessment Pending' || request.overall_status === 'Payment Pending';
       case "completed":
-        return request.has_report && (request.report_status === 'Approved' || request.report_status === 'Rejected');
+        return request.has_report && (request.overall_status === 'Completed' || request.report_status === 'Completed' || request.report_status === 'Approved' || request.report_status === 'Rejected');
       default:
         return true;
     }
@@ -379,7 +427,7 @@ export default function LandReportBody() {
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                Completed ({assessmentRequests.filter(r => r.has_report && (r.report_status === 'Approved' || r.report_status === 'Rejected')).length})
+                Completed ({assessmentRequests.filter(r => r.has_report && (r.overall_status === 'Completed' || r.report_status === 'Completed' || r.report_status === 'Approved' || r.report_status === 'Rejected')).length})
               </button>
             </div>
           </div>
@@ -491,6 +539,20 @@ export default function LandReportBody() {
                           <td className="py-2 pr-2 text-right text-gray-800">{selectedItem.size} acres</td>
                         </tr>
                         <tr className="border-b border-gray-200">
+                          <td className="py-2 pl-2 text-green-600">Land ID</td>
+                          <td className="py-2 pr-2 text-right text-gray-800">#{selectedItem.land_id}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2 pl-2 text-green-600">Report ID</td>
+                          <td className="py-2 pr-2 text-right text-gray-800">{selectedItem.id}</td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
+                          <td className="py-2 pl-2 text-green-600">Assessment Date</td>
+                          <td className="py-2 pr-2 text-right text-gray-800">
+                            {new Date(selectedItem.report_date).toLocaleDateString()}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-gray-200">
                           <td className="py-2 pl-2 text-green-600">Payment Status</td>
                           <td className="py-2 pr-2 text-right text-gray-800">
                             <span className={`px-2 py-1 text-xs rounded-full ${
@@ -498,7 +560,7 @@ export default function LandReportBody() {
                               selectedItem.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-red-100 text-red-800'
                             }`}>
-                              {selectedItem.payment_status}
+                              {selectedItem.payment_status || 'Paid'}
                             </span>
                           </td>
                         </tr>
@@ -565,16 +627,44 @@ export default function LandReportBody() {
                       {/* Crop Recommendations */}
                       {selectedItem.crop_recommendation && (
                         <div className="mb-6">
-                          <h2 className="text-base font-semibold text-gray-800 mb-2">
-                            Crop Recommendations
+                          <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center">
+                            <Leaf className="mr-2 text-green-600" size={20} />
+                            Recommended Crops & Vegetables
                           </h2>
-                          <div className="bg-green-50 p-4 rounded-lg">
-                            <p className="text-sm text-gray-700 mb-4">
-                              Based on the land assessment, the following recommendations have been made:
+                          <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-lg border border-green-200">
+                            <p className="text-sm text-emerald-700 mb-4 font-medium">
+                              🌱 Based on your land's soil analysis and environmental conditions:
                             </p>
-                            <div className="whitespace-pre-line text-sm text-gray-700">
+                            <div className="whitespace-pre-line text-sm text-gray-700 leading-relaxed">
                               {selectedItem.crop_recommendation}
                             </div>
+                            <div className="mt-4 p-3 bg-green-100 rounded-md border-l-4 border-green-500">
+                              <p className="text-xs text-green-800">
+                                💡 <strong>Tip:</strong> These recommendations are based on your soil pH, organic matter, and nutrient levels. 
+                                Contact our agricultural experts for personalized farming advice.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Show message if no crop recommendations yet */}
+                      {!selectedItem.crop_recommendation && (selectedItem.overall_status === 'Completed' || selectedItem.report_status === 'Completed') && (
+                        <div className="mb-6">
+                          <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center">
+                            <Leaf className="mr-2 text-green-600" size={20} />
+                            Crop Recommendations
+                          </h2>
+                          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                            <p className="text-sm text-yellow-700 mb-2">
+                              🔄 Crop recommendations are being generated based on your soil analysis...
+                            </p>
+                            <button
+                              onClick={() => window.location.reload()}
+                              className="text-xs px-3 py-1 bg-yellow-200 text-yellow-800 rounded hover:bg-yellow-300 transition"
+                            >
+                              Refresh to see recommendations
+                            </button>
                           </div>
                         </div>
                       )}
@@ -582,7 +672,7 @@ export default function LandReportBody() {
                   )}
 
                   {/* Soil Analysis Data for completed reports */}
-                  {selectedItem.has_report && selectedItem.report_status === 'Approved' && (
+                  {selectedItem.has_report && (selectedItem.report_status === 'Approved' || selectedItem.report_status === 'Completed' || selectedItem.overall_status === 'Completed') && (
                     <div className="mb-8">
                       <h2 className="text-base font-semibold text-gray-800 mb-4">
                         Soil Analysis Results
@@ -630,8 +720,57 @@ export default function LandReportBody() {
                     </div>
                   )}
 
+                  {/* Interest Selection for Completed Reports */}
+                  {selectedItem.has_report && (selectedItem.report_status === 'Completed' || selectedItem.overall_status === 'Completed') && (
+                    <div className="mb-8">
+                      <h2 className="text-base font-semibold text-gray-800 mb-4">
+                        Partnership Opportunity
+                      </h2>
+                      
+                      {/* Show different content based on whether request exists */}
+                      {existingRequests[selectedItem.report_id] ? (
+                        <div className="text-center">
+                          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="text-blue-600 text-lg mb-2">✅ Interest Already Submitted!</div>
+                            <p className="text-sm text-blue-800">
+                              Your interest request has been sent to our Financial Manager. 
+                              They will review your land and create a leasing proposal for you soon.
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-lg border border-green-200">
+                          <div className="text-center mb-4">
+                            <h3 className="font-medium text-gray-800 mb-2">
+                              🌱 Would you like to partner with FarmMaster for organic farming?
+                            </h3>
+                            <p className="text-sm text-gray-600 mb-4">
+                              Based on your land assessment, we can help you maximize your agricultural potential through our partnership program.
+                            </p>
+                          </div>
+                          
+                          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <button
+                              onClick={() => sendInterestRequest(selectedItem.report_id)}
+                              disabled={loading}
+                              className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
+                            >
+                              🤝 Yes, I'm interested!
+                            </button>
+                            <button
+                              onClick={() => declineInterest(selectedItem.report_id)}
+                              className="px-6 py-3 bg-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-400 transition"
+                            >
+                              Not now
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Simple Land Suitability Conclusion */}
-                  {selectedItem.has_report && selectedItem.report_status === 'Approved' && (
+                  {selectedItem.has_report && (selectedItem.report_status === 'Approved' || selectedItem.report_status === 'Completed' || selectedItem.overall_status === 'Completed') && (
                     <div className="mb-8">
                       <div className="flex items-center justify-between mb-4">
                         <h2 className="text-base font-semibold text-gray-800">
@@ -690,11 +829,11 @@ export default function LandReportBody() {
                               </div>
                             )}
 
-                            {/* Show decision UI immediately when showDecisionUI is true */}
+                            {/* Show decision UI only for SUITABLE land after assessment */}
                             {showDecisionUI[selectedItem.report_id] && selectedItem.conclusion?.is_good_for_organic && (
                               <div className="mt-6 pt-4 border-t border-green-200">
                                 <h4 className="font-medium text-gray-800 mb-3 text-center">
-                                  Great! Your land is suitable for organic farming.
+                                  🌱 Great! Your land is suitable for organic farming.
                                 </h4>
                                 <h4 className="font-medium text-gray-800 mb-3 text-center">
                                   Would you like to partner with FarmMaster?
@@ -706,62 +845,32 @@ export default function LandReportBody() {
                                     disabled={loading}
                                     className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
                                   >
-                                    🤝 Yes, I'm interested!
+                                    🤝 Yes, I am interested
                                   </button>
                                   <button
                                     onClick={() => declineInterest(selectedItem.report_id)}
                                     className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
                                   >
-                                    Maybe later
+                                    Not now
                                   </button>
                                 </div>
                               </div>
                             )}
 
-                            {/* Show full assessment result when decision UI is not active */}
-                            {!showDecisionUI[selectedItem.report_id] && selectedItem.conclusion?.is_good_for_organic && (
-                              <div className="mt-6 pt-4 border-t border-green-200">
-                                <h4 className="font-medium text-gray-800 mb-3 text-center">
-                                  Interested in partnering with FarmMaster for organic farming?
-                                </h4>
-                                
-                                {/* Show different content based on whether request exists */}
-                                {existingRequests[selectedItem.report_id] ? (
-                                  <div className="text-center">
-                                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                      <div className="text-blue-600 text-lg mb-2">Interest Submitted!</div>
-                                      <p className="text-sm text-blue-800">
-                                        Your interest request has been sent to our Financial Manager. 
-                                        They will review your land and create a leasing proposal for you soon.
-                                      </p>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                                    <button
-                                      onClick={() => setShowDecisionUI(prev => ({ ...prev, [selectedItem.report_id]: true }))}
-                                      className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
-                                    >
-                                      🤔 Test Interest
-                                    </button>
-                                    <button
-                                      onClick={() => sendInterestRequest(selectedItem.report_id)}
-                                      className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
-                                    >
-                                      🤝 Interested to join FarmMaster
-                                    </button>
-                                    <button
-                                      onClick={() => declineInterest(selectedItem.report_id)}
-                                      className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
-                                    >
-                                      Maybe next time
-                                    </button>
-                                  </div>
-                                )}
+                            {/* Show completed interest request status */}
+                            {!showDecisionUI[selectedItem.report_id] && existingRequests[selectedItem.report_id] && (
+                              <div className="mt-6 pt-4 border-t border-blue-200 text-center">
+                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                  <div className="text-blue-600 text-lg mb-2">✅ Interest Submitted!</div>
+                                  <p className="text-sm text-blue-800">
+                                    Your interest request has been sent to our Financial Manager. 
+                                    They will review your land and create a leasing proposal for you soon.
+                                  </p>
+                                </div>
                               </div>
                             )}
 
-                            {/* Message for Not Good Land */}
+                            {/* Message for Not Suitable Land */}
                             {selectedItem.conclusion && !selectedItem.conclusion.is_good_for_organic && (
                               <div className="mt-6 pt-4 border-t border-yellow-200 text-center">
                                 <p className="text-sm text-yellow-800 mb-2">
@@ -785,7 +894,7 @@ export default function LandReportBody() {
                   )}
 
                   {/* Environmental Assessment */}
-                  {selectedItem.has_report && selectedItem.environmental_notes && selectedItem.report_status === 'Approved' && (
+                  {selectedItem.has_report && selectedItem.environmental_notes && (selectedItem.report_status === 'Approved' || selectedItem.report_status === 'Completed' || selectedItem.overall_status === 'Completed') && (
                     <div className="mb-8">
                       <h2 className="text-base font-semibold text-gray-800 mb-4">
                         Environmental Assessment
