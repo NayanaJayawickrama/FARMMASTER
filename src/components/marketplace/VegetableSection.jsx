@@ -113,7 +113,7 @@ const VegetableSection = () => {
       // Show success message
       setQuantityPopup({
         show: true,
-        message: `✅ ${quantity} Kg of ${product.name} added to cart successfully!`,
+        message: `${quantity} Kg of ${product.name} added to cart successfully!`,
         availableQuantity: product.quantity,
         requestedQuantity: quantity,
         cropName: product.name,
@@ -134,7 +134,7 @@ const VegetableSection = () => {
       // Show success message
       setQuantityPopup({
         show: true,
-        message: `✅ ${quantity} Kg of ${product.name} added to cart successfully!`,
+        message: `${quantity} Kg of ${product.name} added to cart successfully!`,
         availableQuantity: validationResult.data?.available_quantity || product.quantity,
         requestedQuantity: quantity,
         cropName: product.name,
@@ -250,7 +250,7 @@ const VegetableSection = () => {
                   onClick={() => decreaseQuantity(index)}
                   disabled={item.quantity === 0}
                 >
-                  −
+                  -
                 </button>
                 <span className="px-2">{quantities[index]} Kg</span>
                 <button
@@ -266,7 +266,7 @@ const VegetableSection = () => {
               {quantities[index] > item.quantity && item.quantity > 0 && (
                 <div className="mt-2 mb-1">
                   <p className="text-xs text-red-600 font-semibold bg-red-50 px-2 py-1 rounded border border-red-200">
-                    ⚠️ Only {item.quantity} Kg available in stock!
+                    Only {item.quantity} Kg available in stock!
                   </p>
                   <p className="text-xs text-red-500 mt-1">
                     Please adjust quantity to {item.quantity} Kg or less
@@ -290,7 +290,7 @@ const VegetableSection = () => {
                       : 'bg-green-600 hover:bg-green-700 text-white'
                   }`}
                 >
-                  {quantities[index] > item.quantity ? '⚠️ Check Quantity' : 'Add to Cart'}
+                  {quantities[index] > item.quantity ? 'Check Quantity' : 'Add to Cart'}
                 </button>
               )}
             </div>
@@ -298,7 +298,7 @@ const VegetableSection = () => {
 
           {filteredProducts.length === 0 && searchQuery && (
             <div className="col-span-full text-center py-12">
-              <div className="text-6xl mb-4">🔍</div>
+              <div className="text-6xl mb-4">Search</div>
               <h3 className="text-xl font-semibold text-gray-600 mb-2">
                 No products found for "{searchQuery}"
               </h3>
@@ -386,7 +386,7 @@ const VegetableSection = () => {
               <div className={`text-4xl mb-4 ${
                 quantityPopup.type === 'success' ? 'text-green-600' : 'text-red-600'
               }`}>
-                {quantityPopup.type === 'success' ? '✅' : '⚠️'}
+                {quantityPopup.type === 'success' ? 'Success' : 'Warning'}
               </div>
               <h2 className={`text-lg font-bold mb-3 ${
                 quantityPopup.type === 'success' ? 'text-green-800' : 'text-red-800'

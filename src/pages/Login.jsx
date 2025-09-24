@@ -196,7 +196,7 @@ const Login = () => {
           </button>
 
           {message && (
-            <div className={`text-center mt-2 text-sm ${message.includes('✅') ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-center mt-2 text-sm ${message.includes('Success') ? 'text-green-600' : 'text-red-600'}`}>
               {message}
             </div>
           )}

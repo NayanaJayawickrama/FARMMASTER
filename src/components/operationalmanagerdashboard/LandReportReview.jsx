@@ -40,7 +40,7 @@ export default function LandReportReview({ onBack, report, onSendToLandOwner }) 
             </button>
             
             <div className="text-center py-10">
-              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <div className="text-red-500 text-6xl mb-4">Warning</div>
               <h2 className="text-xl font-semibold text-gray-800 mb-2">No Report Data Available</h2>
               <p className="text-gray-600 mb-4">
                 Unable to load report information. Please go back and try selecting a report again.

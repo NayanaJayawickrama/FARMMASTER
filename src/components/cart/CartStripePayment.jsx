@@ -117,7 +117,7 @@ function StripePaymentForm({ orderData, onSuccess, onError }) {
 
     } catch (error) {
       console.error("Payment error:", error);
-      setMessage(`❌ ${error.message}`);
+      setMessage(`${error.message}`);
       onError(error.message);
     } finally {
       setLoading(false);
@@ -127,7 +127,7 @@ function StripePaymentForm({ orderData, onSuccess, onError }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {message && (
-        <div className={`p-3 rounded-lg text-sm ${message.includes('❌') ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
+        <div className={`p-3 rounded-lg text-sm ${message.includes('error') || message.includes('failed') ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
           {message}
         </div>
       )}
@@ -155,7 +155,7 @@ function StripePaymentForm({ orderData, onSuccess, onError }) {
               options={CARD_ELEMENT_OPTIONS}
               onChange={(event) => {
                 if (event.error) {
-                  setMessage("❌ " + event.error.message);
+                  setMessage("" + event.error.message);
                 } else {
                   setMessage("");
                 }
@@ -175,7 +175,7 @@ function StripePaymentForm({ orderData, onSuccess, onError }) {
                 options={CARD_ELEMENT_OPTIONS}
                 onChange={(event) => {
                   if (event.error) {
-                    setMessage("❌ " + event.error.message);
+                    setMessage("" + event.error.message);
                   } else {
                     setMessage("");
                   }
@@ -193,7 +193,7 @@ function StripePaymentForm({ orderData, onSuccess, onError }) {
                 options={CARD_ELEMENT_OPTIONS}
                 onChange={(event) => {
                   if (event.error) {
-                    setMessage("❌ " + event.error.message);
+                    setMessage("" + event.error.message);
                   } else {
                     setMessage("");
                   }
