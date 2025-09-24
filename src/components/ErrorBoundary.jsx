@@ -19,7 +19,9 @@ class ErrorBoundary extends React.Component {
     });
 
     // You can also log the error to an error reporting service here
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('ErrorBoundary caught an error:', error);
+    console.error('Error info:', errorInfo);
+    console.error('Error stack:', error?.stack);
   }
 
   render() {
@@ -55,7 +57,7 @@ class ErrorBoundary extends React.Component {
               }}>
                 {this.state.error && this.state.error.toString()}
                 <br />
-                {this.state.errorInfo.componentStack}
+                {this.state.errorInfo && this.state.errorInfo.componentStack}
               </pre>
             </details>
           )}
