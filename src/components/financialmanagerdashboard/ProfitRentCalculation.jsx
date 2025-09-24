@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import PopupMessage from '../alerts/PopupMessage';
 
 export default function ProfitRentCalculation() {
   // Time period state
@@ -16,6 +17,14 @@ export default function ProfitRentCalculation() {
   
   // Summary modal state
   const [showSummary, setShowSummary] = useState(false);
+  
+  // Popup message state
+  const [popupMessage, setPopupMessage] = useState({
+    isOpen: false,
+    type: 'info',
+    title: '',
+    message: ''
+  });
 
   // Calculate comprehensive financial metrics
   const calculateProfitData = () => {
@@ -108,6 +117,24 @@ export default function ProfitRentCalculation() {
     };
   };
 
+  // Helper function to show popup messages
+  const showPopupMessage = (type, title, message) => {
+    setPopupMessage({
+      isOpen: true,
+      type,
+      title,
+      message
+    });
+  };
+
+  // Close popup message
+  const closePopupMessage = () => {
+    setPopupMessage({
+      ...popupMessage,
+      isOpen: false
+    });
+  };
+
   // Placeholder for future data loading functionality
   const checkExistingCalculation = () => {
     // This function can be implemented later when backend is ready
@@ -127,11 +154,310 @@ export default function ProfitRentCalculation() {
   const handleShowSummary = () => {
     // Validate that at least some data has been entered
     if (financialData.totalIncome === 0 && financialData.totalExpenses === 0) {
-      alert("Please enter some income or expense data before generating a summary.");
+      showPopupMessage('warning', 'Missing Data', 'Please enter some income or expense data before generating a summary.');
       return;
     }
     
     setShowSummary(true);
+    showPopupMessage('success', 'Summary Generated', 'Financial summary has been successfully generated and is now displayed.');
+  };
+
+  // Print summary function
+  const handlePrintSummary = () => {
+    // Validate that at least some data has been entered
+    if (financialData.totalIncome === 0 && financialData.totalExpenses === 0) {
+      showPopupMessage('warning', 'Missing Data', 'Please enter some income or expense data before printing.');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    const periodDate = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long' 
+    });
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>FARMMASTER - Profit Calculation Summary</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              color: #333;
+              line-height: 1.4;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 2px solid #2563eb;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .company-name {
+              font-size: 28px;
+              font-weight: bold;
+              color: #2563eb;
+              margin-bottom: 5px;
+            }
+            .report-title {
+              font-size: 20px;
+              font-weight: bold;
+              color: #374151;
+              margin-bottom: 10px;
+            }
+            .period-info {
+              font-size: 14px;
+              color: #6b7280;
+            }
+            .summary-section {
+              margin-bottom: 25px;
+              page-break-inside: avoid;
+            }
+            .section-title {
+              font-size: 18px;
+              font-weight: bold;
+              color: #374151;
+              margin-bottom: 15px;
+              padding-bottom: 5px;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            .kpi-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              gap: 15px;
+              margin-bottom: 20px;
+            }
+            .kpi-card {
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              padding: 15px;
+              text-align: center;
+            }
+            .kpi-label {
+              font-size: 12px;
+              color: #6b7280;
+              margin-bottom: 5px;
+            }
+            .kpi-value {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 3px;
+            }
+            .kpi-subtitle {
+              font-size: 10px;
+              color: #9ca3af;
+            }
+            .income-section, .expense-section {
+              background-color: #f9fafb;
+              padding: 15px;
+              border-radius: 8px;
+              margin-bottom: 15px;
+            }
+            .income-section {
+              border-left: 4px solid #10b981;
+            }
+            .expense-section {
+              border-left: 4px solid #ef4444;
+            }
+            .financial-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 8px;
+              font-size: 14px;
+            }
+            .financial-row.total {
+              border-top: 1px solid #d1d5db;
+              padding-top: 8px;
+              font-weight: bold;
+            }
+            .profit-highlight {
+              background-color: ${financialData.netProfit >= 0 ? '#dcfce7' : '#fee2e2'};
+              color: ${financialData.netProfit >= 0 ? '#166534' : '#991b1b'};
+              padding: 15px;
+              border-radius: 8px;
+              text-align: center;
+              font-size: 24px;
+              font-weight: bold;
+              margin: 20px 0;
+            }
+            .recommendations {
+              background-color: #eff6ff;
+              padding: 15px;
+              border-radius: 8px;
+              border-left: 4px solid #3b82f6;
+            }
+            .recommendations ul {
+              margin: 10px 0 0 0;
+              padding-left: 20px;
+            }
+            .recommendations li {
+              margin-bottom: 5px;
+              font-size: 14px;
+            }
+            .footer {
+              margin-top: 30px;
+              text-align: center;
+              font-size: 12px;
+              color: #6b7280;
+              border-top: 1px solid #e5e7eb;
+              padding-top: 15px;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="company-name">FARMMASTER</div>
+            <div class="report-title">Profit Calculation Summary</div>
+            <div class="period-info">
+              <strong>Period:</strong> ${periodDate}<br>
+              <strong>Generated:</strong> ${currentDate}
+            </div>
+          </div>
+
+          <div class="summary-section">
+            <div class="section-title">Key Performance Indicators</div>
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Performance Status</div>
+                <div class="kpi-value" style="color: ${
+                  financialData.performanceStatus === 'Profitable' ? '#059669' :
+                  financialData.performanceStatus === 'Break-even' ? '#d97706' : '#dc2626'
+                }">${financialData.performanceStatus}</div>
+                <div class="kpi-subtitle">${financialData.profitabilityGrade}</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Net Profit</div>
+                <div class="kpi-value" style="color: ${financialData.netProfit >= 0 ? '#2563eb' : '#dc2626'}">Rs ${financialData.netProfit.toLocaleString()}</div>
+                <div class="kpi-subtitle">Monthly</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Profit Margin</div>
+                <div class="kpi-value" style="color: #7c3aed">${financialData.profitMargin.toFixed(1)}%</div>
+                <div class="kpi-subtitle">Return on Revenue</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Cost Efficiency</div>
+                <div class="kpi-value" style="color: #4338ca">${financialData.costEfficiencyRatio.toFixed(2)}x</div>
+                <div class="kpi-subtitle">Revenue per Cost</div>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Break-even Point</div>
+                <div class="kpi-value" style="color: #ea580c">Rs ${financialData.breakEvenPoint.toLocaleString()}</div>
+                <div class="kpi-subtitle">Required Revenue</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="profit-highlight">
+            Net Profit: Rs ${financialData.netProfit.toLocaleString()}
+            (${financialData.profitMargin.toFixed(1)}% Profit Margin)
+          </div>
+
+          <div class="summary-section">
+            <div class="section-title">Financial Breakdown</div>
+            
+            <div class="income-section">
+              <h4 style="color: #059669; margin-bottom: 10px;">Income Sources</h4>
+              <div class="financial-row">
+                <span>Product Sales:</span>
+                <span>Rs ${financialData.productSalesIncome.toLocaleString()}</span>
+              </div>
+              <div class="financial-row">
+                <span>Land Reports:</span>
+                <span>Rs ${financialData.landReportIncome.toLocaleString()}</span>
+              </div>
+              <div class="financial-row total">
+                <span>Total Income:</span>
+                <span>Rs ${financialData.totalIncome.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div class="expense-section">
+              <h4 style="color: #dc2626; margin-bottom: 10px;">Expenses</h4>
+              <div class="financial-row">
+                <span>Workers' Wages:</span>
+                <span>Rs ${financialData.wagesExpense.toLocaleString()}</span>
+              </div>
+              <div class="financial-row">
+                <span>Harvest Costs:</span>
+                <span>Rs ${financialData.harvestExpense.toLocaleString()}</span>
+              </div>
+              <div class="financial-row">
+                <span>Land Rental:</span>
+                <span>Rs ${financialData.rentalExpense.toLocaleString()}</span>
+              </div>
+              <div class="financial-row total">
+                <span>Total Expenses:</span>
+                <span>Rs ${financialData.totalExpenses.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-section">
+            <div class="section-title">Annual Projections</div>
+            <div class="financial-row">
+              <span>Projected Annual Income:</span>
+              <span>Rs ${financialData.annualProjectedIncome.toLocaleString()}</span>
+            </div>
+            <div class="financial-row">
+              <span>Projected Annual Expenses:</span>
+              <span>Rs ${financialData.annualProjectedExpenses.toLocaleString()}</span>
+            </div>
+            <div class="financial-row total" style="font-size: 16px;">
+              <span>Projected Annual Profit:</span>
+              <span style="color: ${financialData.annualProjectedProfit >= 0 ? '#059669' : '#dc2626'}">Rs ${financialData.annualProjectedProfit.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div class="recommendations">
+            <h4 style="color: #2563eb; margin-bottom: 10px;">Recommendations & Action Items</h4>
+            <ul>
+              <li>${financialData.netProfit > 0 ? 
+                'Great job! Consider reinvesting profits to expand operations' : 
+                'Focus on increasing income streams or reducing operational costs'}</li>
+              <li>${financialData.profitMargin >= 15 ? 
+                'Excellent profit margins - maintain current efficiency' : 
+                'Improve profit margins through cost optimization and pricing strategies'}</li>
+              <li>${financialData.marginOfSafetyPercent >= 20 ? 
+                'Good safety margin provides business stability' : 
+                'Consider diversifying income sources to reduce risk'}</li>
+              <li>${financialData.costEfficiencyRatio >= 1.5 ? 
+                'Efficient cost management' : 
+                'Review and optimize operational expenses'}</li>
+            </ul>
+          </div>
+
+          <div class="footer">
+            <p><strong>FARMMASTER</strong> - Agricultural Financial Management System</p>
+            <p>This report is generated automatically based on the provided financial data.</p>
+            <p>© ${new Date().getFullYear()} FARMMASTER. All rights reserved.</p>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Small delay to ensure content is loaded before printing
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+      showPopupMessage('success', 'Print Initiated', 'Financial summary has been sent to your printer successfully.');
+    }, 250);
   };
 
   // Handle clear all
@@ -139,6 +465,7 @@ export default function ProfitRentCalculation() {
     clearForm();
     setSelectedYear(new Date().getFullYear().toString());
     setSelectedMonth((new Date().getMonth() + 1).toString());
+    showPopupMessage('info', 'Form Cleared', 'All fields have been cleared and reset to current date.');
     console.log("Form cleared successfully");
   };
 
@@ -497,7 +824,7 @@ export default function ProfitRentCalculation() {
           onClick={handleShowSummary}
           className="bg-blue-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2"
         >
-          📊 Show Summary
+          Show Summary
         </button>
         <button 
           onClick={handleClearAll}
@@ -515,7 +842,7 @@ export default function ProfitRentCalculation() {
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">📊 Profit Calculation Summary</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">Profit Calculation Summary</h2>
                   <p className="text-sm text-gray-600 mt-1">
                     Period: {new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1).toLocaleDateString('en-US', { 
                       year: 'numeric', 
@@ -567,7 +894,7 @@ export default function ProfitRentCalculation() {
                 <div className="space-y-4">
                   {/* Income Breakdown */}
                   <div className="bg-green-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-green-700 mb-3">💰 Income Sources</h4>
+                    <h4 className="font-semibold text-green-700 mb-3">Income Sources</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-green-600">Product Sales:</span>
@@ -588,7 +915,7 @@ export default function ProfitRentCalculation() {
 
                   {/* Expense Breakdown */}
                   <div className="bg-red-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-red-700 mb-3">💸 Expenses</h4>
+                    <h4 className="font-semibold text-red-700 mb-3">Expenses</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-red-600">Workers' Wages:</span>
@@ -616,7 +943,7 @@ export default function ProfitRentCalculation() {
                 <div className="space-y-4">
                   {/* Financial Ratios */}
                   <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-700 mb-3">📈 Key Metrics</h4>
+                    <h4 className="font-semibold text-blue-700 mb-3">Key Metrics</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-blue-600">Return on Revenue:</span>
@@ -639,7 +966,7 @@ export default function ProfitRentCalculation() {
 
                   {/* Annual Projections */}
                   <div className="bg-purple-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-purple-700 mb-3">🔮 Annual Projections</h4>
+                    <h4 className="font-semibold text-purple-700 mb-3">Annual Projections</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-purple-600">Projected Income:</span>
@@ -664,7 +991,7 @@ export default function ProfitRentCalculation() {
 
               {/* Smart Insights */}
               <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-indigo-700 mb-3">💡 Smart Insights & Recommendations</h4>
+                <h4 className="font-semibold text-indigo-700 mb-3">Smart Insights & Recommendations</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h5 className="font-medium text-indigo-600 mb-2">Business Health</h5>
@@ -680,14 +1007,14 @@ export default function ProfitRentCalculation() {
                     <h5 className="font-medium text-indigo-600 mb-2">Action Items</h5>
                     <ul className="text-sm text-gray-700 space-y-1">
                       <li>{financialData.netProfit > 0 ? 
-                        '✅ Great job! Consider reinvesting profits' : 
-                        '⚠️ Focus on increasing income or reducing costs'}</li>
+                        'Great job! Consider reinvesting profits' : 
+                        'Focus on increasing income or reducing costs'}</li>
                       <li>{financialData.profitMargin >= 15 ? 
-                        '✅ Excellent profit margins' : 
-                        '💡 Improve profit margins through optimization'}</li>
+                        'Excellent profit margins' : 
+                        'Improve profit margins through optimization'}</li>
                       <li>{financialData.marginOfSafetyPercent >= 20 ? 
-                        '✅ Good safety margin for stability' : 
-                        '⚠️ Consider diversifying income sources'}</li>
+                        'Good safety margin for stability' : 
+                        'Consider diversifying income sources'}</li>
                     </ul>
                   </div>
                 </div>
@@ -706,17 +1033,36 @@ export default function ProfitRentCalculation() {
                     minute: '2-digit'
                   })}
                 </div>
-                <button 
-                  onClick={() => setShowSummary(false)}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  Close Summary
-                </button>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={handlePrintSummary}
+                    className="bg-green-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
+                  >
+                    Print Summary
+                  </button>
+                  <button 
+                    onClick={() => setShowSummary(false)}
+                    className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700 transition-colors"
+                  >
+                    Close Summary
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Popup Message */}
+      <PopupMessage
+        isOpen={popupMessage.isOpen}
+        onClose={closePopupMessage}
+        type={popupMessage.type}
+        title={popupMessage.title}
+        message={popupMessage.message}
+        autoClose={true}
+        autoCloseDelay={4000}
+      />
     </div>
   );
 }

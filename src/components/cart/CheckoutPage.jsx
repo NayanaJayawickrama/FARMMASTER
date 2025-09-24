@@ -57,7 +57,7 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
     }
 
     if (!shippingAddress.trim()) {
-      setMessage("❌ Please enter a shipping address");
+      setMessage("Please enter a shipping address");
       return;
     }
 
@@ -223,7 +223,7 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
       
       // Handle specific error cases
       if (error.response?.status === 401 || error.message.includes("session has expired") || error.message.includes("Authentication required")) {
-        setMessage("❌ Your session has expired. Redirecting to login...");
+        setMessage("Your session has expired. Redirecting to login...");
         onError("Your session has expired. Please log in again to complete your purchase.");
         // Clear localStorage and redirect to login after a delay
         setTimeout(() => {
@@ -231,10 +231,10 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
           window.location.href = '/login';
         }, 3000);
       } else if (error.response?.status === 403) {
-        setMessage("❌ Access denied. Please check your account permissions.");
+        setMessage("Access denied. Please check your account permissions.");
         onError("Access denied. Please check your account permissions.");
       } else if (error.message.includes("session has expired")) {
-        setMessage("❌ Your session has expired. Redirecting to login...");
+        setMessage("Your session has expired. Redirecting to login...");
         onError("Session expired. Please log in again.");
         setTimeout(() => {
           logout();
@@ -242,10 +242,10 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
         }, 2000);
       } else if (error.response?.data?.message) {
         // Use the backend error message if available
-        setMessage(`❌ ${error.response.data.message}`);
+        setMessage(`${error.response.data.message}`);
         onError(error.response.data.message);
       } else {
-        setMessage(`❌ ${error.message || "There was an error processing your payment. Please try again."}`);
+        setMessage(`${error.message || "There was an error processing your payment. Please try again."}`);
         onError(error.message || "There was an error processing your payment. Please try again.");
       }
     } finally {
@@ -256,7 +256,7 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {message && (
-        <div className={`p-3 rounded-lg text-sm ${message.includes('❌') ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
+        <div className={`p-3 rounded-lg text-sm ${message.includes('error') || message.includes('failed') || message.includes('expired') || message.includes('denied') ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
           {message}
         </div>
       )}
@@ -286,7 +286,7 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
             options={CARD_ELEMENT_OPTIONS}
             onChange={(event) => {
               if (event.error) {
-                setMessage("❌ " + event.error.message);
+                setMessage("" + event.error.message);
               } else {
                 setMessage("");
               }
@@ -306,7 +306,7 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
               options={CARD_ELEMENT_OPTIONS}
               onChange={(event) => {
                 if (event.error) {
-                  setMessage("❌ " + event.error.message);
+                  setMessage("" + event.error.message);
                 } else {
                   setMessage("");
                 }
@@ -324,7 +324,7 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
               options={CARD_ELEMENT_OPTIONS}
               onChange={(event) => {
                 if (event.error) {
-                  setMessage("❌ " + event.error.message);
+                  setMessage("" + event.error.message);
                 } else {
                   setMessage("");
                 }

@@ -21,13 +21,13 @@ export default function MockStripePayment({ orderData, onSuccess, onError }) {
 
     // Validate form fields
     if (!cardholderName.trim()) {
-      setMessage("❌ Please enter cardholder name");
+      setMessage("Please enter cardholder name");
       setLoading(false);
       return;
     }
 
     if (!cardNumber.trim() || !expiryDate.trim() || !cvc.trim()) {
-      setMessage("❌ Please fill in all card details");
+      setMessage("Please fill in all card details");
       setLoading(false);
       return;
     }
@@ -92,7 +92,7 @@ export default function MockStripePayment({ orderData, onSuccess, onError }) {
       console.log("Payment confirmation response:", confirmResponse.data);
 
       if (confirmResponse.data.status === "success") {
-        setMessage("✅ Payment processed successfully! (Mock Mode)");
+        setMessage("Payment processed successfully! (Mock Mode)");
         onSuccess({
           transaction_id: confirmResponse.data.data.transaction_id,
           payment_intent_id: paymentIntentId,
@@ -105,7 +105,7 @@ export default function MockStripePayment({ orderData, onSuccess, onError }) {
 
     } catch (error) {
       console.error("Mock payment error:", error);
-      setMessage("❌ Payment failed: " + (error.response?.data?.message || error.message));
+      setMessage("Payment failed: " + (error.response?.data?.message || error.message));
       onError && onError(error);
     } finally {
       setLoading(false);
@@ -134,7 +134,7 @@ export default function MockStripePayment({ orderData, onSuccess, onError }) {
       </div>
 
       {message && (
-        <div className={`p-3 rounded-lg mb-4 ${message.includes('✅') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+        <div className={`p-3 rounded-lg mb-4 ${message.includes('successfully') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
           {message}
         </div>
       )}

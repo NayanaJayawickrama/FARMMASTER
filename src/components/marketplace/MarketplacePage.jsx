@@ -134,7 +134,7 @@ const MarketplaceProducts = () => {
       {showRefreshNotification && (
         <div className="fixed top-4 right-4 bg-green-100 border border-green-500 text-green-700 px-4 py-3 rounded-lg shadow-lg z-50">
           <div className="flex items-center gap-2">
-            <span className="text-sm">📦 Product quantities updated!</span>
+            <span className="text-sm">Product quantities updated!</span>
             <button
               onClick={handleRefresh}
               className="text-green-600 hover:text-green-800 font-medium underline"
@@ -152,7 +152,7 @@ const MarketplaceProducts = () => {
           className="bg-green-600 text-white p-3 rounded-full shadow-lg hover:bg-green-700 transition-colors"
           title="Refresh Products"
         >
-          🔄
+          ⟳
         </button>
       </div>
 
