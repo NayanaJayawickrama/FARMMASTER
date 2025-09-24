@@ -28,31 +28,29 @@ export default function LandReportBody() {
   const fetchAssessmentRequests = async () => {
     setLoading(true);
     setError("");
-    console.log("Fetching assessment requests for user:", testUserId);
-    console.log("User context:", user);
+    console.log("🔍 Fetching assessment requests for user:", testUserId);
     try {
-      // Use the same API endpoint as dashboard for consistency
-      const url = `${rootUrl}/assessments?user_id=${testUserId}`;
-      console.log("API URL:", url);
-      console.log("Sending request with credentials...");
+      // Use the fixed main API endpoint for land reports
+      const url = `${rootUrl}/land-reports/land-owner-reports?user_id=${testUserId}`;
+      console.log("📡 API URL:", url);
       
       const response = await axios.get(url, {
         withCredentials: true
       });
       
-      console.log("API Response:", response.data);
+      console.log("✅ API Response:", response.data);
       
       if (response.data.status === 'success') {
-        const assessmentData = response.data.data || [];
-        console.log("Found assessments:", assessmentData.length, assessmentData);
-        setAssessmentRequests(assessmentData);
-        console.log("Assessment requests set in state");
+        const reports = response.data.data || [];
+        console.log("📊 Found reports:", reports.length, reports);
+        setAssessmentRequests(reports);
+        console.log("✅ Reports set in state");
         
 
         
-        if (assessmentData.length > 0) {
-          setSelectedItem(assessmentData[0]);
-          console.log("Selected first assessment:", assessmentData[0].id || assessmentData[0].land_id);
+        if (reports.length > 0) {
+          setSelectedItem(reports[0]);
+          console.log("Selected first report:", reports[0].id || reports[0].land_id);
         }
       } else {
         console.error("API returned error:", response.data.message);
