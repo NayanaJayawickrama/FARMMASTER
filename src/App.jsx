@@ -40,6 +40,8 @@ import FinancialMProfitRentCalculation from "./pages/financialmanagerpages/Finan
 import FinancialMMarketplaceProducts from "./pages/financialmanagerpages/FinancialMMarketplaceProducts";
 import FinancialMFinancialReportManagement from "./pages/financialmanagerpages/FinancialMFinancialReportManagement";
 import FinancialMProposalManagement from "./pages/financialmanagerpages/FinancialMProposalManagement";
+import FinancialManagerHarvestIncome from "./pages/financialmanagerpages/FinancialManagerHarvestIncome";
+import LandownerHarvestIncomePage from "./pages/landownerpages/LandownerHarvestIncomePage";
 
 function App() {
   // Auto-logout after 5 minutes of inactivity (no warning modal - immediate logout)
@@ -196,6 +198,16 @@ function App() {
         <Route path="/financialmanagermarfinancialreportmanagement" element={
           <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
             <FinancialMFinancialReportManagement />
+          </ProtectedRoute>
+        } />
+        <Route path="/financialmanagerharvestincome" element={
+          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
+            <FinancialManagerHarvestIncome />
+          </ProtectedRoute>
+        } />
+        <Route path="/landownerharvestincome" element={
+          <ProtectedRoute requiredRoles={['Landowner']}>
+            <LandownerHarvestIncomePage />
           </ProtectedRoute>
         } />
 

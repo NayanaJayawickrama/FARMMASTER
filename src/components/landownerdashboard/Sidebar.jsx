@@ -4,11 +4,11 @@ import {
   Home,
   FileText,
   Handshake,
-  Leaf,
   Menu,
   X,
   ArrowLeftCircle,
   LogOut,
+  DollarSign,
 } from "lucide-react";
 import logo from "../../assets/images/logo.png";
 import profilePic from "../../assets/images/userProfile.png";
@@ -132,14 +132,14 @@ export default function Sidebar() {
           </NavLink>
 
           <NavLink
-            to="/harvest"
+            to="/landownerharvestincome"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? activeLink : normalLink}`
             }
             onClick={() => setIsOpen(false)}
           >
-            <Leaf size={16} />
-            Harvests
+            <DollarSign size={16} />
+            Harvest Income
           </NavLink>
         </nav>
 

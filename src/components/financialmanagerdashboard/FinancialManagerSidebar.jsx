@@ -169,6 +169,17 @@ export default function FinancialManagerSidebar() {
             <Package size={16} />
             Marketplace Products
           </NavLink>
+
+          <NavLink
+            to="/financialmanagerharvestincome"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? activeLink : normalLink}`
+            }
+            onClick={() => setIsOpen(false)}
+          >
+            <DollarSign size={16} />
+            Harvest Income Reports
+          </NavLink>
         </nav>
 
         {/* Footer */}
