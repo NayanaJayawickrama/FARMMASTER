@@ -32,6 +32,7 @@ export const AuthProvider = ({ children }) => {
               // Create the full user object with name property for frontend compatibility
               const fullUserData = {
                 id: serverUserData.user_id,
+                user_id: serverUserData.user_id, // Add both id and user_id for compatibility
                 role: serverUserData.user_role,
                 name: serverUserData.first_name + ' ' + serverUserData.last_name,
                 first_name: serverUserData.first_name,

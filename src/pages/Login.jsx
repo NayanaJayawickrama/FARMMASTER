@@ -95,6 +95,7 @@ const Login = () => {
       if (response.data.status === 'success') {
         const user = {
           id: response.data.data.user_id,
+          user_id: response.data.data.user_id, // Add both id and user_id for compatibility
           role: response.data.data.user_role,
           name: response.data.data.first_name + ' ' + response.data.data.last_name,
           email: response.data.data.email,

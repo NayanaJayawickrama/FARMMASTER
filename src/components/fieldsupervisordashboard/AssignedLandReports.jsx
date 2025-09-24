@@ -100,6 +100,9 @@ export default function AssignedLandReports() {
       // Get supervisor ID from user context, fallback to default for testing
       const supervisorId = user?.user_id || 31; // Default to Kanchana Almeda for testing
       
+      console.log('Fetching assignments for supervisor ID:', supervisorId);
+      console.log('Current user context:', user);
+      
       const response = await axios.get(`${rootUrl}/api/land-reports/assigned?supervisor_id=${supervisorId}`, {
         withCredentials: true
       });
