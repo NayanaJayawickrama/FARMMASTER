@@ -54,7 +54,7 @@ export default function LandReportBody() {
     setLoading(true);
     setError("");
     try {
-      const response = await axios.get(`${rootUrl}/assessments?user_id=${testUserId}`, {
+      const response = await axios.get(`${rootUrl}/api/land-reports/land-owner-reports?user_id=${testUserId}`, {
         withCredentials: true
       });
       if (response.data.status === 'success') {

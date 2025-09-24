@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiEdit3, FiPackage } from "react-icons/fi";
+import PopupMessage from "../alerts/PopupMessage";
 
 const rootUrl = import.meta.env.VITE_API_URL;
 const allowedCrops = ["Carrot", "Leeks", "Tomato", "Cabbage"];
@@ -15,6 +16,29 @@ export default function CropInventoryManagement() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [cropFilter, setCropFilter] = useState("");
+
+  // Custom popup message state
+  const [popupMessage, setPopupMessage] = useState({
+    isOpen: false,
+    message: '',
+    type: 'success'
+  });
+
+  const showPopup = (message, type = 'success') => {
+    setPopupMessage({
+      isOpen: true,
+      message,
+      type
+    });
+  };
+
+  const closePopup = () => {
+    setPopupMessage({
+      isOpen: false,
+      message: '',
+      type: 'success'
+    });
+  };
 
   // Fetch crops list from backend
   const fetchCrops = async () => {
@@ -51,12 +75,13 @@ export default function CropInventoryManagement() {
         }
       );
       if (res.data.status === 'success') {
+        showPopup("Crop status updated successfully", 'success');
         fetchCrops();
       } else {
-        alert(res.data.message || "Failed to update crop status.");
+        showPopup(res.data.message || "Failed to update crop status.", 'error');
       }
     } catch {
-      alert("Server error while updating crop status.");
+      showPopup("Server error while updating crop status.", 'error');
     }
   };
 
@@ -85,19 +110,19 @@ export default function CropInventoryManagement() {
       }
 
       if (res.data.status === 'success') {
-        alert(editCrop ? "Crop updated successfully" : "Crop added successfully");
+        showPopup(editCrop ? "Crop updated successfully" : "Crop added successfully", 'success');
         // Reset form state
         setEditCrop(null);
         setShowForm(false);
         // Refresh crops list
         await fetchCrops();
       } else {
-        alert(res.data.message || (editCrop ? "Failed to update crop" : "Failed to add crop"));
+        showPopup(res.data.message || (editCrop ? "Failed to update crop" : "Failed to add crop"), 'error');
       }
     } catch (error) {
       console.error('Error:', error);
       console.error('Response:', error.response?.data);
-      alert(error.response?.data?.message || "Server error. Please try again.");
+      showPopup(error.response?.data?.message || "Server error. Please try again.", 'error');
     }
   };
 
@@ -184,7 +209,7 @@ export default function CropInventoryManagement() {
                 </thead>
                 <tbody>
                   {filteredCrops.map((crop) => (
-                    <tr key={crop.crop_id} className="border-b border-black hover:bg-green-50 transition-colors duration-200">
+                    <tr key={crop.crop_id} className="border-b border-black hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 hover:shadow-sm transition-all duration-300 group">
                       <td className="px-6 py-5 text-center font-medium text-gray-900">{crop.crop_name}</td>
                       <td className="px-6 py-5 text-center">
                         <span className="font-semibold text-lg text-gray-600">{crop.quantity}</span>
@@ -226,9 +251,23 @@ export default function CropInventoryManagement() {
                       <td className="px-6 py-5 text-center">
                         <button
                           onClick={() => openEditCropForm(crop)}
-                          className="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium transition-colors duration-200 px-3 py-1 rounded-md hover:bg-blue-50"
+                          className="group relative bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50"
+                          title="Update Crop Quantity"
                         >
-                          Update Quantity
+                          <div className="flex items-center space-x-2">
+                            <FiPackage className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
+                            <span className="group-hover:tracking-wider transition-all duration-300">
+                              Update Quantity
+                            </span>
+                          </div>
+                          
+                          {/* Animated background effect */}
+                          <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-300"></div>
+                          
+                          {/* Ripple effect on click */}
+                          <div className="absolute inset-0 rounded-lg overflow-hidden">
+                            <div className="absolute inset-0 bg-white opacity-0 group-active:opacity-20 group-active:animate-ping"></div>
+                          </div>
                         </button>
                       </td>
                     </tr>
@@ -311,14 +350,17 @@ export default function CropInventoryManagement() {
                 marginBottom: '8px',
                 textAlign: 'center'
               }}>
-                Add New Crop to Inventory
+                {editCrop ? 'Update Crop Quantity' : 'Add New Crop to Inventory'}
               </h2>
               <p style={{ 
                 color: '#6b7280', 
                 textAlign: 'center',
                 fontSize: '14px'
               }}>
-                Enter crop details to add to your inventory management system
+                {editCrop 
+                  ? 'Update the quantity for this crop in your inventory' 
+                  : 'Enter crop details to add to your inventory management system'
+                }
               </p>
             </div>
 
@@ -331,25 +373,54 @@ export default function CropInventoryManagement() {
                 color: '#374151',
                 marginBottom: '8px'
               }}>
-                Crop Name *
+                Crop Name {!editCrop && '*'}
               </label>
-              <input
-                id="crop-name-input"
-                type="text"
-                placeholder="Enter crop name "
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  fontSize: '16px',
-                  border: '2px solid #d1d5db',
-                  borderRadius: '8px',
-                  boxSizing: 'border-box',
-                  outline: 'none',
-                  transition: 'border-color 0.2s'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#10b981'}
-                onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
-              />
+              {editCrop ? (
+                // Read-only crop name display for editing
+                <div
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    fontSize: '16px',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '8px',
+                    boxSizing: 'border-box',
+                    backgroundColor: '#f9fafb',
+                    color: '#6b7280',
+                    fontWeight: '500'
+                  }}
+                >
+                  {editCrop.crop_name}
+                </div>
+              ) : (
+                // Editable crop name input for adding new crop
+                <input
+                  id="crop-name-input"
+                  type="text"
+                  placeholder="Enter crop name "
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    fontSize: '16px',
+                    border: '2px solid #d1d5db',
+                    borderRadius: '8px',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#10b981'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                />
+              )}
+              {editCrop && (
+                <p style={{ 
+                  fontSize: '12px', 
+                  color: '#6b7280', 
+                  marginTop: '4px' 
+                }}>
+                  Crop name cannot be changed when updating quantity
+                </p>
+              )}
             </div>
 
             <div style={{ marginBottom: '24px' }}>
@@ -368,6 +439,7 @@ export default function CropInventoryManagement() {
                 min="0"
                 step="0.001"
                 placeholder="Enter quantity in kilograms"
+                defaultValue={editCrop ? editCrop.quantity : ''}
                 style={{
                   width: '100%',
                   padding: '12px 16px',
@@ -386,7 +458,10 @@ export default function CropInventoryManagement() {
                 color: '#6b7280', 
                 marginTop: '4px' 
               }}>
-                Enter quantity up to 3 decimal places
+                {editCrop 
+                  ? `Current quantity: ${editCrop.quantity} kg - Enter new quantity up to 3 decimal places`
+                  : 'Enter quantity up to 3 decimal places'
+                }
               </p>
             </div>
 
@@ -426,34 +501,43 @@ export default function CropInventoryManagement() {
               
               <button
                 onClick={() => {
-                  const cropName = document.getElementById('crop-name-input').value.trim();
                   const quantity = document.getElementById('crop-quantity-input').value.trim();
                   
-                  // Validation
-                  if (!cropName) {
-                    alert('Please enter a crop name');
-                    document.getElementById('crop-name-input').focus();
-                    return;
-                  }
-                  
+                  // Validation for quantity
                   if (!quantity) {
-                    alert('Please enter a quantity');
+                    showPopup('Please enter a quantity', 'error');
                     document.getElementById('crop-quantity-input').focus();
                     return;
                   }
                   
                   const numQuantity = parseFloat(quantity);
                   if (isNaN(numQuantity) || numQuantity < 0) {
-                    alert('Please enter a valid quantity (0 or greater)');
+                    showPopup('Please enter a valid quantity (0 or greater)', 'error');
                     document.getElementById('crop-quantity-input').focus();
                     return;
                   }
                   
-                  // Submit the form
-                  handleFormSubmit({
-                    crop_name: cropName,
-                    quantity: numQuantity
-                  });
+                  if (editCrop) {
+                    // For editing: only update quantity, keep existing crop name
+                    handleFormSubmit({
+                      crop_name: editCrop.crop_name,
+                      quantity: numQuantity
+                    });
+                  } else {
+                    // For adding new crop: validate crop name and submit both fields
+                    const cropName = document.getElementById('crop-name-input').value.trim();
+                    
+                    if (!cropName) {
+                      showPopup('Please enter a crop name', 'error');
+                      document.getElementById('crop-name-input').focus();
+                      return;
+                    }
+                    
+                    handleFormSubmit({
+                      crop_name: cropName,
+                      quantity: numQuantity
+                    });
+                  }
                 }}
                 style={{
                   padding: '12px 24px',
@@ -469,13 +553,20 @@ export default function CropInventoryManagement() {
                 onMouseOver={(e) => e.target.style.backgroundColor = '#059669'}
                 onMouseOut={(e) => e.target.style.backgroundColor = '#10b981'}
               >
-                Add Crop to Inventory
+                {editCrop ? 'Update Quantity' : 'Add Crop to Inventory'}
               </button>
             </div>
           </div>
         </div>
       )}
-      
+
+      {/* Custom Popup Message */}
+      <PopupMessage
+        isOpen={popupMessage.isOpen}
+        message={popupMessage.message}
+        type={popupMessage.type}
+        onClose={closePopup}
+      />
 
     </div>
   );

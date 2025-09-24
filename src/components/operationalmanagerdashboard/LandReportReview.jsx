@@ -1,18 +1,24 @@
 import React, { useState } from "react";
-import { Leaf, CheckCircle, Circle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
-export default function LandReportReview({ onBack, report, onReviewSubmit }) {
-  const [decision, setDecision] = useState("Approve");
-  const [feedback, setFeedback] = useState("");
+export default function LandReportReview({ onBack, report, onSendToLandOwner }) {
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSendToLandOwner = async () => {
     if (!report || !report.report_id) {
-      alert('No report selected for review');
+      alert('No report selected');
       return;
     }
 
-    if (onReviewSubmit) {
-      await onReviewSubmit(report.report_id, decision, feedback);
+    setIsLoading(true);
+    try {
+      if (onSendToLandOwner) {
+        await onSendToLandOwner(report.report_id);
+      }
+    } catch (error) {
+      console.error('Error sending report to land owner:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -37,7 +43,7 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
 
          
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-            Land Report Review & Approve
+            Land Report Review & Forward
           </h1>
 
          
@@ -49,7 +55,7 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
               ["Requested Date", reportData.date],
               ["Field Supervisor Name", reportData.supervisor],
               ["Field Supervisor ID", reportData.supervisorId],
-              ["Submitted Date", "2025-10-30"],
+              ["Current Status", reportData.status || "Pending Review"],
             ].map(([label, value], idx) => (
               <div key={idx} className="flex justify-between px-4 py-3">
                 <span className="text-gray-600 font-medium">{label}</span>
@@ -66,11 +72,11 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
             <table className="w-full text-sm">
               <tbody>
                 {[
-                  ["Soil pH Value", "6.5"],
-                  ["Organic Matter (%)", "4.2%"],
-                  ["Nitrogen (N) Level", "Medium"],
-                  ["Phosphorus (P) Level", "High"],
-                  ["Potassium (K) Level", "Medium"],
+                  ["Soil pH Value", reportData.report_details?.ph_value || "N/A"],
+                  ["Organic Matter (%)", reportData.report_details?.organic_matter ? `${reportData.report_details.organic_matter}%` : "N/A"],
+                  ["Nitrogen (N) Level", reportData.report_details?.nitrogen_level || "N/A"],
+                  ["Phosphorus (P) Level", reportData.report_details?.phosphorus_level || "N/A"],
+                  ["Potassium (K) Level", reportData.report_details?.potassium_level || "N/A"],
                 ].map(([label, value], index) => (
                   <tr key={index} className="border-b border-gray-300">
                     <td className="py-2 text-green-600">{label}</td>
@@ -81,85 +87,44 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
             </table>
           </div>
 
-        
-          <div className="mb-8">
-            <h2 className="text-base font-semibold text-gray-800 mb-3">
-              Environmental Data
-            </h2>
-            <table className="w-full text-sm">
-              <tbody>
-                {[
-                  ["Average Rainfall (mm)", "1500"],
-                  ["Temperature (°C)", "28"],
-                  ["Sunlight Hours (per day)", "7"],
-                  ["Water Source", "Well"],
-                ].map(([label, value], index) => (
-                  <tr key={index} className="border-b border-gray-300">
-                    <td className="py-2 text-green-600">{label}</td>
-                    <td className="py-2 text-right text-gray-800">{value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
 
           <div className="mb-8">
             <h2 className="text-base font-semibold text-gray-800 mb-2">
               Crop Recommendations
             </h2>
             <p className="text-sm text-gray-700 mb-4">
-              Based on the land assessment, we recommend the following crops for
-              optimal yield and profitability:
+              {reportData.report_details?.crop_recommendation || "Based on the land assessment, we recommend the following crops for optimal yield and profitability:"}
             </p>
+          </div>
 
-            <div className="space-y-3">
-              {[
-                "Organic Rice",
-                "Vegetables (Beans, Tomatoes)",
-                "Fruits (Bananas, Papayas)",
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <div className="bg-green-100 rounded-sm p-1">
-                    <Leaf className="text-green-700" size={16} />
-                  </div>
-                  <span>{item}</span>
-                </div>
-              ))}
+          <div className="mb-8">
+            <h2 className="text-base font-semibold text-gray-800 mb-2">
+              Land Description & Notes
+            </h2>
+            <div className="bg-gray-50 p-4 rounded-md text-sm text-gray-700">
+              <p className="mb-3">
+                <strong>Land Description:</strong><br />
+                {reportData.report_details?.land_description || "No description available"}
+              </p>
+              <p>
+                <strong>Environmental Notes:</strong><br />
+                <pre className="whitespace-pre-wrap text-xs mt-2 max-h-40 overflow-y-auto">
+                  {reportData.report_details?.environmental_notes || "No environmental notes available"}
+                </pre>
+              </p>
             </div>
           </div>
 
-         
-          <div className="mb-10">
-            <h2 className="text-base font-semibold text-gray-800 mb-4">
-              Review Decision
+          {/* Report Summary Notice */}
+          <div className="mb-10 bg-green-50 border border-green-200 rounded-lg p-4">
+            <h2 className="text-base font-semibold text-green-800 mb-2">
+              Report Summary
             </h2>
-
-            <div className="space-y-3">
-              {["Approve", "Request Revisions"].map((opt) => (
-                <div
-                  key={opt}
-                  onClick={() => setDecision(opt)}
-                  className={`flex items-center border px-4 py-2 rounded-md cursor-pointer ${
-                    decision === opt
-                      ? "border-green-600 bg-green-50"
-                      : "border-gray-300"
-                  }`}
-                >
-                  <span className="mr-3 text-green-600">
-                    {decision === opt ? <CheckCircle size={18} /> : <Circle size={18} />}
-                  </span>
-                  <span className="text-sm">{opt}</span>
-                </div>
-              ))}
-            </div>
-
-            <textarea
-              rows="4"
-              placeholder="Enter feedback or revision requests"
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              className="mt-4 w-full border border-green-300 rounded-md p-3 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-            />
+            <p className="text-sm text-green-700">
+              This land report has been completed by the field supervisor and is ready to be sent to the land owner. 
+              Review the details above and click "Send to Land Owner" to forward this report.
+            </p>
           </div>
 
          
@@ -173,9 +138,25 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
             </button>
 
             <button 
-              onClick={handleSubmit}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md text-sm font-semibold transition">
-              Submit Decision
+              onClick={handleSendToLandOwner}
+              disabled={isLoading}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-2 rounded-md text-sm font-semibold transition flex items-center gap-2">
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Send to Land Owner
+                </>
+              )}
             </button>
           </div>
         </div>

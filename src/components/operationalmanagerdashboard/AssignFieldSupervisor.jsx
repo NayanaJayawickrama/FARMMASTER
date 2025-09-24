@@ -53,7 +53,24 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
 
     try {
       setAssigning(true);
-      const response = await axios.put(`${rootUrl}/api/land-reports/${report.report_id}/assign`, {
+      
+      // Determine the correct endpoint based on whether it's an existing report or land request
+      let url;
+      if (report.report_id && report.report_id !== null) {
+        // Existing land report - use assign endpoint
+        url = `${rootUrl}/api/land-reports/${report.report_id}/assign`;
+      } else if (report.land_id) {
+        // New land request - use assign-land-request endpoint
+        url = `${rootUrl}/api/land-reports/${report.land_id}/assign-land-request`;
+      } else {
+        throw new Error('Invalid report data: missing both report_id and land_id');
+      }
+
+      console.log('Assignment URL:', url);
+      console.log('Report data:', report);
+      console.log('Selected supervisor:', selectedSupervisor);
+
+      const response = await axios.put(url, {
         supervisor_id: selectedSupervisor.user_id,
         supervisor_name: selectedSupervisor.full_name
       }, {
@@ -71,7 +88,8 @@ export default function AssignFieldSupervisor({ onBack, report, onAssignmentComp
       }
     } catch (error) {
       console.error('Error assigning supervisor:', error);
-      alert('Failed to assign Supervisor');
+      console.error('Error response:', error.response?.data);
+      alert('Failed to assign Supervisor: ' + (error.response?.data?.message || error.message));
     } finally {
       setAssigning(false);
     }

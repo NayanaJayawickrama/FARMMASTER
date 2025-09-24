@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LandReportReview from "./LandReportReview";
 import AssignFieldSupervisor from "./AssignFieldSupervisor";
+import PopupMessage from "../alerts/PopupMessage";
 
 const rootUrl = import.meta.env.VITE_API_URL;
 
@@ -26,11 +27,34 @@ export default function LandReportManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Popup message state
+  const [popupMessage, setPopupMessage] = useState({
+    isOpen: false,
+    message: '',
+    type: 'success'
+  });
+
+  const showPopup = (message, type = 'success') => {
+    setPopupMessage({
+      isOpen: true,
+      message,
+      type
+    });
+  };
+
+  const closePopup = () => {
+    setPopupMessage({
+      isOpen: false,
+      message: '',
+      type: 'success'
+    });
+  };
+
   // Fetch assignment reports
   const fetchAssignmentReports = async () => {
     try {
-      console.log('Fetching assignment reports from:', `${rootUrl}/api/land-reports/assignments`);
-      const response = await axios.get(`${rootUrl}/api/land-reports/assignments`, {
+      console.log('Fetching assignment reports from:', `${rootUrl}/api/land-reports/assignment-reports-public`);
+      const response = await axios.get(`${rootUrl}/api/land-reports/assignment-reports-public`, {
         withCredentials: true
       });
       console.log('Assignment reports response:', response.data);
@@ -47,8 +71,8 @@ export default function LandReportManagement() {
   // Fetch review reports
   const fetchReviewReports = async () => {
     try {
-      console.log('Fetching review reports from:', `${rootUrl}/api/land-reports/reviews`);
-      const response = await axios.get(`${rootUrl}/api/land-reports/reviews`, {
+      console.log('Fetching review reports from:', `${rootUrl}/api/land-reports/review-reports-public`);
+      const response = await axios.get(`${rootUrl}/api/land-reports/review-reports-public`, {
         withCredentials: true
       });
       console.log('Review reports response:', response.data);
@@ -96,11 +120,11 @@ export default function LandReportManagement() {
       if (response.data.status === 'success') {
         // Refresh assignment data
         await fetchAssignmentReports();
-        alert('Supervisor assigned successfully!');
+        showPopup('Supervisor assigned successfully!', 'success');
       }
     } catch (error) {
       console.error('Error assigning supervisor:', error);
-      alert('Failed to assign supervisor');
+      showPopup('Failed to assign supervisor', 'error');
     }
   };
 
@@ -148,24 +172,21 @@ export default function LandReportManagement() {
     return <LandReportReview 
       onBack={() => setShowReview(false)} 
       report={selectedReport}
-      onReviewSubmit={async (reportId, decision, feedback) => {
+      onSendToLandOwner={async (reportId) => {
         try {
-          const response = await axios.put(`${rootUrl}/api/land-reports/${reportId}/review`, {
-            decision,
-            feedback
-          }, {
+          const response = await axios.put(`${rootUrl}/api/land-reports/${reportId}/send-to-owner`, {}, {
             headers: { 'Content-Type': 'application/json' },
             withCredentials: true
           });
           
           if (response.data.status === 'success') {
-            alert('Review submitted successfully!');
+            showPopup(`✅ Report sent to land owner successfully!\n\n📋 Report ID: ${reportId}\n👤 Land Owner ID: ${response.data.data.land_owner_id}\n📅 Sent: ${new Date().toLocaleString()}\n\n🎯 The land owner can now access this report in their dashboard!`, 'success');
             await fetchReviewReports(); // Refresh data
             setShowReview(false);
           }
         } catch (error) {
-          console.error('Error submitting review:', error);
-          alert('Failed to submit review');
+          console.error('Error sending report to land owner:', error);
+          showPopup('Failed to send report to land owner: ' + (error.response?.data?.message || error.message), 'error');
         }
       }}
     />;
@@ -227,38 +248,61 @@ export default function LandReportManagement() {
               </tr>
             </thead>
             <tbody>
-              {assignmentData.map((item, idx) => (
-                <tr
-                  key={idx}
-                  className="border-t border-gray-200 hover:bg-green-50"
-                >
-                  <td className="py-3 px-4">{item.id}</td>
-                  <td className="py-3 px-4">{item.location}</td>
-                  <td className="py-3 px-4 text-green-700">{item.name}</td>
-                  <td className="py-3 px-4">{item.date}</td>
-                  <td className="py-3 px-4">{item.supervisor}</td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-3 py-1 rounded-full inline-block ${statusColors[item.status]}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
-                      onClick={() => handleAssignmentAction(item)}>
-                    Assign
+              {assignmentData.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="py-8 px-4 text-center text-gray-500">
+                    {loading ? 'Loading assignment data...' : 'No land reports available for assignment'}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                assignmentData.map((item, idx) => (
+                  <tr
+                    key={idx}
+                    className="border-t border-gray-200 hover:bg-green-50"
+                  >
+                    <td className="py-3 px-4">{item.id}</td>
+                    <td className="py-3 px-4">{item.location}</td>
+                    <td className="py-3 px-4 text-green-700">{item.name}</td>
+                    <td className="py-3 px-4">{item.date}</td>
+                    <td className="py-3 px-4">{item.supervisor}</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-3 py-1 rounded-full inline-block ${statusColors[item.status]}`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
+                        onClick={() => handleAssignmentAction(item)}>
+                      Assign
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
       <div>
-        <h2 className="text-3xl md:text-4xl font-bold text-black mb-4 mt-4">
-          Land Report Review & Approval
-        </h2>
+        <div className="flex justify-between items-center mb-4 mt-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-black">
+            Land Report Review & Approval
+          </h2>
+          <button
+            onClick={async () => {
+              setLoading(true);
+              await fetchReviewReports();
+              setLoading(false);
+            }}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh Reports
+          </button>
+        </div>
         <p className="text-green-600 mb-6 text-sm sm:text-base">
           Review the submitted land report data and provide feedback.
         </p>
@@ -313,6 +357,14 @@ export default function LandReportManagement() {
           </table>
         </div>
       </div>
+
+      {/* Popup Message */}
+      <PopupMessage
+        isOpen={popupMessage.isOpen}
+        message={popupMessage.message}
+        type={popupMessage.type}
+        onClose={closePopup}
+      />
     </div>
   );
 }
