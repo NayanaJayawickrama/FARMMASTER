@@ -4,31 +4,40 @@ import axios from 'axios';
 const rootUrl = import.meta.env.VITE_API_URL;
 
 export default function ProposalManagement() {
-  const [interestRequests, setInterestRequests] = useState([]);
+  const [proposalRequests, setProposalRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showProposalForm, setShowProposalForm] = useState(false);
+  const [proposalFormData, setProposalFormData] = useState({
+    crop_type: '',
+    estimated_yield: '',
+    lease_duration_years: 3,
+    rental_value: '',
+    profit_sharing_farmmaster: 60,
+    profit_sharing_landowner: 40,
+    estimated_profit_landowner: ''
+  });
 
   useEffect(() => {
-    fetchInterestRequests();
+    fetchProposalRequests();
   }, []);
 
-  const fetchInterestRequests = async () => {
+  const fetchProposalRequests = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${rootUrl}/api/land-reports/interest-requests`, {
+      const response = await axios.get(`${rootUrl}/api.php/land-reports/proposal-requests-public`, {
         withCredentials: true
       });
       
       if (response.data.status === 'success') {
         const requests = response.data.data || [];
-        setInterestRequests(requests);
+        setProposalRequests(requests);
         if (requests.length > 0 && !selectedRequest) {
           setSelectedRequest(requests[0]);
         }
       } else {
-        setError(response.data.message || 'Failed to fetch interest requests');
+        setError(response.data.message || 'Failed to fetch proposal requests');
       }
     } catch (err) {
       setError('Failed to fetch requests: ' + (err.response?.data?.message || err.message));
@@ -39,7 +48,7 @@ export default function ProposalManagement() {
 
   const updateRequestStatus = async (requestId, status, notes = '') => {
     try {
-      const response = await axios.put(`${rootUrl}/api/land-reports/interest-requests/${requestId}/status`, {
+      const response = await axios.put(`${rootUrl}/api.php/land-reports/proposal-requests/${requestId}/status`, {
         status,
         notes
       }, {
@@ -47,26 +56,67 @@ export default function ProposalManagement() {
       });
       
       if (response.data.status === 'success') {
-        alert('Request status updated successfully!');
-        fetchInterestRequests(); // Refresh the list
+        fetchProposalRequests(); // Refresh the list
       } else {
-        alert('Failed to update status: ' + response.data.message);
+        setError('Failed to update status: ' + response.data.message);
       }
     } catch (err) {
-      alert('Failed to update status: ' + (err.response?.data?.message || err.message));
+      setError('Failed to update status: ' + (err.response?.data?.message || err.message));
     }
   };
 
-  const generateProposal = async (request, proposalData) => {
+  const generateProposal = async (request) => {
+    // Show the proposal form with request data pre-filled
+    setSelectedRequest(request);
+    setProposalFormData({
+      crop_type: request.crop_recommendations || 'Organic Vegetables',
+      estimated_yield: '',
+      lease_duration_years: 3,
+      rental_value: '',
+      profit_sharing_farmmaster: 60,
+      profit_sharing_landowner: 40,
+      estimated_profit_landowner: ''
+    });
+    setShowProposalForm(true);
+  };
+
+  const submitProposal = async () => {
     try {
-      // Here you would typically send the proposal data to create a formal proposal
-      // For now, we'll just update the request status and show a success message
-      await updateRequestStatus(request.request_id, 'approved', 'Proposal generated and sent to landowner');
-      alert(`SUCCESS! Leasing proposal generated and sent to ${request.first_name} ${request.last_name}!`);
-      setShowProposalForm(false);
-      setSelectedRequest(null);
+      setLoading(true);
+      
+      // Create the proposal via API
+      const response = await axios.post(`${rootUrl}/api.php/proposals`, {
+        land_id: selectedRequest.land_id,
+        user_id: selectedRequest.user_id,
+        crop_type: proposalFormData.crop_type,
+        estimated_yield: parseFloat(proposalFormData.estimated_yield),
+        lease_duration_years: parseInt(proposalFormData.lease_duration_years),
+        rental_value: parseFloat(proposalFormData.rental_value),
+        profit_sharing_farmmaster: parseFloat(proposalFormData.profit_sharing_farmmaster),
+        profit_sharing_landowner: parseFloat(proposalFormData.profit_sharing_landowner),
+        estimated_profit_landowner: parseFloat(proposalFormData.estimated_profit_landowner),
+        generated_from_request_id: selectedRequest.request_id
+      }, {
+        withCredentials: true
+      });
+      
+      if (response.data.status === 'success') {
+        // Update the request status to 'proposal_generated'
+        await updateRequestStatus(selectedRequest.request_id, 'proposal_generated', 'Proposal generated successfully');
+        
+        // Reset form and close modal
+        setShowProposalForm(false);
+        setSelectedRequest(null);
+        
+        // Refresh the requests
+        fetchProposalRequests();
+      } else {
+        setError('Failed to create proposal: ' + (response.data.message || 'Unknown error'));
+      }
     } catch (err) {
-      alert('Failed to generate proposal: ' + err.message);
+      setError('Failed to create proposal: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,7 +137,7 @@ export default function ProposalManagement() {
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-700">Error: {error}</p>
           <button 
-            onClick={fetchInterestRequests}
+            onClick={fetchProposalRequests}
             className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
             Retry
@@ -100,22 +150,22 @@ export default function ProposalManagement() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Partnership Interest Requests</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Proposal Requests</h1>
         <p className="text-gray-600">
-          Landowners interested in partnering with FarmMaster for organic farming
+          Landowners requesting proposals for organic farming partnerships
         </p>
       </div>
 
-      {interestRequests.length === 0 ? (
+      {proposalRequests.length === 0 ? (
         <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
           <div className="text-4xl mb-4 text-green-500">
             <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-700 mb-2">No Interest Requests Yet</h3>
+          <h3 className="text-lg font-medium text-gray-700 mb-2">No Proposal Requests Yet</h3>
           <p className="text-gray-500">
-            When landowners express interest in organic farming partnerships, they'll appear here.
+            When landowners request proposals for organic farming partnerships, they'll appear here.
           </p>
         </div>
       ) : (
@@ -125,11 +175,11 @@ export default function ProposalManagement() {
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
               <div className="p-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-800">
-                  Interest Requests ({interestRequests.length})
+                  Proposal Requests ({proposalRequests.length})
                 </h2>
               </div>
               <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-                {interestRequests.map((request) => (
+                {proposalRequests.map((request) => (
                   <div
                     key={request.request_id}
                     className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
@@ -323,13 +373,7 @@ export default function ProposalManagement() {
                         Reject Request
                       </button>
                       <button
-                        onClick={() => {
-                          generateProposal(selectedRequest, {
-                            lease_duration: '12 months',
-                            profit_sharing: '60/40',
-                            responsibilities: 'FarmMaster provides seeds, fertilizers, and technical support'
-                          });
-                        }}
+                        onClick={() => generateProposal(selectedRequest)}
                         className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
                       >
                         ✅ Generate Proposal
@@ -346,13 +390,7 @@ export default function ProposalManagement() {
                         Reject Request
                       </button>
                       <button
-                        onClick={() => {
-                          generateProposal(selectedRequest, {
-                            lease_duration: '12 months',
-                            profit_sharing: '60/40',
-                            responsibilities: 'FarmMaster provides seeds, fertilizers, and technical support'
-                          });
-                        }}
+                        onClick={() => generateProposal(selectedRequest)}
                         className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
                       >
                         Generate Proposal
@@ -388,6 +426,156 @@ export default function ProposalManagement() {
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Proposal Generation Modal */}
+      {showProposalForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Generate Proposal</h2>
+                <button
+                  onClick={() => setShowProposalForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {selectedRequest && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-2">Landowner: {selectedRequest.first_name} {selectedRequest.last_name}</h3>
+                  <p className="text-sm text-gray-600">Land: {selectedRequest.location} ({selectedRequest.size} acres)</p>
+                </div>
+              )}
+
+              <form className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Crop Type</label>
+                    <input
+                      type="text"
+                      value={proposalFormData.crop_type}
+                      onChange={(e) => setProposalFormData({...proposalFormData, crop_type: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="e.g., Organic Vegetables"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Yield (tons)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={proposalFormData.estimated_yield}
+                      onChange={(e) => setProposalFormData({...proposalFormData, estimated_yield: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="e.g., 15.5"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Lease Duration (years)</label>
+                    <select
+                      value={proposalFormData.lease_duration_years}
+                      onChange={(e) => setProposalFormData({...proposalFormData, lease_duration_years: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    >
+                      <option value={1}>1 Year</option>
+                      <option value={2}>2 Years</option>
+                      <option value={3}>3 Years</option>
+                      <option value={5}>5 Years</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Rental Value (Rs.)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={proposalFormData.rental_value}
+                      onChange={(e) => setProposalFormData({...proposalFormData, rental_value: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="e.g., 50000.00"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">FarmMaster Share (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={proposalFormData.profit_sharing_farmmaster}
+                      onChange={(e) => {
+                        const farmMasterShare = parseFloat(e.target.value);
+                        setProposalFormData({
+                          ...proposalFormData, 
+                          profit_sharing_farmmaster: farmMasterShare,
+                          profit_sharing_landowner: 100 - farmMasterShare
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Landowner Share (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={proposalFormData.profit_sharing_landowner}
+                      onChange={(e) => {
+                        const landOwnerShare = parseFloat(e.target.value);
+                        setProposalFormData({
+                          ...proposalFormData, 
+                          profit_sharing_landowner: landOwnerShare,
+                          profit_sharing_farmmaster: 100 - landOwnerShare
+                        });
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Estimated Profit for Landowner (Rs.)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={proposalFormData.estimated_profit_landowner}
+                    onChange={(e) => setProposalFormData({...proposalFormData, estimated_profit_landowner: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="e.g., 75000.00"
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowProposalForm(false)}
+                    className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={submitProposal}
+                    disabled={loading}
+                    className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
+                  >
+                    {loading ? 'Creating...' : 'Create Proposal'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
