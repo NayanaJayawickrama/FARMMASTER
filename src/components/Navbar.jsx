@@ -11,11 +11,25 @@ export default function Navbar() {
   const [showSearch, setShowSearch] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
 
   const { cartItems } = useCart();
   const { user, logout } = useAuth();
+
+  // Optional search context - only use when available
+  let searchContext = null;
+  try {
+    // Only import search context when on marketplace
+    if (location.pathname.startsWith("/marketplace")) {
+      const { useSearch } = require("../context/SearchContext");
+      searchContext = useSearch();
+    }
+  } catch (error) {
+    // SearchContext not available, use local state
+    console.log("SearchContext not available, using local search");
+  }
 
   const isMarketplace = location.pathname.startsWith("/marketplace");
 
@@ -64,6 +78,53 @@ export default function Navbar() {
     setShowLogoutModal(true);
   };
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    // Use search context if available, otherwise use local search
+    if (searchContext) {
+      searchContext.updateSearchQuery(localSearchQuery);
+    }
+    // Scroll to vegetables section
+    const vegetablesSection = document.getElementById('vegetables');
+    if (vegetablesSection) {
+      vegetablesSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value;
+    setLocalSearchQuery(value);
+    // Real-time search - update search query if context available
+    if (searchContext) {
+      searchContext.updateSearchQuery(value);
+    }
+  };
+
+  const handleSearchToggle = () => {
+    // If search bar is open and there's text, perform search instead of closing
+    if (showSearch && localSearchQuery.trim()) {
+      if (searchContext) {
+        searchContext.updateSearchQuery(localSearchQuery);
+      }
+      // Scroll to vegetables section
+      const vegetablesSection = document.getElementById('vegetables');
+      if (vegetablesSection) {
+        vegetablesSection.scrollIntoView({ behavior: 'smooth' });
+      }
+      return;
+    }
+    
+    // Otherwise toggle search bar visibility
+    setShowSearch(!showSearch);
+    if (showSearch) {
+      // When closing search, clear the search
+      setLocalSearchQuery('');
+      if (searchContext) {
+        searchContext.clearSearch();
+      }
+    }
+  };
+
   return (
     <nav
       style={{ backgroundColor: "#F0FFED" }}
@@ -98,19 +159,30 @@ export default function Navbar() {
       </ul>
 
       
+      {/* Desktop Search */}
       <div className="hidden md:flex items-center space-x-6 z-50">
         {isMarketplace && (
           <>
             {showSearch && (
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="border border-gray-300 rounded-full px-4 py-1 w-48 outline-none focus:ring-2 focus:ring-green-300 transition duration-300"
-              />
+              <form onSubmit={handleSearchSubmit} className="flex items-center">
+                <input
+                  type="text"
+                  value={localSearchQuery}
+                  onChange={handleSearchInputChange}
+                  placeholder="Search products..."
+                  className="border border-gray-300 rounded-full px-4 py-1 w-48 outline-none focus:ring-2 focus:ring-green-300 transition duration-300"
+                  autoFocus
+                />
+              </form>
             )}
             <Search
-              className="hover:text-green-700 cursor-pointer transition"
-              onClick={() => setShowSearch(!showSearch)}
+              className={`cursor-pointer transition ${
+                showSearch && localSearchQuery.trim() 
+                  ? 'text-green-600 hover:text-green-800' 
+                  : 'hover:text-green-700'
+              }`}
+              onClick={handleSearchToggle}
+              title={showSearch && localSearchQuery.trim() ? 'Search products' : 'Toggle search'}
             />
             <button onClick={handleCartClick} className="relative">
               <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />
@@ -151,19 +223,30 @@ export default function Navbar() {
       </div>
 
       
+      {/* Mobile Search */}
       <div className="flex md:hidden items-center space-x-5 z-50">
         {isMarketplace && (
           <>
             {showSearch && (
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="border border-gray-300 rounded-full px-4 py-1 w-40 outline-none focus:ring-2 focus:ring-green-300 transition duration-300"
-              />
+              <form onSubmit={handleSearchSubmit} className="flex items-center">
+                <input
+                  type="text"
+                  value={localSearchQuery}
+                  onChange={handleSearchInputChange}
+                  placeholder="Search products..."
+                  className="border border-gray-300 rounded-full px-4 py-1 w-40 outline-none focus:ring-2 focus:ring-green-300 transition duration-300"
+                  autoFocus
+                />
+              </form>
             )}
             <Search
-              className="hover:text-green-700 cursor-pointer transition"
-              onClick={() => setShowSearch(!showSearch)}
+              className={`cursor-pointer transition ${
+                showSearch && localSearchQuery.trim() 
+                  ? 'text-green-600 hover:text-green-800' 
+                  : 'hover:text-green-700'
+              }`}
+              onClick={handleSearchToggle}
+              title={showSearch && localSearchQuery.trim() ? 'Search products' : 'Toggle search'}
             />
             <button onClick={handleCartClick} className="relative">
               <ShoppingCart className="hover:text-green-700 cursor-pointer transition" />

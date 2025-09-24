@@ -38,7 +38,6 @@ import FinancialMDashboard from "./pages/financialmanagerpages/FinancialMDashboa
 import FinancialMPaymentManagement from "./pages/financialmanagerpages/FinancialMPaymentManagement";
 import FinancialMProfitRentCalculation from "./pages/financialmanagerpages/FinancialMProfitRentCalculation";
 import FinancialMMarketplaceProducts from "./pages/financialmanagerpages/FinancialMMarketplaceProducts";
-import FinancialMFinancialReportManagement from "./pages/financialmanagerpages/FinancialMFinancialReportManagement";
 import FinancialMProposalManagement from "./pages/financialmanagerpages/FinancialMProposalManagement";
 import FinancialManagerHarvestIncome from "./pages/financialmanagerpages/FinancialManagerHarvestIncome";
 import LandownerHarvestIncomePage from "./pages/landownerpages/LandownerHarvestIncomePage";
@@ -193,11 +192,6 @@ function App() {
         <Route path="/financialmanagermarketplaceproducts" element={
           <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
             <FinancialMMarketplaceProducts />
-          </ProtectedRoute>
-        } />
-        <Route path="/financialmanagermarfinancialreportmanagement" element={
-          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
-            <FinancialMFinancialReportManagement />
           </ProtectedRoute>
         } />
         <Route path="/financialmanagerharvestincome" element={

@@ -6,9 +6,13 @@ const ProductContext = createContext();
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastFetchTime, setLastFetchTime] = useState(Date.now());
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(`${rootUrl}/api.php/products`, {
         withCredentials: true
       });
@@ -32,6 +36,9 @@ export const ProductProvider = ({ children }) => {
             is_featured: item.is_featured ? true : false
           }));
           setProducts(mappedProducts);
+          setLastFetchTime(Date.now());
+          setError(null);
+          console.log('Products fetched successfully:', mappedProducts.length, 'items');
         } else {
           setProducts([]);
         }
@@ -40,12 +47,41 @@ export const ProductProvider = ({ children }) => {
       }
     } catch (err) {
       setProducts([]);
+      console.error("Error fetching products:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Auto-refresh products every 30 seconds
   useEffect(() => {
     fetchProducts();
+    
+    const refreshInterval = setInterval(() => {
+      console.log('Auto-refreshing products...');
+      fetchProducts();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(refreshInterval);
   }, []);
+
+  // Force refresh when user comes back to the tab
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // User came back to the tab, refresh if it's been more than 10 seconds
+        const timeSinceLastFetch = Date.now() - lastFetchTime;
+        if (timeSinceLastFetch > 10000) { // 10 seconds
+          console.log('Tab became visible, refreshing products...');
+          fetchProducts();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [lastFetchTime]);
 
   const updateProduct = (id, updatedFields) => {
     setProducts((prev) =>
@@ -55,8 +91,24 @@ export const ProductProvider = ({ children }) => {
     );
   };
 
+  // Manual refresh function for components to call
+  const forceRefresh = () => {
+    console.log('Force refreshing products...');
+    fetchProducts();
+  };
+
+  const value = {
+    products,
+    loading,
+    error,
+    fetchProducts,
+    forceRefresh, // Expose force refresh
+    updateProduct,
+    lastFetchTime, // Expose last fetch time
+  };
+
   return (
-    <ProductContext.Provider value={{ products, updateProduct, fetchProducts }}>
+    <ProductContext.Provider value={value}>
       {children}
     </ProductContext.Provider>
   );

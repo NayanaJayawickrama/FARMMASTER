@@ -17,6 +17,7 @@ import placeholderImg from "../../assets/images/marketplaceimages/vegetables.jpg
 import CartPaymentSuccessPopup from "../alerts/CartPaymentSuccessPopup";
 import CartPaymentErrorPopup from "../alerts/CartPaymentErrorPopup";
 import MockStripePayment from "./MockStripePayment";
+import { useProducts } from "../financialmanagerdashboard/ProductContext";
 
 // Initialize Stripe
 const stripePromise = loadStripe("pk_test_51Rnk1kC523WS3olJgTHr67VfyR8w8fRy0kyoeoV257f1zaGdO7Egl1kXOtll5zbMnF1IgV0iRmWPkNlYiDvdesAP00teJxyQKk");
@@ -358,6 +359,7 @@ function PaymentForm({ cartItems, totalAmount, onSuccess, onError }) {
 export default function CheckoutPage() {
   const { cartItems, clearCart } = useCart();
   const { user, logout } = useAuth();
+  const { forceRefresh } = useProducts(); // Add this
   const navigate = useNavigate();
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [showErrorPopup, setShowErrorPopup] = useState(false);
@@ -445,6 +447,12 @@ export default function CheckoutPage() {
   const handlePaymentSuccess = (paymentResultData) => {
     setPaymentResult(paymentResultData);
     setShowSuccessPopup(true);
+    
+    // Refresh products after successful payment
+    setTimeout(() => {
+      console.log('Refreshing products after successful payment...');
+      forceRefresh();
+    }, 2000);
   };
 
   const handlePaymentError = (errorMessage) => {
@@ -455,6 +463,7 @@ export default function CheckoutPage() {
   const handleSuccessPopupClose = () => {
     setShowSuccessPopup(false);
     clearCart(); // Clear cart after successful payment
+    forceRefresh(); // Final refresh before navigation
     navigate("/buyerdashboard"); // Navigate to dashboard
   };
 
