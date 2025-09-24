@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Leaf, CheckCircle, Circle, ArrowLeft } from "lucide-react";
 
 export default function LandReportReview({ onBack, report, onReviewSubmit }) {
-  const [decision, setDecision] = useState("Approve");
+  const [decision, setDecision] = useState("approved");
   const [feedback, setFeedback] = useState("");
 
   const handleSubmit = async () => {
@@ -49,7 +49,7 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
               ["Requested Date", reportData.date],
               ["Field Supervisor Name", reportData.supervisor],
               ["Field Supervisor ID", reportData.supervisorId],
-              ["Submitted Date", "2025-10-30"],
+              ["Current Status", reportData.status || "Pending Review"],
             ].map(([label, value], idx) => (
               <div key={idx} className="flex justify-between px-4 py-3">
                 <span className="text-gray-600 font-medium">{label}</span>
@@ -66,11 +66,11 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
             <table className="w-full text-sm">
               <tbody>
                 {[
-                  ["Soil pH Value", "6.5"],
-                  ["Organic Matter (%)", "4.2%"],
-                  ["Nitrogen (N) Level", "Medium"],
-                  ["Phosphorus (P) Level", "High"],
-                  ["Potassium (K) Level", "Medium"],
+                  ["Soil pH Value", reportData.report_details?.ph_value || "N/A"],
+                  ["Organic Matter (%)", reportData.report_details?.organic_matter ? `${reportData.report_details.organic_matter}%` : "N/A"],
+                  ["Nitrogen (N) Level", reportData.report_details?.nitrogen_level || "N/A"],
+                  ["Phosphorus (P) Level", reportData.report_details?.phosphorus_level || "N/A"],
+                  ["Potassium (K) Level", reportData.report_details?.potassium_level || "N/A"],
                 ].map(([label, value], index) => (
                   <tr key={index} className="border-b border-gray-300">
                     <td className="py-2 text-green-600">{label}</td>
@@ -81,50 +81,32 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
             </table>
           </div>
 
-        
-          <div className="mb-8">
-            <h2 className="text-base font-semibold text-gray-800 mb-3">
-              Environmental Data
-            </h2>
-            <table className="w-full text-sm">
-              <tbody>
-                {[
-                  ["Average Rainfall (mm)", "1500"],
-                  ["Temperature (°C)", "28"],
-                  ["Sunlight Hours (per day)", "7"],
-                  ["Water Source", "Well"],
-                ].map(([label, value], index) => (
-                  <tr key={index} className="border-b border-gray-300">
-                    <td className="py-2 text-green-600">{label}</td>
-                    <td className="py-2 text-right text-gray-800">{value}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+
 
           <div className="mb-8">
             <h2 className="text-base font-semibold text-gray-800 mb-2">
               Crop Recommendations
             </h2>
             <p className="text-sm text-gray-700 mb-4">
-              Based on the land assessment, we recommend the following crops for
-              optimal yield and profitability:
+              {reportData.report_details?.crop_recommendation || "Based on the land assessment, we recommend the following crops for optimal yield and profitability:"}
             </p>
+          </div>
 
-            <div className="space-y-3">
-              {[
-                "Organic Rice",
-                "Vegetables (Beans, Tomatoes)",
-                "Fruits (Bananas, Papayas)",
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <div className="bg-green-100 rounded-sm p-1">
-                    <Leaf className="text-green-700" size={16} />
-                  </div>
-                  <span>{item}</span>
-                </div>
-              ))}
+          <div className="mb-8">
+            <h2 className="text-base font-semibold text-gray-800 mb-2">
+              Land Description & Notes
+            </h2>
+            <div className="bg-gray-50 p-4 rounded-md text-sm text-gray-700">
+              <p className="mb-3">
+                <strong>Land Description:</strong><br />
+                {reportData.report_details?.land_description || "No description available"}
+              </p>
+              <p>
+                <strong>Environmental Notes:</strong><br />
+                <pre className="whitespace-pre-wrap text-xs mt-2 max-h-40 overflow-y-auto">
+                  {reportData.report_details?.environmental_notes || "No environmental notes available"}
+                </pre>
+              </p>
             </div>
           </div>
 
@@ -135,20 +117,23 @@ export default function LandReportReview({ onBack, report, onReviewSubmit }) {
             </h2>
 
             <div className="space-y-3">
-              {["Approve", "Request Revisions"].map((opt) => (
+              {[
+                { label: "Approve", value: "approved" },
+                { label: "Request Revisions", value: "rejected" }
+              ].map((opt) => (
                 <div
-                  key={opt}
-                  onClick={() => setDecision(opt)}
+                  key={opt.value}
+                  onClick={() => setDecision(opt.value)}
                   className={`flex items-center border px-4 py-2 rounded-md cursor-pointer ${
-                    decision === opt
+                    decision === opt.value
                       ? "border-green-600 bg-green-50"
                       : "border-gray-300"
                   }`}
                 >
                   <span className="mr-3 text-green-600">
-                    {decision === opt ? <CheckCircle size={18} /> : <Circle size={18} />}
+                    {decision === opt.value ? <CheckCircle size={18} /> : <Circle size={18} />}
                   </span>
-                  <span className="text-sm">{opt}</span>
+                  <span className="text-sm">{opt.label}</span>
                 </div>
               ))}
             </div>

@@ -29,8 +29,8 @@ export default function LandReportManagement() {
   // Fetch assignment reports
   const fetchAssignmentReports = async () => {
     try {
-      console.log('Fetching assignment reports from:', `${rootUrl}/api/land-reports/assignments`);
-      const response = await axios.get(`${rootUrl}/api/land-reports/assignments`, {
+      console.log('Fetching assignment reports from:', `${rootUrl}/api/land-reports/assignment-reports-public`);
+      const response = await axios.get(`${rootUrl}/api/land-reports/assignment-reports-public`, {
         withCredentials: true
       });
       console.log('Assignment reports response:', response.data);
@@ -47,8 +47,8 @@ export default function LandReportManagement() {
   // Fetch review reports
   const fetchReviewReports = async () => {
     try {
-      console.log('Fetching review reports from:', `${rootUrl}/api/land-reports/reviews`);
-      const response = await axios.get(`${rootUrl}/api/land-reports/reviews`, {
+      console.log('Fetching review reports from:', `${rootUrl}/api/land-reports/review-reports-public`);
+      const response = await axios.get(`${rootUrl}/api/land-reports/review-reports-public`, {
         withCredentials: true
       });
       console.log('Review reports response:', response.data);
@@ -227,29 +227,37 @@ export default function LandReportManagement() {
               </tr>
             </thead>
             <tbody>
-              {assignmentData.map((item, idx) => (
-                <tr
-                  key={idx}
-                  className="border-t border-gray-200 hover:bg-green-50"
-                >
-                  <td className="py-3 px-4">{item.id}</td>
-                  <td className="py-3 px-4">{item.location}</td>
-                  <td className="py-3 px-4 text-green-700">{item.name}</td>
-                  <td className="py-3 px-4">{item.date}</td>
-                  <td className="py-3 px-4">{item.supervisor}</td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-3 py-1 rounded-full inline-block ${statusColors[item.status]}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
-                      onClick={() => handleAssignmentAction(item)}>
-                    Assign
+              {assignmentData.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="py-8 px-4 text-center text-gray-500">
+                    {loading ? 'Loading assignment data...' : 'No land reports available for assignment'}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                assignmentData.map((item, idx) => (
+                  <tr
+                    key={idx}
+                    className="border-t border-gray-200 hover:bg-green-50"
+                  >
+                    <td className="py-3 px-4">{item.id}</td>
+                    <td className="py-3 px-4">{item.location}</td>
+                    <td className="py-3 px-4 text-green-700">{item.name}</td>
+                    <td className="py-3 px-4">{item.date}</td>
+                    <td className="py-3 px-4">{item.supervisor}</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-3 py-1 rounded-full inline-block ${statusColors[item.status]}`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-black font-semibold cursor-pointer hover:underline hover:text-green-600"
+                        onClick={() => handleAssignmentAction(item)}>
+                      Assign
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
