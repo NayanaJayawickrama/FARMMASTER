@@ -116,8 +116,8 @@ export default function ProposalManagement() {
       });
       
       if (response.data.status === 'success') {
-        // Update the request status to 'proposal_generated'
-        await updateRequestStatus(selectedRequest.request_id, 'proposal_generated', 'Proposal generated successfully');
+        // Update the request status to 'approved'
+        await updateRequestStatus(selectedRequest.request_id, 'approved', 'Proposal generated and sent to landowner successfully');
         
         // Reset form and close modal
         setShowProposalForm(false);
@@ -414,49 +414,15 @@ export default function ProposalManagement() {
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 justify-end">
                   {activeTab === 'interest' ? (
-                    /* Interest Request Actions */
+                    /* Interest Request Actions - Simplified */
                     <>
-                      {selectedRequest.status === 'pending' && (
-                        <>
-                          <button
-                            onClick={() => updateRequestStatus(selectedRequest.request_id, 'under_review', 'Interest request is under review by the Financial Manager')}
-                            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
-                          >
-                            Mark Under Review
-                          </button>
-                          <button
-                            onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Interest request rejected after review')}
-                            className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
-                          >
-                            Reject Interest
-                          </button>
-                          {selectedRequest.conclusion?.is_good_for_organic && (
-                            <button
-                              onClick={() => generateProposal(selectedRequest)}
-                              className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
-                            >
-                              🌱 Generate Proposal
-                            </button>
-                          )}
-                        </>
-                      )}
-                      {selectedRequest.status === 'under_review' && (
-                        <>
-                          <button
-                            onClick={() => updateRequestStatus(selectedRequest.request_id, 'rejected', 'Interest request rejected after detailed review')}
-                            className="px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
-                          >
-                            Reject Interest
-                          </button>
-                          {selectedRequest.conclusion?.is_good_for_organic && (
-                            <button
-                              onClick={() => generateProposal(selectedRequest)}
-                              className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
-                            >
-                              🌱 Generate Proposal
-                            </button>
-                          )}
-                        </>
+                      {selectedRequest.status === 'pending' && selectedRequest.conclusion?.is_good_for_organic && (
+                        <button
+                          onClick={() => generateProposal(selectedRequest)}
+                          className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
+                        >
+                          🌱 Generate Proposal
+                        </button>
                       )}
                       {selectedRequest.status === 'approved' && (
                         <div className="flex items-center gap-2 text-green-600">
@@ -464,10 +430,10 @@ export default function ProposalManagement() {
                           <span className="font-medium">Proposal Generated and Sent to Landowner</span>
                         </div>
                       )}
-                      {selectedRequest.status === 'rejected' && (
-                        <div className="flex items-center gap-2 text-red-600">
-                          <span className="text-red-600">●</span>
-                          <span className="font-medium">Interest Request Rejected</span>
+                      {selectedRequest.conclusion && !selectedRequest.conclusion.is_good_for_organic && (
+                        <div className="flex items-center gap-2 text-yellow-600">
+                          <span className="text-yellow-600">⚠</span>
+                          <span className="font-medium">Land Not Suitable for Organic Farming</span>
                         </div>
                       )}
                     </>
@@ -656,7 +622,7 @@ export default function ProposalManagement() {
                     disabled={loading}
                     className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
                   >
-                    {loading ? 'Creating...' : 'Create Proposal'}
+                    {loading ? 'Sending...' : '📤 Send to Landowner'}
                   </button>
                 </div>
               </form>

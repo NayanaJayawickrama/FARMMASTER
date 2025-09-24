@@ -157,6 +157,65 @@ export default function LandReportBody() {
     }
   };
 
+  // Send interest request to financial manager
+  const sendInterestRequest = async (reportId) => {
+    try {
+      setLoading(true);
+      setError(""); // Clear any previous errors
+      
+      const response = await axios.post(`${rootUrl}/api.php/land-reports/${reportId}/interest-request`, {}, {
+        withCredentials: true
+      });
+      
+      if (response.data.status === 'success') {
+        alert("Interest request sent to Financial Manager successfully! They will review your land and create a proposal for you.");
+        
+        // Refresh the reports to get updated state
+        await fetchAssessmentRequests();
+      } else {
+        setError("Failed to send interest request: " + (response.data.message || "Unknown error"));
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message;
+      
+      // If the error is about existing request, show appropriate message
+      if (errorMessage.includes("already exists")) {
+        alert("You have already expressed interest for this land report. Our Financial Manager will review it soon.");
+      } else {
+        setError("Failed to send interest request: " + errorMessage);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle decline interest - Save the decision
+  const declineInterest = async (reportId) => {
+    try {
+      setLoading(true);
+      
+      // Send decline decision to backend
+      const response = await axios.post(`${rootUrl}/api.php/land-reports/${reportId}/decline-interest`, {}, {
+        withCredentials: true
+      });
+      
+      if (response.data.status === 'success') {
+        alert("Thank you for your feedback. You can change your mind anytime by clicking 'Yes, I'm interested!' later.");
+        
+        // Refresh the reports
+        await fetchAssessmentRequests();
+      } else {
+        setError("Failed to save decision: " + (response.data.message || "Unknown error"));
+      }
+    } catch (err) {
+      // If endpoint doesn't exist, just show a message
+      console.warn("Decline endpoint not available:", err);
+      alert("Thank you for your feedback. You can change your mind anytime.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'approved': return 'text-green-600 bg-green-100';
@@ -671,6 +730,65 @@ export default function LandReportBody() {
                               </div>
                             )}
                           </div>
+
+                          {/* Interest Decision Box - After Assessment */}
+                          {selectedItem.conclusion && !selectedItem.has_interest_decision && (
+                            <div className="mt-6 p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-green-200">
+                              <div className="text-center">
+                                <h3 className="font-medium text-gray-800 mb-2">
+                                  🌱 Would you like to partner with FarmMaster for organic farming?
+                                </h3>
+                                <p className="text-sm text-gray-600 mb-4">
+                                  Our Financial Manager will review your land assessment and create a customized farming proposal for you.
+                                </p>
+                                
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                  <button
+                                    onClick={() => sendInterestRequest(selectedItem.report_id)}
+                                    disabled={loading}
+                                    className="px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
+                                  >
+                                    🤝 Yes, I'm interested!
+                                  </button>
+                                  <button
+                                    onClick={() => declineInterest(selectedItem.report_id)}
+                                    className="px-6 py-3 bg-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-400 transition"
+                                  >
+                                    Not now
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Interest Decision Status - Show if already decided */}
+                          {selectedItem.conclusion && selectedItem.has_interest_decision && (
+                            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="text-center">
+                                <h3 className="font-medium text-gray-800 mb-2">
+                                  📋 Your Partnership Decision
+                                </h3>
+                                {selectedItem.interest_status === 'pending' && (
+                                  <div className="text-green-700">
+                                    <p className="mb-2">✅ <strong>You expressed interest!</strong></p>
+                                    <p className="text-sm">Our Financial Manager is reviewing your land and will create a customized proposal for you soon.</p>
+                                  </div>
+                                )}
+                                {selectedItem.interest_status === 'approved' && (
+                                  <div className="text-blue-700">
+                                    <p className="mb-2">🎉 <strong>Your interest has been approved!</strong></p>
+                                    <p className="text-sm">Check your proposals section for the farming plan created for you.</p>
+                                  </div>
+                                )}
+                                {selectedItem.interest_status === 'rejected' && (
+                                  <div className="text-gray-700">
+                                    <p className="mb-2">📝 <strong>You chose not to partner at this time.</strong></p>
+                                    <p className="text-sm">You can change your mind anytime - just contact our support team.</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="bg-blue-50 p-4 rounded-lg">
