@@ -106,9 +106,7 @@ const MarketplaceProducts = () => {
           <h1 className="text-3xl md:text-4xl font-bold text-black mb-2 mt-4">
             Marketplace Products
           </h1>
-          <p className="text-green-700 text-sm mb-4 md:mb-0">
-            You can only update existing product details in the online marketplace.
-          </p>
+          
         </div>
         
         {/* Quick Actions Buttons */}

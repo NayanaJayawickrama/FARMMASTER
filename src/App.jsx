@@ -38,7 +38,6 @@ import FinancialMDashboard from "./pages/financialmanagerpages/FinancialMDashboa
 import FinancialMPaymentManagement from "./pages/financialmanagerpages/FinancialMPaymentManagement";
 import FinancialMProfitRentCalculation from "./pages/financialmanagerpages/FinancialMProfitRentCalculation";
 import FinancialMMarketplaceProducts from "./pages/financialmanagerpages/FinancialMMarketplaceProducts";
-import FinancialMFinancialReportManagement from "./pages/financialmanagerpages/FinancialMFinancialReportManagement";
 import FinancialMProposalManagement from "./pages/financialmanagerpages/FinancialMProposalManagement";
 
 function App() {
@@ -193,11 +192,7 @@ function App() {
             <FinancialMMarketplaceProducts />
           </ProtectedRoute>
         } />
-        <Route path="/financialmanagermarfinancialreportmanagement" element={
-          <ProtectedRoute requiredRoles={['Financial Manager', 'Financial_Manager']}>
-            <FinancialMFinancialReportManagement />
-          </ProtectedRoute>
-        } />
+       
 
         {/* 404 - Catch all undefined routes */}
         <Route path="*" element={<NotFound />} />
