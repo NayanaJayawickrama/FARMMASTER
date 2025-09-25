@@ -159,6 +159,7 @@ function StripePaymentForm({ landData, onSuccess, onError }) {
           <div className="flex justify-between">
             <span>Location:</span>
             <span className="font-medium">{landData.location}</span>
+            
           </div>
           <div className="border-t pt-2 mt-2">
             <div className="flex justify-between font-semibold">
@@ -487,7 +488,9 @@ export default function LandAssessmentStripePayment() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Land Location *
+                  <p>Select Location in Badulla District</p>
                 </label>
+
                 <MapLocationPicker
                   onLocationSelect={handleLocationSelect}
                   initialLocation={landData.location}
