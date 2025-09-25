@@ -9,10 +9,10 @@ import rightImg from "../../assets/images/marketplaceimages/right-veg.png";
 import leftImg from "../../assets/images/marketplaceimages/left-veg1.png";
 
 const VegetableSection = () => {
-  const { products, forceRefresh } = useProducts(); // Add forceRefresh
+  const { products, forceRefresh } = useProducts();
   const { addToCart } = useCart();
   const { user } = useAuth();
-  const { searchQuery } = useSearch();
+  const { searchQuery, clearSearch } = useSearch();
   const navigate = useNavigate();
 
   const [quantities, setQuantities] = useState([]);
@@ -240,11 +240,11 @@ const VegetableSection = () => {
               </p>
               
               {/* Available Quantity Display */}
-              <p className="text-xs text-gray-500 mb-2">
+              <p className="text-m text-gray-500 mb-2">
                 Available: {item.quantity} Kg
               </p>
               
-              <div className="border mt-1 rounded flex justify-between items-center w-32 text-sm whitespace-nowrap">
+              <div className="border mt-1 rounded flex justify-between items-center w-32 text-l whitespace-nowrap">
                 <button
                   className="px-3 cursor-pointer"
                   onClick={() => decreaseQuantity(index)}
@@ -298,18 +298,23 @@ const VegetableSection = () => {
 
           {filteredProducts.length === 0 && searchQuery && (
             <div className="col-span-full text-center py-12">
-              <div className="text-6xl mb-4">Search</div>
+              <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                No products found for "{searchQuery}"
+                Product Not Found
               </h3>
-              <p className="text-gray-500 mb-4">
+              <p className="text-gray-500 mb-2">
+                No products found for "{searchQuery}"
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
                 Try searching with different keywords or check the spelling
               </p>
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  clearSearch();
+                }}
                 className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
               >
-                Clear Search
+                Clear Search & View All Products
               </button>
             </div>
           )}

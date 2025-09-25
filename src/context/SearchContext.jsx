@@ -5,7 +5,12 @@ const SearchContext = createContext();
 export const useSearch = () => {
   const context = useContext(SearchContext);
   if (!context) {
-    throw new Error('useSearch must be used within a SearchProvider');
+    // Return fallback instead of throwing error
+    return {
+      searchQuery: '',
+      updateSearchQuery: () => {},
+      clearSearch: () => {}
+    };
   }
   return context;
 };
@@ -14,7 +19,7 @@ export const SearchProvider = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
   
   const updateSearchQuery = (query) => {
-    setSearchQuery(query);
+    setSearchQuery(query || '');
   };
   
   const clearSearch = () => {

@@ -4,6 +4,7 @@ import logo from "../assets/images/logo.png";
 import { Menu, X, Search, ShoppingCart, User } from "lucide-react";
 import { useCart } from "./cart/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useSearch } from "../context/SearchContext";
 import ConfirmationModal from "./ConfirmationModal";
 
 export default function Navbar() {
@@ -17,19 +18,7 @@ export default function Navbar() {
 
   const { cartItems } = useCart();
   const { user, logout } = useAuth();
-
-  // Optional search context - only use when available
-  let searchContext = null;
-  try {
-    // Only import search context when on marketplace
-    if (location.pathname.startsWith("/marketplace")) {
-      const { useSearch } = require("../context/SearchContext");
-      searchContext = useSearch();
-    }
-  } catch (error) {
-    // SearchContext not available, use local state
-    console.log("SearchContext not available, using local search");
-  }
+  const { searchQuery, updateSearchQuery, clearSearch } = useSearch();
 
   const isMarketplace = location.pathname.startsWith("/marketplace");
 
@@ -80,37 +69,42 @@ export default function Navbar() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    // Use search context if available, otherwise use local search
-    if (searchContext) {
-      searchContext.updateSearchQuery(localSearchQuery);
+    updateSearchQuery(localSearchQuery);
+    // Navigate to marketplace if not already there
+    if (!isMarketplace) {
+      navigate('/marketplace');
     }
     // Scroll to vegetables section
-    const vegetablesSection = document.getElementById('vegetables');
-    if (vegetablesSection) {
-      vegetablesSection.scrollIntoView({ behavior: 'smooth' });
-    }
+    setTimeout(() => {
+      const vegetablesSection = document.getElementById('vegetables');
+      if (vegetablesSection) {
+        vegetablesSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   const handleSearchInputChange = (e) => {
     const value = e.target.value;
     setLocalSearchQuery(value);
-    // Real-time search - update search query if context available
-    if (searchContext) {
-      searchContext.updateSearchQuery(value);
-    }
+    // Real-time search update
+    updateSearchQuery(value);
   };
 
   const handleSearchToggle = () => {
     // If search bar is open and there's text, perform search instead of closing
     if (showSearch && localSearchQuery.trim()) {
-      if (searchContext) {
-        searchContext.updateSearchQuery(localSearchQuery);
+      updateSearchQuery(localSearchQuery);
+      // Navigate to marketplace if not already there
+      if (!isMarketplace) {
+        navigate('/marketplace');
       }
       // Scroll to vegetables section
-      const vegetablesSection = document.getElementById('vegetables');
-      if (vegetablesSection) {
-        vegetablesSection.scrollIntoView({ behavior: 'smooth' });
-      }
+      setTimeout(() => {
+        const vegetablesSection = document.getElementById('vegetables');
+        if (vegetablesSection) {
+          vegetablesSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
       return;
     }
     
@@ -119,9 +113,7 @@ export default function Navbar() {
     if (showSearch) {
       // When closing search, clear the search
       setLocalSearchQuery('');
-      if (searchContext) {
-        searchContext.clearSearch();
-      }
+      clearSearch();
     }
   };
 
@@ -368,3 +360,4 @@ export default function Navbar() {
     </nav>
   );
 }
+        
