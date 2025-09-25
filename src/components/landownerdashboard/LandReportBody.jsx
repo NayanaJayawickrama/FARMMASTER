@@ -3,6 +3,8 @@ import { Leaf, Download, Eye, Calendar, MapPin, FileText, Clock, CheckCircle, XC
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { NavLink } from "react-router-dom";
+import AlertModal from "../AlertModal";
+import { useAlert } from "../../hooks/useAlert";
 
 const rootUrl = import.meta.env.VITE_API_URL;
 
@@ -13,6 +15,7 @@ export default function LandReportBody() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("all"); // "all", "pending", "completed"
   const { user } = useAuth();
+  const { alert, showSuccess, showError, showWarning, hideAlert } = useAlert();
 
   // Test user ID - replace with actual user from auth context
   const testUserId = user?.id || 32;
@@ -108,13 +111,13 @@ export default function LandReportBody() {
       
       if (!newWindow) {
         // If popup was blocked, show alternative
-        alert("Please allow popups and try again, or copy this URL to view the report: " + reportUrl);
+        showWarning("Please allow popups and try again, or copy this URL to view the report: " + reportUrl);
       } else {
         // Auto-focus the new window
         newWindow.focus();
       }
     } catch (err) {
-      alert("Failed to open report: " + err.message);
+      showError("Failed to open report: " + err.message);
     }
   };
 
@@ -131,7 +134,7 @@ export default function LandReportBody() {
           ...prev,
           conclusion: response.data.data
         }));
-        alert("Land suitability analysis completed!");
+        showSuccess("Land suitability analysis completed!");
       } else {
         setError("Failed to generate conclusion: " + (response.data.message || "Unknown error"));
       }
@@ -178,7 +181,7 @@ export default function LandReportBody() {
       });
       
       if (response.data.status === 'success') {
-        alert("Proposal request submitted successfully! Our financial team will review and create a proposal for you.");
+        showSuccess("Proposal request submitted successfully! Our financial team will review and create a proposal for you.");
         // Refresh the reports to show updated status
         fetchAssessmentRequests();
       } else {
@@ -202,7 +205,7 @@ export default function LandReportBody() {
       });
       
       if (response.data.status === 'success') {
-        alert("Interest request sent to Financial Manager successfully! They will review your land and create a proposal for you.");
+        showSuccess("Interest request sent to Financial Manager successfully! They will review your land and create a proposal for you.");
         
         // Refresh the reports to get updated state
         await fetchAssessmentRequests();
@@ -214,9 +217,9 @@ export default function LandReportBody() {
       
       // If the error is about existing request, show appropriate message
       if (errorMessage.includes("already exists")) {
-        alert("You have already expressed interest for this land report. Our Financial Manager will review it soon.");
+        showWarning("You have already expressed interest for this land report. Our Financial Manager will review it soon.");
       } else {
-        setError("Failed to send interest request: " + errorMessage);
+        showError("Failed to send interest request: " + errorMessage);
       }
     } finally {
       setLoading(false);
@@ -234,7 +237,7 @@ export default function LandReportBody() {
       });
       
       if (response.data.status === 'success') {
-        alert("Thank you for your feedback. You can change your mind anytime by clicking 'Yes, I'm interested!' later.");
+        showSuccess("Thank you for your feedback. You can change your mind anytime by clicking 'Yes, I'm interested!' later.");
         
         // Refresh the reports
         await fetchAssessmentRequests();
@@ -244,7 +247,7 @@ export default function LandReportBody() {
     } catch (err) {
       // If endpoint doesn't exist, just show a message
       console.warn("Decline endpoint not available:", err);
-      alert("Thank you for your feedback. You can change your mind anytime.");
+      showSuccess("Thank you for your feedback. You can change your mind anytime.");
     } finally {
       setLoading(false);
     }
@@ -765,18 +768,16 @@ export default function LandReportBody() {
                             )}
                           </div>
 
-                          {/* Interest Decision Box - After Assessment */}
-                          {selectedItem.conclusion && !selectedItem.has_interest_decision && (
-                            <div className="mt-6 p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-green-200">
-                              <div className="text-center">
-                                <h3 className="font-medium text-gray-800 mb-2">
-                                  🌱 Would you like to partner with FarmMaster for organic farming?
-                                </h3>
-                                <p className="text-sm text-gray-600 mb-4">
-                                  Our Financial Manager will review your land assessment and create a customized farming proposal for you.
-                                </p>
-                                
-                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {/* Interest Decision Box - Only for Suitable Lands */}
+          {selectedItem.conclusion && selectedItem.conclusion.is_good_for_organic && !selectedItem.has_interest_decision && (
+            <div className="mt-6 p-4 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border border-green-200">
+              <div className="text-center">
+                <h3 className="font-medium text-gray-800 mb-2">
+                  🌱 Would you like to partner with FarmMaster for organic farming?
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Your land is suitable! Our Financial Manager will review your assessment and create a customized farming proposal for you.
+                </p>                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                                   <button
                                     onClick={() => sendInterestRequest(selectedItem.report_id)}
                                     disabled={loading}
@@ -796,7 +797,7 @@ export default function LandReportBody() {
                           )}
                           
                           {/* Interest Decision Status - Show if already decided */}
-                          {selectedItem.conclusion && selectedItem.has_interest_decision && (
+                          {selectedItem.conclusion && selectedItem.conclusion.is_good_for_organic && selectedItem.has_interest_decision && (
                             <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                               <div className="text-center">
                                 <h3 className="font-medium text-gray-800 mb-2">
@@ -882,6 +883,16 @@ export default function LandReportBody() {
           </div>
         </div>
       </div>
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alert.isOpen}
+        onClose={hideAlert}
+        title={alert.title}
+        message={alert.message}
+        type={alert.type}
+        buttonText={alert.buttonText}
+      />
     </div>
   );
 }

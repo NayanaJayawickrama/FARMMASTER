@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { CheckCircle, XCircle, Clock, MapPin, Calendar, TrendingUp } from "lucide-react";
 import axios from "axios";
+import AlertModal from "../AlertModal";
+import { useAlert } from "../../hooks/useAlert";
 
 export default function LeaseProposalBody() {
   const [proposals, setProposals] = useState([]);
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { alert, showSuccess, showError, hideAlert } = useAlert();
 
   const rootUrl = import.meta.env.VITE_API_URL;
 
@@ -77,12 +80,12 @@ export default function LeaseProposalBody() {
           setSelectedProposal({ ...selectedProposal, status: response.data.data.new_status });
         }
         
-        alert(`Proposal ${action}ed successfully!`);
+        showSuccess(`Proposal ${action}ed successfully!`);
       } else {
-        alert("Failed to update proposal: " + response.data.message);
+        showError("Failed to update proposal: " + response.data.message);
       }
     } catch (err) {
-      alert("Error updating proposal: " + (err.response?.data?.error || err.message));
+      showError("Error updating proposal: " + (err.response?.data?.error || err.message));
     }
   };
 
@@ -342,6 +345,16 @@ export default function LeaseProposalBody() {
           </div>
         </div>
       </div>
+
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alert.isOpen}
+        onClose={hideAlert}
+        title={alert.title}
+        message={alert.message}
+        type={alert.type}
+        buttonText={alert.buttonText}
+      />
     </div>
   );
 }

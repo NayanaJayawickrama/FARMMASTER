@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import AlertModal from '../AlertModal';
+import { useAlert } from '../../hooks/useAlert';
 
 // Fix for default markers in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -12,7 +14,7 @@ L.Icon.Default.mergeOptions({
 });
 
 // Component to handle map clicks
-function LocationMarker({ position, setPosition, onLocationSelect }) {
+function LocationMarker({ position, setPosition, onLocationSelect, showWarning }) {
   useMapEvents({
     click(e) {
       const lat = e.latlng.lat;
@@ -20,7 +22,7 @@ function LocationMarker({ position, setPosition, onLocationSelect }) {
       
       // Check if the clicked location is within Sri Lanka boundaries
       if (lat < 5.9 || lat > 9.9 || lng < 79.4 || lng > 81.9) {
-        alert("Please select a location within Sri Lanka only.");
+        showWarning("Please select a location within Sri Lanka only.");
         return;
       }
       
@@ -36,7 +38,7 @@ function LocationMarker({ position, setPosition, onLocationSelect }) {
             const address = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
             onLocationSelect(address, newPosition);
           } else {
-            alert("Please select a location within Sri Lanka only.");
+            showWarning("Please select a location within Sri Lanka only.");
             setPosition(null);
           }
         })
@@ -59,6 +61,7 @@ const MapLocationPicker = ({ onLocationSelect, initialLocation = "" }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const mapRef = useRef();
+  const { alert, showWarning, hideAlert } = useAlert();
 
   // Search for locations
   const searchLocation = async (query) => {
@@ -199,6 +202,7 @@ const MapLocationPicker = ({ onLocationSelect, initialLocation = "" }) => {
                   position={position}
                   setPosition={setPosition}
                   onLocationSelect={handleLocationSelect}
+                  showWarning={showWarning}
                 />
               </MapContainer>
               
@@ -220,7 +224,15 @@ const MapLocationPicker = ({ onLocationSelect, initialLocation = "" }) => {
         </div>
       )}
 
- 
+      {/* Alert Modal */}
+      <AlertModal
+        isOpen={alert.isOpen}
+        onClose={hideAlert}
+        title={alert.title}
+        message={alert.message}
+        type={alert.type}
+        buttonText={alert.buttonText}
+      />
     </div>
   );
 };

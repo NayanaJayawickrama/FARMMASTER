@@ -10,15 +10,67 @@ export default function LandDataSubmissionForm() {
     notes: "",
   });
 
+  const [errors, setErrors] = useState({});
+
+  const validateField = (name, value) => {
+    let error = "";
+
+    if (value === "") return ""; // Allow empty values
+
+    switch (name) {
+      case "phValue":
+        const numValue = parseFloat(value);
+        if (isNaN(numValue)) {
+          error = "Please enter a valid pH value";
+        } else if (numValue < 4.0 || numValue > 9.5) {
+          error = "pH value must be between 4.0 and 9.5";
+        }
+        break;
+      case "organicMatter":
+        const organicValue = parseFloat(value);
+        if (isNaN(organicValue)) {
+          error = "Please enter a valid percentage";
+        } else if (organicValue < 0.5 || organicValue > 15.0) {
+          error = "Organic matter must be between 0.5% and 15%";
+        }
+        break;
+      case "nitrogen":
+      case "phosphorus":
+      case "potassium":
+        // For dropdown selections, no validation needed as options are predefined
+        break;
+    }
+
+    return error;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Validate the field and update errors
+    const error = validateField(name, value);
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Submitted Data:", formData);
     
+    // Validate all fields before submission
+    const newErrors = {};
+    Object.keys(formData).forEach(key => {
+      if (key !== "notes") { // Skip notes validation
+        const error = validateField(key, formData[key]);
+        if (error) newErrors[key] = error;
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    console.log("Submitted Data:", formData);
   };
 
   return (
@@ -35,75 +87,127 @@ export default function LandDataSubmissionForm() {
       <div className="max-w-xl space-y-6">
         {/* pH Value */}
         <div>
-          <label className="block font-semibold text-black mb-1">pH Value</label>
+          <label className="block font-semibold text-black mb-1">
+            pH Value <span className="text-sm text-gray-600">(4.0 - 9.5)</span>
+          </label>
           <input
-            type="text"
+            type="number"
             name="phValue"
             value={formData.phValue}
             onChange={handleChange}
-            placeholder="Enter pH value"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
+            placeholder="e.g., 6.5 (optimal for most crops)"
+            min="4.0"
+            max="9.5"
+            step="0.1"
+            className={`w-full bg-green-50 text-green-700 p-3 rounded-md border ${
+              errors.phValue ? 'border-red-500' : 'border-green-500'
+            } placeholder-[#5E964F] focus:outline-none focus:ring-2 ${
+              errors.phValue ? 'focus:ring-red-400' : 'focus:ring-green-400'
+            }`}
           />
+          {errors.phValue && (
+            <p className="text-red-500 text-sm mt-1">{errors.phValue}</p>
+          )}
         </div>
 
         {/* Organic Matter */}
         <div>
           <label className="block font-semibold text-black mb-1">
-            Organic Matter (%)
+            Organic Matter (%) <span className="text-sm text-gray-600">(0.5% - 15%)</span>
           </label>
           <input
-            type="text"
+            type="number"
             name="organicMatter"
             value={formData.organicMatter}
             onChange={handleChange}
-            placeholder="Enter organic matter percentage"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
+            placeholder="e.g., 3.5 (good for organic farming)"
+            min="0.5"
+            max="15"
+            step="0.1"
+            className={`w-full bg-green-50 text-green-700 p-3 rounded-md border ${
+              errors.organicMatter ? 'border-red-500' : 'border-green-500'
+            } placeholder-[#5E964F] focus:outline-none focus:ring-2 ${
+              errors.organicMatter ? 'focus:ring-red-400' : 'focus:ring-green-400'
+            }`}
           />
+          {errors.organicMatter && (
+            <p className="text-red-500 text-sm mt-1">{errors.organicMatter}</p>
+          )}
         </div>
 
         {/* Nitrogen */}
         <div>
           <label className="block font-semibold text-black mb-1">
-            Nitrogen (N)
+            Nitrogen (N) Level
           </label>
-          <input
-            type="text"
+          <select
             name="nitrogen"
             value={formData.nitrogen}
             onChange={handleChange}
-            placeholder="Enter nitrogen level"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
+            className={`w-full bg-green-50 text-green-700 p-3 rounded-md border ${
+              errors.nitrogen ? 'border-red-500' : 'border-green-500'
+            } focus:outline-none focus:ring-2 ${
+              errors.nitrogen ? 'focus:ring-red-400' : 'focus:ring-green-400'
+            }`}
+          >
+            <option value="">Select nitrogen level</option>
+            <option value="low">Low (10-25 ppm)</option>
+            <option value="medium">Medium (25-40 ppm)</option>
+            <option value="high">High (40+ ppm)</option>
+          </select>
+          {errors.nitrogen && (
+            <p className="text-red-500 text-sm mt-1">{errors.nitrogen}</p>
+          )}
         </div>
 
         {/* Phosphorus */}
         <div>
           <label className="block font-semibold text-black mb-1">
-            Phosphorus (P)
+            Phosphorus (P) Level
           </label>
-          <input
-            type="text"
+          <select
             name="phosphorus"
             value={formData.phosphorus}
             onChange={handleChange}
-            placeholder="Enter phosphorus level"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
+            className={`w-full bg-green-50 text-green-700 p-3 rounded-md border ${
+              errors.phosphorus ? 'border-red-500' : 'border-green-500'
+            } focus:outline-none focus:ring-2 ${
+              errors.phosphorus ? 'focus:ring-red-400' : 'focus:ring-green-400'
+            }`}
+          >
+            <option value="">Select phosphorus level</option>
+            <option value="low">Low (5-15 ppm)</option>
+            <option value="medium">Medium (15-30 ppm)</option>
+            <option value="high">High (30+ ppm)</option>
+          </select>
+          {errors.phosphorus && (
+            <p className="text-red-500 text-sm mt-1">{errors.phosphorus}</p>
+          )}
         </div>
 
         {/* Potassium */}
         <div>
           <label className="block font-semibold text-black mb-1">
-            Potassium (K)
+            Potassium (K) Level
           </label>
-          <input
-            type="text"
+          <select
             name="potassium"
             value={formData.potassium}
             onChange={handleChange}
-            placeholder="Enter potassium level"
-            className="w-full bg-green-50 text-green-700 p-3 rounded-md border border-green-500 placeholder-[#5E964F] focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
+            className={`w-full bg-green-50 text-green-700 p-3 rounded-md border ${
+              errors.potassium ? 'border-red-500' : 'border-green-500'
+            } focus:outline-none focus:ring-2 ${
+              errors.potassium ? 'focus:ring-red-400' : 'focus:ring-green-400'
+            }`}
+          >
+            <option value="">Select potassium level</option>
+            <option value="low">Low (50-100 ppm)</option>
+            <option value="medium">Medium (100-200 ppm)</option>
+            <option value="high">High (200+ ppm)</option>
+          </select>
+          {errors.potassium && (
+            <p className="text-red-500 text-sm mt-1">{errors.potassium}</p>
+          )}
         </div>
 
         {/* Environmental Notes */}
