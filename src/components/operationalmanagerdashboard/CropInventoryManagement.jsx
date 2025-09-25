@@ -157,18 +157,7 @@ export default function CropInventoryManagement() {
                   className="bg-green-50 text-sm rounded-md pl-10 pr-4 py-2 w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
-              <select
-                value={cropFilter}
-                onChange={(e) => setCropFilter(e.target.value)}
-                className="bg-green-50 text-sm rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                <option value="">All Crops</option>
-                {allowedCrops.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              
             </div>
             <button
               onClick={() => {

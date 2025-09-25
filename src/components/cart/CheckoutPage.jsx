@@ -661,30 +661,7 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {/* Test Card Information */}
-          <div className="mt-8 bg-blue-50 p-4 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold text-blue-800">
-                {stripeAvailable ? "🌐 Live Stripe Payment" : "🧪 Mock Payment Mode"}
-              </span>
-            </div>
-            <div className="text-sm text-blue-700 space-y-1">
-              {stripeAvailable ? (
-                <>
-                  <p><strong>Card Number:</strong> 4242 4242 4242 4242 (Success)</p>
-                  <p><strong>Card Number:</strong> 4000 0000 0000 0002 (Decline)</p>
-                  <p><strong>Expiry Date:</strong> Any future date (e.g., 12/25)</p>
-                  <p><strong>CVV:</strong> Any 3 digits (e.g., 123)</p>
-                </>
-              ) : (
-                <>
-                  <p><strong>Network Issue:</strong> Cannot reach Stripe servers</p>
-                  <p><strong>Solution:</strong> Using mock payment for development</p>
-                  <p><strong>Note:</strong> No real payment will be processed</p>
-                </>
-              )}
-            </div>
-          </div>
+          
         </div>
       </div>
     
