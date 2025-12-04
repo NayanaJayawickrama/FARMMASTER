@@ -200,9 +200,15 @@ export default function LandReportBody() {
       setLoading(true);
       setError(""); // Clear any previous errors
       
-      const response = await axios.post(`${rootUrl}/api.php/land-reports/${reportId}/interest-request`, {}, {
+      console.log('📤 Sending interest request for report ID:', reportId);
+      console.log('📡 API URL:', `${rootUrl}/api/land-reports/${reportId}/interest-request`);
+      
+      const response = await axios.post(`${rootUrl}/api/land-reports/${reportId}/interest-request`, {}, {
+        headers: { 'Content-Type': 'application/json' },
         withCredentials: true
       });
+      
+      console.log('✅ Interest request response:', response.data);
       
       if (response.data.status === 'success') {
         showSuccess("Interest request sent to Financial Manager successfully! They will review your land and create a proposal for you.");
@@ -213,6 +219,8 @@ export default function LandReportBody() {
         setError("Failed to send interest request: " + (response.data.message || "Unknown error"));
       }
     } catch (err) {
+      console.error('❌ Error sending interest request:', err);
+      console.error('Error response:', err.response?.data);
       const errorMessage = err.response?.data?.message || err.message;
       
       // If the error is about existing request, show appropriate message
@@ -231,8 +239,11 @@ export default function LandReportBody() {
     try {
       setLoading(true);
       
+      console.log('📤 Declining interest for report ID:', reportId);
+      
       // Send decline decision to backend
-      const response = await axios.post(`${rootUrl}/api.php/land-reports/${reportId}/decline-interest`, {}, {
+      const response = await axios.post(`${rootUrl}/api/land-reports/${reportId}/decline-interest`, {}, {
+        headers: { 'Content-Type': 'application/json' },
         withCredentials: true
       });
       

@@ -181,18 +181,26 @@ export default function LandReportManagement() {
       report={selectedReport}
       onSendToLandOwner={async (reportId) => {
         try {
+          console.log('Sending report to land owner. Report ID:', reportId);
+          console.log('Full URL:', `${rootUrl}/api/land-reports/${reportId}/send-to-owner`);
+          
           const response = await axios.put(`${rootUrl}/api/land-reports/${reportId}/send-to-owner`, {}, {
             headers: { 'Content-Type': 'application/json' },
             withCredentials: true
           });
           
+          console.log('Send to owner response:', response.data);
+          
           if (response.data.status === 'success') {
             showPopup('Report sent to land owner successfully!', 'success');
             await fetchReviewReports(); // Refresh data
             setShowReview(false);
+          } else {
+            showPopup('Failed to send report: ' + (response.data.message || 'Unknown error'), 'error');
           }
         } catch (error) {
           console.error('Error sending report to land owner:', error);
+          console.error('Error response:', error.response?.data);
           showPopup('Failed to send report to land owner: ' + (error.response?.data?.message || error.message), 'error');
         }
       }}
