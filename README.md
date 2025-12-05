@@ -1,12 +1,180 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# 🌿 FARMMASTER Frontend – React + Vite
 
-Currently, two official plugins are available:
+This is the frontend of **FARMMASTER**, a comprehensive agricultural land and crop management system.  
+The frontend is built using **React 18 + Vite**, with **Tailwind**, **Context API**, and **Axios**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## 🚀 Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### **Frontend**
+- React 18 (Vite)
+- React Router v6
+- Context API
+- Tailwind CSS
+- Axios
+- Leaflet (OpenStreetMap)
+- Stripe React SDK
+
+---
+
+## 📁 Folder Structure
+
+````
+
+FARMMASTER-Frontend/
+├── src/
+│   ├── components/
+│   │   ├── landownerdashboard/
+│   │   ├── operationalmanagerdashboard/
+│   │   ├── fieldsupervisordashboard/
+│   │   ├── financialmanagerdashboard/
+│   │   ├── buyerdashboard/
+│   │   ├── cart/
+│   │   ├── alerts/
+│   │   ├── home/
+│   │   ├── about/
+│   │   └── contact/
+│   ├── pages/
+│   │   ├── Login.jsx
+│   │   ├── Register.jsx
+│   │   ├── ForgotPassword.jsx
+│   │   ├── ResetPassword.jsx
+│   │   └── Profile.jsx
+│   ├── context/
+│   │   ├── AuthContext.jsx
+│   │   ├── SearchContext.jsx
+│   │   └── CartContext.jsx
+│   ├── assets/
+│   ├── App.jsx
+│   └── main.jsx
+├── index.html
+├── package.json
+├── vite.config.js
+└── .env
+
+````
+
+---
+
+## ⚙️ Installation
+
+### **1. Install dependencies**
+```bash
+npm install
+````
+
+### **2. Add environment variables**
+
+Create `.env`:
+
+```env
+VITE_API_URL=http://localhost/FarmMaster/FARMMASTER-Backend
+```
+
+### **3. Start development server**
+
+```bash
+npm run dev
+```
+
+### **4. App URLs**
+
+```
+Frontend: http://localhost:5173
+Backend API: http://localhost/FarmMaster/FARMMASTER-Backend/api.php
+```
+
+---
+
+## 🌟 Core Features
+
+### ✔ Authentication
+
+* Login / Register
+* Forgot Password / Reset Password (Email OTP)
+* Role-based UI (OM, FM, Supervisor, Landowner, Buyer)
+
+### ✔ Land Management (Leaflet Map)
+
+* Select land location via map
+* Display Sri Lanka boundaries
+* Reverse geocoding
+
+### ✔ Marketplace (Buyers)
+
+* View crops & products
+* Add to cart (cookie persistence)
+* Stripe card payments
+* Track order history
+
+### ✔ Dashboards
+
+Each role has a personalized dashboard:
+
+* Landowner Dashboard
+* Operational Manager Dashboard
+* Financial Manager Dashboard
+* Field Supervisor Dashboard
+* Buyer Dashboard
+
+### ✔ State Management
+
+* `AuthContext`: login state
+* `CartContext`: shopping cart
+* `SearchContext`: product filtering
+
+---
+
+## 🔌 API Communication
+
+Axios setup (`withCredentials: true`):
+
+```js
+axios.get(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+  withCredentials: true
+});
+```
+
+---
+
+## 🧪 Testing (Manual)
+
+* Test authentication pages
+* Validate CORS calls
+* Check map dragging & marker accuracy
+* Stripe test cards:
+
+  * Success → 4242 4242 4242 4242
+  * Fail → 4000 0000 0000 0002
+
+---
+
+## 🐛 Troubleshooting
+
+### **CORS Errors**
+
+* Ensure backend has:
+
+```php
+header("Access-Control-Allow-Origin: http://localhost:5173");
+```
+
+### **Map Not Loading**
+
+* Ensure Leaflet CSS is imported
+* Check API key (if using geocoding API)
+
+### **Stripe Errors**
+
+* Verify publishable key
+* Use test mode
+
+---
+
+## 📄 License
+
+Open-source — for academic & learning purposes.
+
+
